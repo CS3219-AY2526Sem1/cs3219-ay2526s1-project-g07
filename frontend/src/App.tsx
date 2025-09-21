@@ -1,11 +1,11 @@
 import "./App.css";
+import { Button } from "@/components/ui/button";
 
 const App = () => {
   return (
-    <div className="content">
-      <h1>Rsbuild with React</h1>
-      <h1 className="text-3xl font-bold underline">Hello Tailwind!</h1>
-      <p>Start building amazing things with Rsbuild.</p>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+      <Button variant="outline">Button</Button>
     </div>
   );
 };
