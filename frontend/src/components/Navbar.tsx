@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,8 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut, useSession } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
+import { signOut } from "@/lib/auth-client";
 
 const navbarLinks = [
   { name: "Home", to: "/home" },
@@ -16,7 +15,7 @@ const navbarLinks = [
   { name: "Profile", to: "/profile" },
   { name: "Questions", to: "/admin/questions" },
   { name: "Users", to: "/admin/users" },
-  { name: "Protected Route", to: "protected"}
+  { name: "Protected Route", to: "/protected"}
 ];
 
 function Navbar() {
