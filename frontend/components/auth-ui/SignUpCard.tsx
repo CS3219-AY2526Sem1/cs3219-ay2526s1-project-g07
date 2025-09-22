@@ -12,6 +12,7 @@ import {
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { signUp } from "../../lib/auth-client"
+import { Link } from "@tanstack/react-router"
 
 
 export default function SignUpCard() {
@@ -66,8 +67,7 @@ export default function SignUpCard() {
         </CardDescription>
         <CardAction>
           <Button className="cursor-pointer" variant="link">
-            {/* <Link to="/login">Back to Log In</Link> */}
-            Back to Log In
+            <Link to="/login">Back to Log In</Link>
           </Button>
         </CardAction>
       </CardHeader>

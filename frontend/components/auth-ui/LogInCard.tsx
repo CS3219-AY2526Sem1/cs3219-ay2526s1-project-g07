@@ -12,12 +12,14 @@ import {
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { signIn } from "../../lib/auth-client"
+import { Link, useNavigate } from "@tanstack/react-router"
 
 
 export default function LogInCard() {
   
   const [email, setEmail] = useState<string>("username@example.com")
   const [password, setPassword] = useState<string>("password")
+  const navigate = useNavigate()
   // const [loading, setLoading] = useState<boolean>(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +38,7 @@ export default function LogInCard() {
         
           if (ctx.response.ok) {
             console.log("Signin successful")
-            // navigate({ to: "/" });
+            navigate({ to: "/home" });
           } else {
             console.log("Signin failed", ctx.response.status)
             // setError(`Signup failed: ${ctx.response.status}`);
@@ -63,8 +65,7 @@ export default function LogInCard() {
         </CardDescription>
         <CardAction>
           <Button className="cursor-pointer" variant="link">
-            {/* <Link to="/signup">Sign Up</Link> */}
-            Sign Up
+            <Link to="/signup">Sign Up</Link>
           </Button>
         </CardAction>
       </CardHeader>

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut, useSession } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 
 const navbarLinks = [
   { name: "Home", to: "/home" },
@@ -18,6 +20,24 @@ const navbarLinks = [
 ];
 
 function Navbar() {
+
+
+  const handleClick = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          console.log("Successfully signed out")
+        },
+        onResponse: (ctx) => {
+          console.log("Signout response received:", ctx)
+        },
+        onError: (ctx) => {
+          console.log("Signout Error", ctx.error);
+        }
+      },
+    })
+  }
+
   return (
     <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200">
       <div className="text-xl font-semibold ">PeerPrep</div>
@@ -39,7 +59,7 @@ function Navbar() {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <Link to="/">
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onClick={handleClick}>
               Logout
             </DropdownMenuItem>
           </Link>
