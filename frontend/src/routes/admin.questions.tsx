@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import Navbar from "../components/Navbar";
 
 export const Route = createFileRoute("/admin/questions")({
   component: RouteComponent,
@@ -6,5 +7,10 @@ export const Route = createFileRoute("/admin/questions")({
 
 // crud questions for admin
 function RouteComponent() {
-  return <div>Hello "/admin/questions"!</div>;
+  return (
+    <div>
+      <Navbar />
+      <div>Hello "/admin/questions"!</div>
+    </div>
+  );
 }

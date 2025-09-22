@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import Navbar from "../components/Navbar";
 
 export const Route = createFileRoute("/history")({
   component: RouteComponent,
@@ -6,5 +7,10 @@ export const Route = createFileRoute("/history")({
 
 // attempt history
 function RouteComponent() {
-  return <div>Hello "/history"!</div>;
+  return (
+    <div>
+      <Navbar />
+      <div>Hello "/history"!</div>
+    </div>
+  );
 }

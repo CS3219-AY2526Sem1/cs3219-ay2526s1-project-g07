@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import Navbar from "../components/Navbar";
 
 export const Route = createFileRoute("/collab/$sessionId")({
   component: RouteComponent,
@@ -7,5 +8,10 @@ export const Route = createFileRoute("/collab/$sessionId")({
 // collaborative coding session
 function RouteComponent() {
   const { sessionId } = Route.useParams();
-  return <div>Hello "/collab/{sessionId}!"</div>;
+  return (
+    <div>
+      <Navbar />
+      <div>Hello "/collab/{sessionId}!"</div>
+    </div>
+  );
 }

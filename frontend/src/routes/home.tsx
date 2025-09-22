@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import Navbar from "../components/Navbar";
 
 export const Route = createFileRoute("/home")({
   component: RouteComponent,
@@ -6,5 +7,10 @@ export const Route = createFileRoute("/home")({
 
 // homepage, selector for matching
 function RouteComponent() {
-  return <div>Hello "/home"!</div>;
+  return (
+    <div>
+      <Navbar />
+      <div>Hello "/home"!</div>
+    </div>
+  );
 }
