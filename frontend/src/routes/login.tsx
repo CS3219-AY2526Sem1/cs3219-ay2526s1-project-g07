@@ -8,7 +8,6 @@ export const Route = createFileRoute("/login")({
 function RouteComponent() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      Hi, please log in!
       <LogInCard />
     </div>
   );
