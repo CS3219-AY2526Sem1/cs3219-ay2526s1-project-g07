@@ -11,10 +11,10 @@ app.get('/', (c: Context) => c.text('Hello Hono!'))
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://127.0.0.1:3000"], 
-  allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["GET", "POST", "OPTIONS"],
-  exposeHeaders: ["Content-Length"],
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000"], 
+  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
+  allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+  exposeHeaders: ["Content-Length", "Set-Cookie"],
   maxAge: 600,
   credentials: true
 }))
@@ -23,6 +23,11 @@ app.use(cors({
 app.on(["POST", "GET"], "/api/auth/**", (c: Context) => {
   console.log(`${c.req.method} request to ${c.req.url}`);
   return auth.handler(c.req.raw);
+});
+
+// Add OPTIONS method support for CORS preflight
+app.options("/api/auth/**", (c: Context) => {
+  return new Response(null, { status: 200 });
 });
 
 app.route("/", route);

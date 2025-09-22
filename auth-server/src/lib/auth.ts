@@ -49,15 +49,13 @@ export const auth = betterAuth({
     database: "auth-db",
     password: "password",
     port: 5432,
-    // run npx @better-auth/cli generate, please have db on though
-    // this generates 
   }),
   emailAndPassword: {    
     enabled: true,
     autoSignIn: false //defaults to true
     // requireEmailVerification: true // defaults to false
   },
-  trustedOrigins: ["http://localhost:3000"], // your client URL
+  trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"], // your client URL
   plugins: [ 
     jwt({
       jwks: {
@@ -68,11 +66,4 @@ export const auth = betterAuth({
       }
     }),
   ],
-  advanded: {
-    cookies: {
-      session_token: {
-        name: "medumentor_auth"
-      }
-    }
-  }
 })

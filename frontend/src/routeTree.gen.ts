@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ProtectedRouteImport } from './routes/protected'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
@@ -22,6 +23,11 @@ import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/protected',
+  path: '/protected',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/profile'
+    | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/profile'
+    | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/profile'
+    | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  ProtectedRoute: typeof ProtectedRoute
   SignupRoute: typeof SignupRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protected': {
+      id: '/protected'
+      path: '/protected'
+      fullPath: '/protected'
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  ProtectedRoute: ProtectedRoute,
   SignupRoute: SignupRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
