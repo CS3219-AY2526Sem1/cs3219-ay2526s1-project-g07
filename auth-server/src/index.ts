@@ -11,7 +11,7 @@ app.get('/', (c: Context) => c.text('Hello Hono!'))
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://localhost:3000"], 
+  origin: ["http://127.0.0.1:3000"], 
   allowHeaders: ["Content-Type", "Authorization"],
   allowMethods: ["GET", "POST", "OPTIONS"],
   exposeHeaders: ["Content-Length"],

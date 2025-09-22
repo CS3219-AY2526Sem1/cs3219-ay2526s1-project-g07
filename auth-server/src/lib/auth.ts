@@ -7,7 +7,7 @@ import { jwt } from "better-auth/plugins"
 const pool = new Pool({
   user: "username",
   host: "localhost", 
-  database: "db",
+  database: "auth-db",
   password: "password",
   port: 5432,
 });
@@ -46,7 +46,7 @@ export const auth = betterAuth({
     // connection options
     user: "username",
     host: "localhost",
-    database: "db",
+    database: "auth-db",
     password: "password",
     port: 5432,
     // run npx @better-auth/cli generate, please have db on though

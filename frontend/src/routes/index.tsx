@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Card className="mx-16 w-full h-180 md:h-140 p-0">
+      <Card className="mx-16 w-full h-180 md:h-140 p-0 max-w-4xl">
         <div className="grid grid-cols-1 md:grid-cols-2 h-full w-full">
           <div className="p-8 bg-gradient-to-b from-rose-500 via-fuchsia-800 to-indigo-700 flex flex-col justify-center rounded-t-xl md:rounded-l-xl md:rounded-t-none">
             <h1 className="text-4xl font-bold text-white">PeerPrep</h1>
