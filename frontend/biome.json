@@ -32,5 +32,8 @@
     "rules": {
       "recommended": true
     }
+  },
+  "files": {
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "!src/routeTree.gen.ts"]
   }
 }
