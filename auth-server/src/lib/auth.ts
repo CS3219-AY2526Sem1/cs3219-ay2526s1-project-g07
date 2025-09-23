@@ -1,23 +1,24 @@
 import { betterAuth } from "better-auth"
 import { Pool } from "pg";
 import { jwt } from "better-auth/plugins"
+import fs from "fs";
+import path from "path";
 
 // console.log("hey")
 // Test database connection first
 const pool = new Pool({
-  user: "username",
-  host: "localhost", 
-  database: "auth-db",
-  password: "password",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-export const testDbConnection = async () => {
+export const initializeDatabase = async () => {
   try {
     const client = await pool.connect();
     console.log("✅ Database connected successfully");
     
-    // Check if Better Auth tables exist
+    // Check if tables already exist
     const tablesQuery = `
       SELECT table_name 
       FROM information_schema.tables 
@@ -26,29 +27,57 @@ export const testDbConnection = async () => {
     `;
     
     const result = await client.query(tablesQuery);
-    console.log("📊 Better Auth tables found:", result.rows);
+    console.log("📊 Existing tables found:", result.rows.map(row => row.table_name));
     
     if (result.rows.length === 0) {
-      console.log("❌ No Better Auth tables found! Run: npx @better-auth/cli generate");
+      console.log("🔧 No tables found, initializing database...");
+      
+      // Read and execute init.sql
+      const initSqlPath = path.join(process.cwd(), "db", "init.sql");
+      
+      if (fs.existsSync(initSqlPath)) {
+        const initSql = fs.readFileSync(initSqlPath, "utf8");
+        
+        // Split SQL by semicolons and execute each statement
+        const statements = initSql.split(';').filter(stmt => stmt.trim().length > 0);
+        
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await client.query(statement);
+          }
+        }
+        
+        console.log("✅ Database initialized successfully!");
+        
+        // Verify tables were created
+        const verifyResult = await client.query(tablesQuery);
+        console.log("📋 Created tables:", verifyResult.rows.map(row => row.table_name));
+      } else {
+        console.log("❌ init.sql file not found at:", initSqlPath);
+      }
+    } else {
+      console.log("✅ Database tables already exist, skipping initialization");
     }
     
     client.release();
     return true;
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
+    console.error("❌ Database initialization failed:", error);
     return false;
   }
+};
+
+export const testDbConnection = async () => {
+  return await initializeDatabase();
 };
 
 
 export const auth = betterAuth({
   database: new Pool({
-    // connection options
-    user: "username",
-    host: "localhost",
-    database: "auth-db",
-    password: "password",
-    port: 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
   }),
   emailAndPassword: {    
     enabled: true,

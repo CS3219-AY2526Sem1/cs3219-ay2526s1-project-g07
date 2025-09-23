@@ -1,6 +1,7 @@
+import 'dotenv/config'
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { auth } from "./lib/auth"; 
+import { auth, testDbConnection } from "./lib/auth"; 
 import { cors } from "hono/cors";
 import type { Context } from "hono";
 import route from './routes/routes'
@@ -32,10 +33,24 @@ app.options("/api/auth/**", (c: Context) => {
 
 app.route("/", route);
 
-serve({
-  fetch: app.fetch,
-  port: 5000
-}, (info: { address: string; port: number }) => {
-  console.log(`🚀 Server running at http://localhost:${info.port}`)
-})
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Initialize database first
+    await testDbConnection();
+    
+    // Start the server
+    serve({
+      fetch: app.fetch,
+      port: 5000
+    }, (info: { address: string; port: number }) => {
+      console.log(`🚀 Server running at http://localhost:${info.port}`)
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
