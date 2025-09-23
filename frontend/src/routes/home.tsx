@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: GitHub Copilot (model: gemini-2.5-pro), date: 2025‑09‑23
+Scope: Generated initial implementation of the criteria selection UI.
+Author review: I validated correctness of the components and edited their styles.
+*/
+
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 // import { authClient } from "@/lib/auth-client";
