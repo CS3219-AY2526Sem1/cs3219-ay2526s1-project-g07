@@ -38,18 +38,23 @@ function RouteComponent() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex flex-1 flex-col mx-12 mb-16">
-        <div className="border-red-500 border-2 h-14 mb-2">
+      <div className="flex flex-1 flex-col mx-12 mb-16 min-h-148 max-h-[calc(100vh-160px)]">
+        <div className="border-red-500 border-2 h-14 shrink-0 mb-2">
           Welcome {sessionId} - Collab and Tool Buttons
         </div>
         <ResizablePanelGroup
           direction="horizontal"
-          className="flex-1 min-h-128 h-full border-1 rounded-md"
+          className="flex-1 min-h-128 border-1 rounded-md"
         >
-          <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-            <div className="p-6">
-              <div className="font-semibold mb-6">Question</div>
-              <div className="whitespace-pre-wrap text-sm question-desc-markdown">
+          <ResizablePanel
+            defaultSize={25}
+            minSize={20}
+            maxSize={40}
+            className="!overflow-auto pt-6 pb-12"
+          >
+            <div className="overflow-auto px-6 py-2">
+              <div className="font-semibold mb-6 text-lg">Reverse String</div>
+              <div className="whitespace-pre-wrap text-sm min-w-fit question-desc-markdown">
                 <Markdown>{q}</Markdown>
               </div>
             </div>
