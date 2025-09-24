@@ -974,6 +974,20 @@ def parse_chat_log(chat_data: Dict[str, Any]) -> str:
                 md_lines.append(line)
             md_lines.append("")
 
+        # Add usage decision
+        md_lines.append("### Action Taken")
+        md_lines.append("")
+        md_lines.append("- [ ] Accepted as-is")
+        md_lines.append("- [ ] Modified")
+        md_lines.append("- [ ] Rejected")
+
+        md_lines.append("")
+
+        md_lines.append("### Author Notes")
+        md_lines.append("")
+        md_lines.append("- **write your notes here: (what you changed, why, and how you verified correctness)**")
+        md_lines.append("")
+
         # Add separator between requests
         if i < len(requests):
             md_lines.append("---")

@@ -116,4 +116,15 @@ I have updated the `home.tsx` file to include two selectors for topic and diffic
 > <br>*Model: gemini-2.5-pro*
 > <br>*Timestamp: 2025-09-23 11:49:29 (GMT+8)*
 
+### Action Taken
+
+- [ ] Accepted as-is
+- [x] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Updated styling to better reflect the original design in the prototype.
+- Verified through preview from dev server.
+
 ---
