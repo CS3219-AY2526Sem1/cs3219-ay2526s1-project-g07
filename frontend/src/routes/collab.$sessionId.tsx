@@ -1,10 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Navbar from "../components/Navbar";
+import Markdown from "react-markdown";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import Navbar from "../components/Navbar";
+
+const q = `
+Write a function that reverses a string. The input string is given as an array of characters \`s\`.
+
+You must do this by modifying the input array in-place with \`O(1)\` extra memory.
+
+---
+**Example 1:**
+**Input**: \`s = ["h","e","l","l","o"]\`
+**Output**: \`["o","l","l","e","h"]\`
+
+**Example 2:**
+**Input**: \`s = ["H","a","n","n","a","h"]\`
+**Output**: \`["h","a","n","n","a","H"]\`
+
+---
+
+**Constraints:**
+*   \`1 <= s.length <= 10^5\`
+*   \`s[i]\` is a printable ASCII character.
+`;
 
 export const Route = createFileRoute("/collab/$sessionId")({
   component: RouteComponent,
@@ -25,8 +47,11 @@ function RouteComponent() {
           className="flex-1 min-h-128 h-full border-1 rounded-md"
         >
           <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-            <div className="flex h-full items-center justify-center p-6">
-              <span className="font-semibold">Question</span>
+            <div className="p-6">
+              <div className="font-semibold mb-6">Question</div>
+              <div className="whitespace-pre-wrap text-sm question-desc-markdown">
+                <Markdown>{q}</Markdown>
+              </div>
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
