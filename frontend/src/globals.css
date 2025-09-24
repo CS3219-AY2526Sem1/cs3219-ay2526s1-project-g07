@@ -138,6 +138,7 @@
         color: #1f2328;
         padding: 0.2em 0.4em;
         border-radius: 3px;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 13px;
+        font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", "Menlo", "Consolas", monospace
     }
 }
