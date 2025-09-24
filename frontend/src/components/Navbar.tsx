@@ -15,30 +15,28 @@ const navbarLinks = [
   { name: "Profile", to: "/profile" },
   { name: "Questions", to: "/admin/questions" },
   { name: "Users", to: "/admin/users" },
-  { name: "Protected Route", to: "/protected"}
+  { name: "Protected Route", to: "/protected" },
 ];
 
 function Navbar() {
-
-
   const handleClick = async () => {
     await signOut({
       fetchOptions: {
         onSuccess: () => {
-          console.log("Successfully signed out")
+          console.log("Successfully signed out");
         },
         onResponse: (ctx) => {
-          console.log("Signout response received:", ctx)
+          console.log("Signout response received:", ctx);
         },
         onError: (ctx) => {
           console.log("Signout Error", ctx.error);
-        }
+        },
       },
-    })
-  }
+    });
+  };
 
   return (
-    <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200">
+    <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200 shrink-0">
       <div className="text-xl font-semibold ">PeerPrep</div>
       <div className="flex items-center space-x-4">
         {navbarLinks.map((link) => (
