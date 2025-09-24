@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 
 const navbarLinks = [
   { name: "Home", to: "/home" },
@@ -19,6 +20,8 @@ const navbarLinks = [
 ];
 
 function Navbar() {
+  const session = useSession()
+
   const handleClick = async () => {
     await signOut({
       fetchOptions: {
@@ -35,6 +38,17 @@ function Navbar() {
     });
   };
 
+  // Get user initials for avatar fallback
+  const getUserInitials = (email?: string, name?: string) => {
+    if (name) {
+      return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase()
+    }
+    return 'U'
+  }
+
   return (
     <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200 shrink-0">
       <div className="text-xl font-semibold ">PeerPrep</div>
@@ -47,21 +61,46 @@ function Navbar() {
           </Link>
         ))}
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="cursor-pointer">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <Link to="/">
+      {session.isPending ? (
+        <div className="animate-pulse">
+          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+        </div>
+      ) : session.data?.user ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="cursor-pointer">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                <AvatarImage src={session.data.user.image || "https://github.com/shadcn.png"} />
+                <AvatarFallback>
+                  {getUserInitials(session.data.user.email, session.data.user.name)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="cursor-pointer">
+              <Link 
+                to="/user/$username" 
+                params={{ username: session.data.user.name }}
+                className="w-full"
+              >                
+                Profile
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={handleClick}>
               Logout
             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="flex items-center space-x-2">
+          <Link to="/login">
+            <Button variant="ghost" size="sm">
+              Sign In
+            </Button>
           </Link>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </div>
+      )}
     </div>
   );
 }
