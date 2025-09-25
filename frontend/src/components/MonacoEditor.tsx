@@ -5,7 +5,7 @@ Scope: Generated implementation of the MonacoEditor component for Python coding.
 Author review: I validated correctness of the components, removed unnecessary code, and edited styles.
 I also extracted the component from the parent file for better modularity.
 */
-import { Button } from "@/components/ui/button";
+
 import MonacoEditor, { type monaco } from "react-monaco-editor";
 
 /** Monaco Editor options
@@ -34,44 +34,15 @@ const monacoEditorOptions: monaco.editor.IStandaloneEditorConstructionOptions =
 interface PythonMonacoEditorProps {
   code: string;
   onCodeChange: (newCode: string) => void;
-  isRunning: boolean;
-  runCode: () => void;
-  stopCode: () => void;
 }
 
-function PythonMonacoEditor({
-  code,
-  onCodeChange,
-  isRunning,
-  runCode,
-  stopCode,
-}: PythonMonacoEditorProps) {
+function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
   return (
     <div className="h-full w-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
-        <h3 className="text-sm">Python 3</h3>
-        <div className="flex items-center gap-2">
-          {isRunning && (
-            <Button
-              variant="default"
-              onClick={stopCode}
-              className="px-3 py-1 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              <span>Stop</span>
-            </Button>
-          )}
-          {!isRunning && (
-            <Button
-              variant="default"
-              onClick={runCode}
-              className="px-3 py-1 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isRunning ? "Running..." : "Run Code"}
-            </Button>
-          )}
-        </div>
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
+        <h3 className="text-sm">Language: Python 3</h3>
       </div>
-      <div className="h-[calc(100%-48px)]">
+      <div className="h-[calc(100%-44px)]">
         <MonacoEditor
           width="100%"
           height="100%"

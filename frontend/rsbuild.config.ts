@@ -18,7 +18,7 @@ export default defineConfig({
         }),
         new MonacoWebpackPlugin({
           languages: ['python']
-        })
+        }),
       ],
     },
   },
@@ -29,6 +29,12 @@ export default defineConfig({
         attrs: {
           href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap",
           rel: "stylesheet",
+        },
+      },
+      {
+        tag: "script",
+        attrs: {
+          src: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js",
         },
       },
     ]
