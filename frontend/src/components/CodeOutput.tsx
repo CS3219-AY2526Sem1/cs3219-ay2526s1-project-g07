@@ -19,6 +19,7 @@ function CodeOutput({ code }: CodeOutputProps) {
 
   const workerRef = useRef<Worker | null>(null);
   const interruptBufferRef = useRef(new Uint8Array(new SharedArrayBuffer(1)));
+  const lastExecTimeRef = useRef<number | null>(null);
 
   const onMessage = useCallback((event: MessageEvent) => {
     const { type, msg, pyodideVersion, pythonVersion } = event.data;
@@ -36,10 +37,17 @@ function CodeOutput({ code }: CodeOutputProps) {
         break;
       case "stdout":
       case "stderr":
-        setOutput((prev) => prev + msg + "\n");
+        setOutput((prev) => `${prev + msg}\n`);
         break;
       case "executionComplete":
         setIsRunning(false);
+        setOutput(
+          (prev) =>
+            prev +
+            `[Finished in ${
+              (Date.now() - (lastExecTimeRef.current || 0)) / 1000
+            }s]\n`
+        );
         break;
       default:
         console.warn("Unknown message type from worker:", type);
@@ -58,7 +66,7 @@ function CodeOutput({ code }: CodeOutputProps) {
       cmd: "setInterruptBuffer",
       interruptBuffer: interruptBufferRef.current,
     });
-  }, []);
+  }, [onMessage]);
 
   const killWorker = useCallback(() => {
     if (workerRef.current) {
@@ -68,7 +76,7 @@ function CodeOutput({ code }: CodeOutputProps) {
       setPyodideLoaded(false);
       setIsRunning(false);
     }
-  }, []);
+  }, [onMessage]);
 
   const interruptExecution = useCallback(() => {
     interruptBufferRef.current[0] = 2;
@@ -79,21 +87,22 @@ function CodeOutput({ code }: CodeOutputProps) {
     killWorker();
     setOutput("Pyodide worker terminated. Recreating worker, please wait...");
     createWorker();
-  }, []);
+  }, [createWorker, killWorker]);
 
   const runPythonCode = useCallback(() => {
     if (pyodideLoaded && workerRef.current !== null) {
       setOutput("");
       setIsRunning(true);
+      lastExecTimeRef.current = Date.now();
       interruptBufferRef.current[0] = 0;
       workerRef.current.postMessage({ cmd: "runCode", code });
     }
-  }, [pyodideLoaded]);
+  }, [pyodideLoaded, code]);
 
   useEffect(() => {
     createWorker();
     return killWorker;
-  }, []);
+  }, [createWorker, killWorker]);
 
   return (
     <div className="h-full flex flex-col">
