@@ -1,6 +1,7 @@
 import { defineConfig } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { tanstackRouter } from "@tanstack/router-plugin/rspack";
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 export default defineConfig({
   plugins: [pluginReact()],
@@ -15,6 +16,9 @@ export default defineConfig({
           target: "react",
           autoCodeSplitting: true,
         }),
+        new MonacoWebpackPlugin({
+          languages: ['python']
+        })
       ],
     },
   },

@@ -6,6 +6,8 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Navbar from "../components/Navbar";
+import { useState } from "react";
+import PythonMonacoEditor from "../components/MonacoEditor";
 
 const q = `
 Write a function that reverses a string. The input string is given as an array of characters \`s\`.
@@ -35,6 +37,39 @@ export const Route = createFileRoute("/collab/$sessionId")({
 // collaborative coding session
 function RouteComponent() {
   const { sessionId } = Route.useParams();
+
+  const [code, setCode] = useState(`def solution(s):
+    """
+    Reverse a string in-place with O(1) extra memory.
+    :type s: List[str]
+    :rtype: None Do not return anything, modify s in-place instead.
+    """
+    left, right = 0, len(s) - 1
+    while left < right:
+        s[left], s[right] = s[right], s[left]
+        left += 1
+        right -= 1
+
+# Test the solution
+test_input = ["h","e","l","l","o"]
+solution(test_input)
+print(test_input)  # Expected: ["o","l","l","e","h"]`);
+  const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput("Running code...\n");
+
+    // Simulate code execution (in a real app, you'd send this to a backend)
+    setTimeout(() => {
+      setOutput(
+        `Running Python code...\n\n['o', 'l', 'l', 'e', 'h']\n\nExecution completed successfully.`
+      );
+      setIsRunning(false);
+    }, 1500);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -66,14 +101,32 @@ function RouteComponent() {
               className="flex-1 min-h-128 h-full"
             >
               <ResizablePanel>
-                <div className="flex h-full items-center justify-center p-6">
-                  <span className="font-semibold">Code Editor</span>
-                </div>
+                <PythonMonacoEditor
+                  code={code}
+                  onCodeChange={setCode}
+                  isRunning={isRunning}
+                  runCode={runCode}
+                  stopCode={() => setIsRunning(false)}
+                />
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel defaultSize={30} minSize={10} maxSize={30}>
-                <div className="flex h-full items-center justify-center p-6">
-                  <span className="font-semibold">Console Output and Run</span>
+                <div className="h-full flex flex-col">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+                    <h3 className="text-sm font-medium">Console Output</h3>
+                    <button
+                      onClick={() => setOutput("")}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex-1 p-4 bg-gray-900 text-green-400 font-mono text-sm overflow-auto">
+                    <pre className="whitespace-pre-wrap">
+                      {output ||
+                        "Click 'Run' to execute your code and see the output here..."}
+                    </pre>
+                  </div>
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
