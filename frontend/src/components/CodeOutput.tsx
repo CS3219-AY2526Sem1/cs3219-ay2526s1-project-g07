@@ -15,82 +15,119 @@ interface CodeOutputProps {
 function CodeOutput({ code }: CodeOutputProps) {
   const [output, setOutput] = useState("Loading Pyodide worker...");
   const [pyodideLoaded, setPyodideLoaded] = useState(false);
-  const [defaultOutput, setDefaultOutput] = useState(
-    "Loading Pyodide worker..."
-  );
   const [isRunning, setIsRunning] = useState(false);
 
-  const clearOutput = useCallback(
-    () => setOutput(defaultOutput),
-    [defaultOutput]
-  );
   const workerRef = useRef<Worker | null>(null);
+  const interruptBufferRef = useRef(new Uint8Array(new SharedArrayBuffer(1)));
 
-  useEffect(() => {
-    // Create a new worker
+  const onMessage = useCallback((event: MessageEvent) => {
+    const { type, msg, pyodideVersion, pythonVersion } = event.data;
+    switch (type) {
+      case "ready": {
+        setPyodideLoaded(true);
+        setOutput(
+          `[Ready] Python ${pythonVersion} on Pyodide ${pyodideVersion}\n`
+        );
+        console.log("Pyodide loaded.");
+        break;
+      }
+      case "error":
+        setOutput(`[Error] Pyodide could not be loaded:\n${msg}\n`);
+        break;
+      case "stdout":
+      case "stderr":
+        setOutput((prev) => prev + msg + "\n");
+        break;
+      case "executionComplete":
+        setIsRunning(false);
+        break;
+      default:
+        console.warn("Unknown message type from worker:", type);
+        break;
+    }
+  }, []);
+
+  const createWorker = useCallback(() => {
+    interruptBufferRef.current[0] = 0;
     workerRef.current = new Worker(
       new URL("../workers/pyodide.worker.ts", import.meta.url)
     );
 
-    const onMessage = (event: MessageEvent) => {
-      const { type, msg, pyodideVersion, pythonVersion } = event.data;
-      switch (type) {
-        case "ready": {
-          setPyodideLoaded(true);
-          const readyMessage = `[Ready] Python ${pythonVersion} on Pyodide ${pyodideVersion}\n`;
-          setDefaultOutput(readyMessage);
-          setOutput(readyMessage);
-          console.log("Pyodide loaded.");
-          break;
-        }
-        case "error":
-          setOutput(`[Error] Pyodide could not be loaded:\n${msg}\n`);
-          break;
-        case "stdout":
-        case "stderr":
-          setIsRunning(false);
-          setOutput((prev) => prev + msg + "\n");
-          break;
-      }
-    };
-
     workerRef.current.addEventListener("message", onMessage);
-
-    // Terminate the worker on component unmount
-    return () => {
-      workerRef.current?.removeEventListener("message", onMessage);
-      workerRef.current?.terminate();
-    };
+    workerRef.current.postMessage({
+      cmd: "setInterruptBuffer",
+      interruptBuffer: interruptBufferRef.current,
+    });
   }, []);
 
-  const runPythonCode = () => {
+  const killWorker = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.removeEventListener("message", onMessage);
+      workerRef.current.terminate();
+      workerRef.current = null;
+      setPyodideLoaded(false);
+      setIsRunning(false);
+    }
+  }, []);
+
+  const interruptExecution = useCallback(() => {
+    interruptBufferRef.current[0] = 2;
+  }, []);
+
+  const killAndRestartWorker = useCallback(() => {
+    interruptBufferRef.current[0] = 2;
+    killWorker();
+    setOutput("Pyodide worker terminated. Recreating worker, please wait...");
+    createWorker();
+  }, []);
+
+  const runPythonCode = useCallback(() => {
     if (pyodideLoaded && workerRef.current !== null) {
       setOutput("");
       setIsRunning(true);
-      workerRef.current.postMessage({ code });
+      interruptBufferRef.current[0] = 0;
+      workerRef.current.postMessage({ cmd: "runCode", code });
     }
-  };
+  }, [pyodideLoaded]);
+
+  useEffect(() => {
+    createWorker();
+    return killWorker;
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
         <h3 className="text-sm">Console Output</h3>
         <div className="flex gap-4">
-          <Button
-            variant="default"
-            onClick={runPythonCode}
-            className="px-3 py-1 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            disabled={!pyodideLoaded || isRunning}
-          >
-            {isRunning ? "Running..." : "Run Code"}
-          </Button>
-          <Button
-            variant="default"
-            onClick={clearOutput}
-            className="px-3 py-1 text-xs h-6 bg-gray-200 text-black rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Clear
-          </Button>
+          {isRunning && (
+            <Button
+              variant="destructive"
+              onClick={interruptExecution}
+              className="px-3 py-1 text-xs h-6 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Interrupt
+            </Button>
+          )}
+          {isRunning && (
+            <Button
+              variant="destructive"
+              onClick={killAndRestartWorker}
+              className="px-3 py-1 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Kill
+            </Button>
+          )}
+          {!isRunning && (
+            <Button
+              variant="default"
+              onClick={runPythonCode}
+              className="px-3 py-1 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={!pyodideLoaded}
+            >
+              Run Code
+            </Button>
+          )}
         </div>
       </div>
       <div className="flex-1 p-4 bg-gray-900 text-green-400 font-mono text-sm overflow-auto">
