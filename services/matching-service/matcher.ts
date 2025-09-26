@@ -1,0 +1,77 @@
+import { UserMatchingRequest, Difficulty, MatchResult } from './types';
+
+export class Matcher {
+  queue: UserMatchingRequest[];
+  matchInterval = 5000; // Interval to check for matches in milliseconds
+
+  constructor() {
+    this.queue = [];
+    setInterval(() => {
+      this.tryFindMatch();
+    }, this.matchInterval);
+  }
+
+  enqueue(userId: number, preferences: { topic: string; difficulty: string }) {
+    const userRequest: UserMatchingRequest = {
+      userId: userId,
+      preferences: {
+        topic: preferences.topic,
+        difficulty: preferences.difficulty as Difficulty
+      }
+    };
+    this.queue.push(userRequest);
+    console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} 
+      added to the matching queue.`);
+  }
+
+  dequeue(userId: number) {
+    this.queue = this.queue.filter(request => request.userId !== userId);
+    console.log(`User ${userId} removed from the matching queue.`);
+  }
+
+  private tryFindMatch() {
+    const match = this.findMatch();
+    if (match) {
+      this.handleMatchFound(match);
+    } else {
+      this.handleNoMatch();
+    }
+  }
+
+  private handleMatchFound(match: MatchResult) {
+    const { firstUserId, secondUserId, preferences: {topic, difficulty} } = match;
+
+  }
+
+  private handleNoMatch() {
+    console.log('No suitable match found at this time.');
+  }
+
+  private findMatch(): MatchResult | null {
+    if (this.queue.length < 2) {
+      return null; // Not enough users to match
+    }
+
+    const firstUser = this.queue[0];
+    for (let i = 1; i < this.queue.length; i++) {
+      const potentialMatch = this.queue[i];
+      if (this.isMatchCriteria(firstUser, potentialMatch)) {
+        // Found a match
+        this.dequeue(firstUser.userId);
+        this.dequeue(potentialMatch.userId);
+        console.log(`Matched users ${firstUser.userId} and ${potentialMatch.userId}`);
+        return {
+          firstUserId: firstUser.userId,
+          secondUserId: potentialMatch.userId,
+          preferences: firstUser.preferences
+        };
+      }
+    }
+    return null; // No match found
+  }
+
+  private isMatchCriteria(firstUser: UserMatchingRequest, potentialMatch: UserMatchingRequest): boolean {
+    return firstUser.preferences.topic === potentialMatch.preferences.topic &&
+          firstUser.preferences.difficulty === potentialMatch.preferences.difficulty
+  }
+}
