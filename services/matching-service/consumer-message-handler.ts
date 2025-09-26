@@ -19,9 +19,16 @@ export class ConsumerMessageHandler {
 
   private static processMatchingRequest(value: string) {
     console.log(`Processing matching request: ${value}`);
+    const { userId, preferences: {topic, difficulty} } = JSON.parse(value);
+    // TODO: Match users and produce matching success event
+
   }
 
   private static processMatchingSuccess(value: string) {
     console.log(`Processing matching success: ${value}`);
+    const { userId, peerId, sessionId, preferences: {topic, difficulty} } = JSON.parse(value);
+    // TODO: Implement logic to handle successful matching, 
+    // e.g., notify users & question service to prepare questions
+
   }
 }
