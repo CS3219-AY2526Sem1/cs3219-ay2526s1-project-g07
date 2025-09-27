@@ -14,8 +14,4 @@ export interface MatchResult {
   preferences: MatchPreference;
 }
 
-export enum Difficulty {
-  EASY = 'easy',
-  MEDIUM = 'medium',
-  HARD = 'hard'
-}
+export type Difficulty = 'easy' | 'medium' | 'hard';

@@ -3,9 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Kafka } from 'kafkajs';
 import type { Request, Response, NextFunction } from 'express';
-import { TOPICS, API_ENDPOINTS } from './utils.ts';
+import { TOPICS_MATCHING, API_ENDPOINTS_MATCHING } from './utils.ts';
 import { MatchingServiceProducer } from './matching-service-producer.ts';
 import { MatchingServiceConsumer } from './matching-service-consumer.ts';
+import { Matcher } from './matcher.ts';
+import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 
 const app = express();
 
@@ -23,8 +25,10 @@ const kafka = new Kafka({
   brokers: ['localhost:9094']
 });
 
-const producer = new MatchingServiceProducer();
-const consumer = new MatchingServiceConsumer();
+const matcher = new Matcher();
+const messageHandler = new ConsumerMessageHandler(matcher);
+const producer = new MatchingServiceProducer(kafka, matcher);
+const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
 const connectToKafka = async () => {
   try {
@@ -45,12 +49,12 @@ app.listen(4000, () => {
 });
 
 // API endpoints
-app.post(API_ENDPOINTS.MATCHING_REQUEST, async (req: Request, res: Response) => {
+app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
   const { userId, topic, difficulty } = req.body;
   console.log(`Received matching request for user id: ${userId}`);
 
   await producer.send({
-    topic: TOPICS.MATCHING_REQUEST,
+    topic: TOPICS_MATCHING.MATCHING_REQUEST,
     messages: [ { value: JSON.stringify({ userId, topic, difficulty }) }]
   });
 

@@ -1,11 +1,14 @@
-import { UserMatchingRequest, Difficulty, MatchResult } from './types';
+import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
+import { EventEmitter } from 'events';
 
 export class Matcher {
   queue: UserMatchingRequest[];
   matchInterval = 5000; // Interval to check for matches in milliseconds
+  emitter: EventEmitter;
 
   constructor() {
     this.queue = [];
+    this.emitter = new EventEmitter();
     setInterval(() => {
       this.tryFindMatch();
     }, this.matchInterval);
@@ -40,7 +43,8 @@ export class Matcher {
 
   private handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId, preferences: {topic, difficulty} } = match;
-
+    this.emitter.emit('matchFound', match);
+    console.log(`Match found between users ${firstUserId} and ${secondUserId} with topic ${topic} and difficulty ${difficulty}`);
   }
 
   private handleNoMatch() {
