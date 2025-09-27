@@ -1,17 +1,15 @@
 import { Kafka, type Consumer } from 'kafkajs';
-import { TOPICS } from './utils.ts';
+import { TOPICS_MATCHING } from './utils.ts';
 import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 
 export class MatchingServiceConsumer {
   consumer: Consumer;
-  topics: string[] = [TOPICS.MATCHING_REQUEST, TOPICS.MATCHING_SUCCESS];
+  messageHandler: ConsumerMessageHandler;
+  topics: string[] = [TOPICS_MATCHING.MATCHING_REQUEST, TOPICS_MATCHING.MATCHING_SUCCESS];
 
-  constructor() {
-    const kafka = new Kafka({
-      clientId: 'matching-service',
-      brokers: ['localhost:9094']
-    });
+  constructor(kafka: Kafka, messageHandler: ConsumerMessageHandler) {
     this.consumer = kafka.consumer({ groupId: 'matching-group' });
+    this.messageHandler = messageHandler;
   }
 
   async init() {
@@ -28,7 +26,7 @@ export class MatchingServiceConsumer {
   private async run() {
     await this.consumer.run({
           eachMessage: async ({ topic, partition, message }) => {
-            ConsumerMessageHandler.handleMessage(message, topic);
+            this.messageHandler.handleMessage(message, topic);
           }
         });
   }
