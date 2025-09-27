@@ -1,5 +1,6 @@
 import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
 import { EventEmitter } from 'events';
+import { MatchCriteria } from './match-criteria.ts';
 
 export class Matcher {
   queue: UserMatchingRequest[];
@@ -59,7 +60,7 @@ export class Matcher {
     const firstUser = this.queue[0];
     for (let i = 1; i < this.queue.length; i++) {
       const potentialMatch = this.queue[i];
-      if (this.isMatchCriteria(firstUser, potentialMatch)) {
+      if (MatchCriteria.isMatch(firstUser, potentialMatch)) {
         // Found a match
         this.dequeue(firstUser.userId);
         this.dequeue(potentialMatch.userId);
@@ -72,10 +73,5 @@ export class Matcher {
       }
     }
     return null; // No match found
-  }
-
-  private isMatchCriteria(firstUser: UserMatchingRequest, potentialMatch: UserMatchingRequest): boolean {
-    return firstUser.preferences.topic === potentialMatch.preferences.topic &&
-          firstUser.preferences.difficulty === potentialMatch.preferences.difficulty
   }
 }
