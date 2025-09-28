@@ -7,11 +7,17 @@ import path from "path";
 // console.log("hey")
 // Test database connection first
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  // connectionString: process.env.DATABASE_URL,
+  // ssl: {
+  //   rejectUnauthorized: false
+  // }
+  user: "username",
+  host: "localhost",
+  database: "auth-db",
+  password: "password",
+  port: 5433,
 });
+
 
 export const initializeDatabase = async () => {
   try {
@@ -73,11 +79,21 @@ export const testDbConnection = async () => {
 
 
 export const auth = betterAuth({
+  // database: new Pool({
+  //   connectionString: process.env.DATABASE_URL,
+  //   ssl: {
+  //     rejectUnauthorized: false
+  //   }
+  // }),
   database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    }
+    // connection options
+    user: "username",
+    host: "localhost",
+    database: "auth-db",
+    password: "password",
+    port: 5433,
+    // run npx @better-auth/cli generate, please have db on though
+    // this generates 
   }),
   emailAndPassword: {    
     enabled: true,
