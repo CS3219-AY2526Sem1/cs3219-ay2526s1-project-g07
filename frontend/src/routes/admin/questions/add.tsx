@@ -99,9 +99,9 @@ function RouteComponent() {
     setIsLoading(true);
     
     try {
-      // TODO: Replace with actual API call to your question service
+      // Call the question service API
       console.log("Submitting question:", formData);
-      const response = await fetch('/api/questions', {
+      const response = await fetch('http://localhost:5001/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
