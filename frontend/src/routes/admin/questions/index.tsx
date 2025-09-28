@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import Navbar from "@/src/components/Navbar";
+import Navbar from "../../../components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,52 +30,36 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
 
-  // Mock data - replace with actual API call
+  // Fetch questions from API
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch questions
-    const mockQuestions: Question[] = [
-      {
-        id: "1",
-        title: "Two Sum",
-        question: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
-        difficulty: "Easy",
-        categories: ["Array", "Hash Table"]
-      },
-      {
-        id: "2", 
-        title: "Add Two Numbers",
-        question: "You are given two non-empty linked lists representing two non-negative integers.",
-        difficulty: "Medium",
-        categories: ["Linked List", "Math"]
-      },
-      {
-        id: "3",
-        title: "Longest Substring Without Repeating Characters",
-        question: "Given a string s, find the length of the longest substring without repeating characters.",
-        difficulty: "Medium",
-        categories: ["Hash Table", "String", "Sliding Window"]
-      },
-      {
-        id: "4",
-        title: "Median of Two Sorted Arrays",
-        question: "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.",
-        difficulty: "Hard",
-        categories: ["Array", "Binary Search", "Divide and Conquer"]
-      },
-      {
-        id: "5",
-        title: "Longest Palindromic Substring",
-        question: "Given a string s, return the longest palindromic substring in s.",
-        difficulty: "Medium",
-        categories: ["String", "Dynamic Programming"]
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5001/questions');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch questions');
+        }
+        
+        const data = await response.json();
+        console.log(data)
+        console.log('Fetched questions:', data);
+        
+        // The API returns { message, questions, count }
+        const questionsData = data.questions || [];
+        setQuestions(questionsData);
+        setFilteredQuestions(questionsData);
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        // Keep empty state on error
+        setQuestions([]);
+        setFilteredQuestions([]);
+      } finally {
+        setLoading(false);
       }
-    ];
-    
-    setTimeout(() => {
-      setQuestions(mockQuestions);
-      setFilteredQuestions(mockQuestions);
-      setLoading(false);
-    }, 500);
+    };
+
+    fetchQuestions();
   }, []);
 
   // Filter questions based on search term
@@ -102,6 +86,31 @@ function RouteComponent() {
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
+
+  const handleDelete = async (questionId: string) => {
+    if (!confirm('Are you sure you want to delete this question?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5001/questions/${questionId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove question from local state
+        setQuestions(prev => prev.filter(q => q.id !== questionId));
+        console.log('Question deleted successfully');
+      } else {
+        throw new Error('Failed to delete question');
+      }
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      alert('Failed to delete question. Please try again.');
+    }
+  };
+
+
 
   if (loading) {
     return (
@@ -153,7 +162,13 @@ function RouteComponent() {
                     {filteredQuestions.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="h-24 text-center">
-                          {searchTerm ? "No questions found matching your search." : "No questions available."}
+                          {loading ? (
+                            "Loading questions..."
+                          ) : searchTerm ? (
+                            "No questions found matching your search."
+                          ) : (
+                            "No questions available. Add some questions to get started!"
+                          )}
                         </td>
                       </tr>
                     ) : (
@@ -224,10 +239,19 @@ function RouteComponent() {
                                   </div>
                                 </DialogContent>
                               </Dialog>
-                              <Button variant="outline" size="sm">
-                                Edit
-                              </Button>
-                              <Button variant="destructive" size="sm">
+                              <Link to="/admin/questions/$questionId" params={{ questionId: question.id }}>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                >
+                                  Edit
+                                </Button>
+                              </Link>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleDelete(question.id)}
+                              >
                                 Delete
                               </Button>
                             </div>
@@ -244,6 +268,8 @@ function RouteComponent() {
             </div>
           </CardContent>
         </Card>
+
+
       </div>
     </div>
   );
