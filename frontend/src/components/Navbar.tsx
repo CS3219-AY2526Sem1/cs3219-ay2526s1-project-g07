@@ -80,7 +80,7 @@ function Navbar() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem className="cursor-pointer">
               <Link 
-                to="/user/$username" 
+                to="/profile/$username" 
                 params={{ username: session.data.user.name }}
                 className="w-full"
               >                
