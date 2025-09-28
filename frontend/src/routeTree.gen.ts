@@ -11,17 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedRouteImport } from './routes/protected'
-import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UserIndexRouteImport } from './routes/user/index'
+import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as CollabSessionIdRouteImport } from './routes/collab.$sessionId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
-import { Route as UserUsernameIndexRouteImport } from './routes/user/$username/index'
-import { Route as UserUsernameEditRouteImport } from './routes/user/$username/edit'
+import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
+import { Route as ProfileUsernameEditRouteImport } from './routes/profile/$username/edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -31,11 +30,6 @@ const SignupRoute = SignupRouteImport.update({
 const ProtectedRoute = ProtectedRouteImport.update({
   id: '/protected',
   path: '/protected',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -58,9 +52,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserIndexRoute = UserIndexRouteImport.update({
-  id: '/user/',
-  path: '/user/',
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollabSessionIdRoute = CollabSessionIdRouteImport.update({
@@ -78,14 +72,14 @@ const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   path: '/admin/questions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserUsernameIndexRoute = UserUsernameIndexRouteImport.update({
-  id: '/user/$username/',
-  path: '/user/$username/',
+const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
+  id: '/profile/$username/',
+  path: '/profile/$username/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserUsernameEditRoute = UserUsernameEditRouteImport.update({
-  id: '/user/$username/edit',
-  path: '/user/$username/edit',
+const ProfileUsernameEditRoute = ProfileUsernameEditRouteImport.update({
+  id: '/profile/$username/edit',
+  path: '/profile/$username/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -94,30 +88,28 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
-  '/user': typeof UserIndexRoute
-  '/user/$username/edit': typeof UserUsernameEditRoute
-  '/user/$username': typeof UserUsernameIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/profile/$username/edit': typeof ProfileUsernameEditRoute
+  '/profile/$username': typeof ProfileUsernameIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
-  '/user': typeof UserIndexRoute
-  '/user/$username/edit': typeof UserUsernameEditRoute
-  '/user/$username': typeof UserUsernameIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/profile/$username/edit': typeof ProfileUsernameEditRoute
+  '/profile/$username': typeof ProfileUsernameIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,15 +117,14 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
-  '/user/': typeof UserIndexRoute
-  '/user/$username/edit': typeof UserUsernameEditRoute
-  '/user/$username/': typeof UserUsernameIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/profile/$username/edit': typeof ProfileUsernameEditRoute
+  '/profile/$username/': typeof ProfileUsernameIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,45 +133,42 @@ export interface FileRouteTypes {
     | '/history'
     | '/home'
     | '/login'
-    | '/profile'
     | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
-    | '/user'
-    | '/user/$username/edit'
-    | '/user/$username'
+    | '/profile'
+    | '/profile/$username/edit'
+    | '/profile/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/history'
     | '/home'
     | '/login'
-    | '/profile'
     | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
-    | '/user'
-    | '/user/$username/edit'
-    | '/user/$username'
+    | '/profile'
+    | '/profile/$username/edit'
+    | '/profile/$username'
   id:
     | '__root__'
     | '/'
     | '/history'
     | '/home'
     | '/login'
-    | '/profile'
     | '/protected'
     | '/signup'
     | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
-    | '/user/'
-    | '/user/$username/edit'
-    | '/user/$username/'
+    | '/profile/'
+    | '/profile/$username/edit'
+    | '/profile/$username/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -188,15 +176,14 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
   ProtectedRoute: typeof ProtectedRoute
   SignupRoute: typeof SignupRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   CollabSessionIdRoute: typeof CollabSessionIdRoute
-  UserIndexRoute: typeof UserIndexRoute
-  UserUsernameEditRoute: typeof UserUsernameEditRoute
-  UserUsernameIndexRoute: typeof UserUsernameIndexRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+  ProfileUsernameEditRoute: typeof ProfileUsernameEditRoute
+  ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -213,13 +200,6 @@ declare module '@tanstack/react-router' {
       path: '/protected'
       fullPath: '/protected'
       preLoaderRoute: typeof ProtectedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -250,11 +230,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/': {
-      id: '/user/'
-      path: '/user'
-      fullPath: '/user'
-      preLoaderRoute: typeof UserIndexRouteImport
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collab/$sessionId': {
@@ -278,18 +258,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/$username/': {
-      id: '/user/$username/'
-      path: '/user/$username'
-      fullPath: '/user/$username'
-      preLoaderRoute: typeof UserUsernameIndexRouteImport
+    '/profile/$username/': {
+      id: '/profile/$username/'
+      path: '/profile/$username'
+      fullPath: '/profile/$username'
+      preLoaderRoute: typeof ProfileUsernameIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/$username/edit': {
-      id: '/user/$username/edit'
-      path: '/user/$username/edit'
-      fullPath: '/user/$username/edit'
-      preLoaderRoute: typeof UserUsernameEditRouteImport
+    '/profile/$username/edit': {
+      id: '/profile/$username/edit'
+      path: '/profile/$username/edit'
+      fullPath: '/profile/$username/edit'
+      preLoaderRoute: typeof ProfileUsernameEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -300,15 +280,14 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
   ProtectedRoute: ProtectedRoute,
   SignupRoute: SignupRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   CollabSessionIdRoute: CollabSessionIdRoute,
-  UserIndexRoute: UserIndexRoute,
-  UserUsernameEditRoute: UserUsernameEditRoute,
-  UserUsernameIndexRoute: UserUsernameIndexRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+  ProfileUsernameEditRoute: ProfileUsernameEditRoute,
+  ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
