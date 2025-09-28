@@ -18,8 +18,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as CollabSessionIdRouteImport } from './routes/collab.$sessionId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
+import { Route as AdminQuestionsIndexRouteImport } from './routes/admin/questions/index'
+import { Route as AdminQuestionsAddRouteImport } from './routes/admin/questions/add'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -66,14 +67,19 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
-  id: '/admin/questions',
-  path: '/admin/questions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
   id: '/profile/$username/',
   path: '/profile/$username/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminQuestionsIndexRoute = AdminQuestionsIndexRouteImport.update({
+  id: '/admin/questions/',
+  path: '/admin/questions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminQuestionsAddRoute = AdminQuestionsAddRouteImport.update({
+  id: '/admin/questions/add',
+  path: '/admin/questions/add',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -84,10 +90,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
-  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile': typeof ProfileIndexRoute
+  '/admin/questions/add': typeof AdminQuestionsAddRoute
+  '/admin/questions': typeof AdminQuestionsIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
 }
 export interface FileRoutesByTo {
@@ -97,10 +104,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
-  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile': typeof ProfileIndexRoute
+  '/admin/questions/add': typeof AdminQuestionsAddRoute
+  '/admin/questions': typeof AdminQuestionsIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
 }
 export interface FileRoutesById {
@@ -111,10 +119,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
-  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile/': typeof ProfileIndexRoute
+  '/admin/questions/add': typeof AdminQuestionsAddRoute
+  '/admin/questions/': typeof AdminQuestionsIndexRoute
   '/profile/$username/': typeof ProfileUsernameIndexRoute
 }
 export interface FileRouteTypes {
@@ -126,10 +135,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
-    | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile'
+    | '/admin/questions/add'
+    | '/admin/questions'
     | '/profile/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,10 +149,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
-    | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile'
+    | '/admin/questions/add'
+    | '/admin/questions'
     | '/profile/$username'
   id:
     | '__root__'
@@ -152,10 +163,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
-    | '/admin/questions'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile/'
+    | '/admin/questions/add'
+    | '/admin/questions/'
     | '/profile/$username/'
   fileRoutesById: FileRoutesById
 }
@@ -166,10 +178,11 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProtectedRoute: typeof ProtectedRoute
   SignupRoute: typeof SignupRoute
-  AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   CollabSessionIdRoute: typeof CollabSessionIdRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
+  AdminQuestionsAddRoute: typeof AdminQuestionsAddRoute
+  AdminQuestionsIndexRoute: typeof AdminQuestionsIndexRoute
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
 }
 
@@ -238,18 +251,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/questions': {
-      id: '/admin/questions'
-      path: '/admin/questions'
-      fullPath: '/admin/questions'
-      preLoaderRoute: typeof AdminQuestionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile/$username/': {
       id: '/profile/$username/'
       path: '/profile/$username'
       fullPath: '/profile/$username'
       preLoaderRoute: typeof ProfileUsernameIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/questions/': {
+      id: '/admin/questions/'
+      path: '/admin/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/questions/add': {
+      id: '/admin/questions/add'
+      path: '/admin/questions/add'
+      fullPath: '/admin/questions/add'
+      preLoaderRoute: typeof AdminQuestionsAddRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -262,10 +282,11 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProtectedRoute: ProtectedRoute,
   SignupRoute: SignupRoute,
-  AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   CollabSessionIdRoute: CollabSessionIdRoute,
   ProfileIndexRoute: ProfileIndexRoute,
+  AdminQuestionsAddRoute: AdminQuestionsAddRoute,
+  AdminQuestionsIndexRoute: AdminQuestionsIndexRoute,
   ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,
 }
 export const routeTree = rootRouteImport
