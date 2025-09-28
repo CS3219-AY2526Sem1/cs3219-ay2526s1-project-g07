@@ -39,4 +39,41 @@ userController.get("/getUserData/:userId", async (c: Context) => {
   }
 })
 
+userController.put("/updateUserData/:userId", async (c: Context) => {
+  console.log("Updating user data for user ID:", c.req.param('userId'))
+  const userId = c.req.param('userId')
+  
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400)
+  }
+
+  try {
+    const body = await c.req.json()
+    const { name, description } = body
+    console.log(body)
+    
+    // Validate required fields
+    if (!name || name.trim() === '') {
+      return c.json({ error: "Name is required" }, 400)
+    }
+
+    // Update user data
+    await userService.updateUserData(userId, { name, description })
+    
+    // Return updated data
+    const updatedUserData = await userService.getUserData(userId)
+    
+    return c.json({
+      message: "User data updated successfully",
+      userId: updatedUserData?.id,
+      name: updatedUserData?.name,
+      description: updatedUserData?.description,
+    })
+  } catch (error) {
+    console.error('Error in updateUserData:', error)
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
+
 export default userController;
