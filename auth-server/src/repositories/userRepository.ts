@@ -33,7 +33,20 @@ export const userRepository = {
       console.error('Error fetching user data:', error);
       throw new Error('Failed to fetch user data');
     }
+  },
+  async updateUserData(userId: string, data: any): Promise<void> {
+    try {
+      const { name, description } = data;
+      const query = `
+        UPDATE "user"
+        SET name = $1, description = $2, "updatedAt" = NOW()
+        WHERE id = $3
+      `;
+      await db.query(query, [name, description, userId]);
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      throw new Error('Failed to update user data');
+    }
+
   }
-
 };
-
