@@ -1,0 +1,35 @@
+{
+  "name": "better-auth-integration",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "_comment_dev": "the tsc watches the project",
+    "dev": "tsx watch src/index.ts",
+    "_comment_build": "tsc -p tsconfig.json builds the project (with Typescript compiler)",
+    "build": "tsc -p tsconfig.json",
+    "_comment_start": "starts the application",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@hono/node-server": "^1.19.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "better-auth": "^1.3.7",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
+    "hono": "^4.9.5",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
