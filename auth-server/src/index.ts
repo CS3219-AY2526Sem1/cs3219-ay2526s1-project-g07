@@ -42,7 +42,7 @@ const startServer = async () => {
     // Start the server
     serve({
       fetch: app.fetch,
-      port: 5000
+      port: 5002
     }, (info: { address: string; port: number }) => {
       console.log(`🚀 Server running at http://localhost:${info.port}`)
     });

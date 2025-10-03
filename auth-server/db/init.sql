@@ -5,7 +5,8 @@ CREATE TABLE "user" (
   "emailVerified" BOOLEAN NOT NULL,
   "image" TEXT,
   "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+  "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  "description" TEXT
 );
 
 CREATE TABLE "session" (
@@ -50,3 +51,17 @@ create table "jwks" (
   "privateKey" text not null, 
   "createdAt" timestamp not null
 );
+
+create table "user_detail" (
+  "userId" TEXT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE,
+  "role" text,
+  "description" text,
+);
+
+create table "question" (
+  "id" text not null primary key,
+  "title" text not null,
+  "question" text not null,
+  "difficulty" text not null,
+  "categories" text[] not null
+)

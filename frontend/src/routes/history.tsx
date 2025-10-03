@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "../components/Navbar";
+import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
 
 export const Route = createFileRoute("/history")({
   component: RouteComponent,
@@ -7,6 +8,8 @@ export const Route = createFileRoute("/history")({
 
 // attempt history
 function RouteComponent() {
+  redirectIfNotAuthenticated();
+  
   return (
     <div>
       <Navbar />
