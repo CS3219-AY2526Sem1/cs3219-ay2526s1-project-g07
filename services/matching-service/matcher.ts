@@ -24,8 +24,7 @@ export class Matcher {
       }
     };
     this.queue.push(userRequest);
-    console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} 
-      added to the matching queue.`);
+    console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
   dequeue(userId: number) {
