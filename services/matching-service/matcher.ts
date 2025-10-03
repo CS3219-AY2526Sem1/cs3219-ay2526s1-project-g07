@@ -5,6 +5,7 @@ import { MatchCriteria } from './match-criteria.ts';
 export class Matcher {
   queue: UserMatchingRequest[];
   matchInterval = 5000; // Interval to check for matches in milliseconds
+  timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
 
   constructor() {
@@ -12,6 +13,7 @@ export class Matcher {
     this.emitter = new EventEmitter();
     setInterval(() => {
       this.tryFindMatch();
+      this.tryTimeOut();
     }, this.matchInterval);
   }
 
@@ -21,7 +23,8 @@ export class Matcher {
       preferences: {
         topic: preferences.topic,
         difficulty: preferences.difficulty as Difficulty
-      }
+      },
+      timestamp: Date.now()
     };
     this.queue.push(userRequest);
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
@@ -30,6 +33,22 @@ export class Matcher {
   dequeue(userId: number) {
     this.queue = this.queue.filter(request => request.userId !== userId);
     console.log(`User ${userId} removed from the matching queue.`);
+  }
+
+  private tryTimeOut() {
+    const timedOutRequests = this.queue.filter(request => !this.isTimedOut(request.timestamp));
+
+    if (timedOutRequests.length > 0) {
+      this.queue = this.queue.filter(request => !this.isTimedOut(request.timestamp));
+      timedOutRequests.forEach(request => {
+        console.log(`User ${request.userId} request timed out.`);
+        // Use web-socket to notify user of timeout.
+      });
+    }
+  }
+
+  private isTimedOut(requestTimestamp: number): boolean {
+    return (Date.now() - requestTimestamp) >= this.timeOutDuration;
   }
 
   private tryFindMatch() {

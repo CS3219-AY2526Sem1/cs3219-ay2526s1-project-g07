@@ -1,6 +1,7 @@
 export interface UserMatchingRequest {
   userId: number;
   preferences: MatchPreference;
+  timestamp: number;
 }
 
 export interface MatchPreference {
