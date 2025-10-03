@@ -138,7 +138,6 @@ function RouteComponent() {
   return (
     <div>
       <Navbar />
-      holy shit
       <div className="container mx-auto p-6 max-w-4xl">
         <Card>
           <CardHeader>
