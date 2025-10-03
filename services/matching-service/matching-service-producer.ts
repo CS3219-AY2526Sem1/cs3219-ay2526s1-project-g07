@@ -36,7 +36,6 @@ export class MatchingServiceProducer {
     const { firstUserId, secondUserId, preferences } = match;
     const sessionId = this.generateSessionId();
     await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), sessionId, preferences);
-    await this.produceMatchingSuccess(secondUserId.toString(), firstUserId.toString(), sessionId, preferences);
   }
 
   private async produceMatchingSuccess(userId: string, peerId: string, sessionId: string, preferences: MatchPreference) {
