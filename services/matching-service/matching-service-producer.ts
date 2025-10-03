@@ -1,6 +1,7 @@
 import { Kafka, type Producer } from 'kafkajs';
 import { Matcher } from './matcher.ts';
 import { TOPICS_MATCHING } from './utils.ts';
+import type { MatchResult } from './types.ts';
 
 export class MatchingServiceProducer {
   producer: Producer;
@@ -31,7 +32,7 @@ export class MatchingServiceProducer {
     return `session-${Date.now()}`;
   }
 
-  private async handleMatchFound(match: any) {
+  private async handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId } = match;
     const sessionId = this.generateSessionId();
     await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), sessionId);
