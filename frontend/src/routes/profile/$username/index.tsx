@@ -15,6 +15,7 @@ import {
   DialogFooter 
 } from '@/components/ui/dialog'
 import { getSession } from '@/lib/auth-client'
+import { redirectIfNotAuthenticated } from '@/src/hooks/user-hooks'
 
 export const Route = createFileRoute('/profile/$username/')({
   component: RouteComponent, 
@@ -35,6 +36,8 @@ export const Route = createFileRoute('/profile/$username/')({
 })
 
 function RouteComponent() {
+  redirectIfNotAuthenticated();
+  
   const { username } = Route.useParams()
   const data = Route.useLoaderData()
   

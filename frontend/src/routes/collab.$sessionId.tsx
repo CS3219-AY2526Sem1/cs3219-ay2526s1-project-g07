@@ -9,6 +9,7 @@ import {
 import CodeOutput from "../components/CodeOutput";
 import PythonMonacoEditor from "../components/MonacoEditor";
 import Navbar from "../components/Navbar";
+import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
 
 const q = `
 Write a function that reverses a string. The input string is given as an array of characters \`s\`.
@@ -56,6 +57,8 @@ export const Route = createFileRoute("/collab/$sessionId")({
 function RouteComponent() {
   const { sessionId } = Route.useParams();
   const [code, setCode] = useState(defaultCode);
+  redirectIfNotAuthenticated();
+  
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -11,6 +11,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
+import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
 interface Question {
   id: string;
@@ -29,7 +30,8 @@ function RouteComponent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-
+  redirectIfNotAuthenticated();
+  
   // Fetch questions from API
   useEffect(() => {
     const fetchQuestions = async () => {

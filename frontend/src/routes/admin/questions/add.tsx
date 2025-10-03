@@ -13,6 +13,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import Navbar from "@/src/components/Navbar";
+import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
 export const Route = createFileRoute("/admin/questions/add")({
   component: RouteComponent,
@@ -63,6 +64,7 @@ function RouteComponent() {
   
   const [categoryInput, setCategoryInput] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  redirectIfNotAuthenticated();
 
 
   const handleRemoveCategory = (categoryToRemove: string) => {

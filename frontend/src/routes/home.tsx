@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Navbar from "../components/Navbar";
+import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
 
 export const Route = createFileRoute("/home")({
   //   loader: async () => {
@@ -36,6 +37,7 @@ function RouteComponent() {
   const session = Route.useLoaderData();
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("");
+  redirectIfNotAuthenticated();
 
   return (
     <div>

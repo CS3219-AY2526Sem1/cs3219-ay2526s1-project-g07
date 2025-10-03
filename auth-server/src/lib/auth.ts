@@ -97,7 +97,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {    
     enabled: true,
-    autoSignIn: false //defaults to true
+    autoSignIn: true //defaults to true
     // requireEmailVerification: true // defaults to false
   },
   trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"], // your client URL

@@ -13,6 +13,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import Navbar from "@/src/components/Navbar";
+import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
 export const Route = createFileRoute("/admin/questions/$questionId")({
   component: RouteComponent,
@@ -52,6 +53,8 @@ const CATEGORY_OPTIONS = [
 ];
 
 function RouteComponent() {
+  redirectIfNotAuthenticated();
+  
   const navigate = useNavigate();
   const { questionId } = Route.useParams();
   const [isLoading, setIsLoading] = useState(false);
