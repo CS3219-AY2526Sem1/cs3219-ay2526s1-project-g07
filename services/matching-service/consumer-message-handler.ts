@@ -12,10 +12,6 @@ export class ConsumerMessageHandler {
   handleMessage(message: KafkaMessage, topic: string) {
     const value = message.value?.toString() || '';
     switch (topic) {
-      case TOPICS_MATCHING.MATCHING_REQUEST:
-        this.processMatchingRequest(value);
-        break;
-
       case TOPICS_MATCHING.MATCHING_SUCCESS:
         this.processMatchingSuccess(value);
         break;
@@ -25,17 +21,10 @@ export class ConsumerMessageHandler {
     }
   }
 
-  private processMatchingRequest(value: string) {
-    console.log(`Processing matching request: ${value}`);
-    const { userId, topic, difficulty } = JSON.parse(value);
-    this.matcher.enqueue(userId, { topic, difficulty });
-  }
-
   private processMatchingSuccess(value: string) {
     console.log(`Processing matching success: ${value}`);
     const { userId, peerId, sessionId } = JSON.parse(value);
-    // TODO: Implement logic to handle successful matching, 
-    // Question service should consume matching success messages
+    // TODO: Implement logic to handle successful matching internally if needed
 
   }
 }

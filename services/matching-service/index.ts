@@ -53,10 +53,16 @@ app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Resp
   const { userId, topic, difficulty } = req.body;
   console.log(`Received matching request for user id: ${userId}`);
 
-  await producer.send({
-    topic: TOPICS_MATCHING.MATCHING_REQUEST,
-    messages: [ { value: JSON.stringify({ userId, topic, difficulty }) }]
-  });
+  matcher.enqueue(userId, { topic, difficulty });
 
   return res.status(200).send({ message: `Matching service received session id: ${userId}` });
+});
+
+app.post(API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  console.log(`Received matching cancel request for user id: ${userId}`);
+
+  matcher.dequeue(userId);
+
+  return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId}` });
 });
