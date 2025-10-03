@@ -1,7 +1,7 @@
 import { Kafka, type Producer } from 'kafkajs';
 import { Matcher } from './matcher.ts';
 import { TOPICS_MATCHING } from './utils.ts';
-import type { MatchResult } from './types.ts';
+import type { MatchPreference, MatchResult } from './types.ts';
 
 export class MatchingServiceProducer {
   producer: Producer;
@@ -33,16 +33,16 @@ export class MatchingServiceProducer {
   }
 
   private async handleMatchFound(match: MatchResult) {
-    const { firstUserId, secondUserId } = match;
+    const { firstUserId, secondUserId, preferences } = match;
     const sessionId = this.generateSessionId();
-    await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), sessionId);
-    await this.produceMatchingSuccess(secondUserId.toString(), firstUserId.toString(), sessionId);
+    await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), sessionId, preferences);
+    await this.produceMatchingSuccess(secondUserId.toString(), firstUserId.toString(), sessionId, preferences);
   }
 
-  private async produceMatchingSuccess(userId: string, peerId: string, sessionId: string) {
+  private async produceMatchingSuccess(userId: string, peerId: string, sessionId: string, preferences: MatchPreference) {
     await this.send({
       topic: TOPICS_MATCHING.MATCHING_SUCCESS,
-      messages: [ { value: JSON.stringify({ userId, peerId, sessionId }) }]
+      messages: [ { value: JSON.stringify({ userId, peerId, sessionId, preferences }) }]
     });
     console.log(`Produced matching success for userId: ${userId}, peerId: ${peerId}, sessionId: ${sessionId}`);
   }
