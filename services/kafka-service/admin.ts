@@ -31,8 +31,8 @@ const run = async () => {
   await admin.connect();
   console.log('Admin connected');
 
-  createMatchingTopics();
-  createQuestionTopics();
+  await createMatchingTopics();
+  await createQuestionTopics();
 }
 
 run();
