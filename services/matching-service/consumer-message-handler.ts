@@ -33,7 +33,7 @@ export class ConsumerMessageHandler {
 
   private processMatchingSuccess(value: string) {
     console.log(`Processing matching success: ${value}`);
-    const { userId, peerId, sessionId, preferences: {topic, difficulty} } = JSON.parse(value);
+    const { userId, peerId, sessionId } = JSON.parse(value);
     // TODO: Implement logic to handle successful matching, 
     // Question service should consume matching success messages
 
