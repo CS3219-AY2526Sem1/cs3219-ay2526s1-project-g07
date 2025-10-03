@@ -34,7 +34,7 @@ export const questionRepository = {
         data.categories
       ]);
 
-      console.log(result.rows[0])
+      
       
       return result.rows[0] as Question;
     } catch (error) {
