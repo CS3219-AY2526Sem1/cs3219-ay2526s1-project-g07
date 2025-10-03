@@ -23,7 +23,7 @@ export const Route = createFileRoute('/profile/$username/')({
     const userId = userInfo?.data?.user.id
     
     try {
-      const response = await fetch('http://localhost:5000/user/getUserData/' + userId)
+      const response = await fetch('http://localhost:5002/user/getUserData/' + userId)
       const data = await response.json()
       console.log('Profile data:', data)
       return data
@@ -54,7 +54,7 @@ function RouteComponent() {
       const userId = userInfo?.data?.user.id
       
       // TODO: Replace with actual API call to save data
-      const response = await fetch(`http://localhost:5000/user/updateUserData/${userId}`, {
+      const response = await fetch(`http://localhost:5002/user/updateUserData/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

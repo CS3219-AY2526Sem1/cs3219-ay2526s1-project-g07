@@ -11,7 +11,7 @@ app.get("/api/auth/token", async (c: Context) => {
     // 1. Validate existing session first
     const cookieHeader = c.req.header('cookie') || '';
     
-    const sessionResponse = await fetch('http://localhost:5000/api/auth/get-session', {
+    const sessionResponse = await fetch('http://localhost:5002/api/auth/get-session', {
       headers: { Cookie: cookieHeader }
     });
     

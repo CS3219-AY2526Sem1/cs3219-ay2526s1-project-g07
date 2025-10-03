@@ -1,4 +1,4 @@
-BETTER_AUTH_URL=http://localhost:5000 #Base URL of your app
+BETTER_AUTH_URL=http://localhost:5002 #Base URL of your app
 BETTER_AUTH_SECRET=better_auth_secret 
 
 DATABASE_URL=postgres://username:password@localhost:5432/db
