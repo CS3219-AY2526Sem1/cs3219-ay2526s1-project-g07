@@ -52,8 +52,8 @@ function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
   // // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
     const provider = new WebsocketProvider(
-      "wss://demos.yjs.dev/ws", // change with collab backend websocket URL
-      // "wss://localhost:1234", // will run the demo server by default if url fails
+      // "wss://demos.yjs.dev/ws", // change with collab backend websocket URL
+      "ws://localhost:1234", // will run the demo server by default if url fails
       roomname,
       ydoc
     );
