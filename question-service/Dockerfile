@@ -20,8 +20,6 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# TODO: This should be removed in production for an .env file
-ENV BETTER_AUTH_SECRET=better_auth_secret
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 hono
@@ -34,6 +32,6 @@ COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
 COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
 
 USER hono
-EXPOSE 5002
+EXPOSE 5001
 
 CMD ["npm", "run", "start"]

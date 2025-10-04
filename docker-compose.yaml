@@ -1,15 +1,55 @@
 services:
-  peerprep-auth-db: 
+  peerprep-auth-db:
     image: postgres:17-alpine
     container_name: peerprep-auth-db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_USER=username
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=auth-db
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  auth-server:
+    build:
+      context: ./auth-server
+      dockerfile: Dockerfile
+    container_name: auth-server
+    ports:
+      - "5002:5002"
+    environment:
+      - JWT_SECRET=your_jwt_secret_key
+    depends_on:
+      - peerprep-auth-db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  question-service:
+    build:
+      context: ./question-service
+      dockerfile: Dockerfile
+    container_name: question-service
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-server
+      - question-service
     restart: unless-stopped
     networks:
       - app-network
