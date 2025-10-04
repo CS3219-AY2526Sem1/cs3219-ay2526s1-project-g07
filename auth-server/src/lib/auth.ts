@@ -9,7 +9,7 @@ export const auth = betterAuth({
     autoSignIn: true //defaults to true
     // requireEmailVerification: true // defaults to false
   },
-  trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"], // your client URL
+  trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000", "http://localhost:80"], // your client URL
   plugins: [ 
     jwt({
       jwks: {

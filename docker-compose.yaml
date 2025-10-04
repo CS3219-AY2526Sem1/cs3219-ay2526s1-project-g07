@@ -14,45 +14,45 @@ services:
     networks:
       - app-network
 
-  auth-server:
-    build:
-      context: ./auth-server
-      dockerfile: Dockerfile
-    container_name: auth-server
-    ports:
-      - "5002:5002"
-    environment:
-      - JWT_SECRET=your_jwt_secret_key
-    depends_on:
-      - peerprep-auth-db
-    restart: unless-stopped
-    networks:
-      - app-network
+  # auth-server:
+  #   build:
+  #     context: ./auth-server
+  #     dockerfile: Dockerfile
+  #   container_name: auth-server
+  #   ports:
+  #     - "5002:5002"
+  #   environment:
+  #     - JWT_SECRET=your_jwt_secret_key
+  #   depends_on:
+  #     - peerprep-auth-db
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
-  question-service:
-    build:
-      context: ./question-service
-      dockerfile: Dockerfile
-    container_name: question-service
-    ports:
-      - "5001:5001"
-    restart: unless-stopped
-    networks:
-      - app-network
+  # question-service:
+  #   build:
+  #     context: ./question-service
+  #     dockerfile: Dockerfile
+  #   container_name: question-service
+  #   ports:
+  #     - "5001:5001"
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - auth-server
-      - question-service
-    restart: unless-stopped
-    networks:
-      - app-network
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: frontend
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - auth-server
+  #     - question-service
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:

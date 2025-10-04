@@ -10,9 +10,11 @@ const app = new Hono()
 
 app.get('/', (c: Context) => c.text('Hello Hono!'))
 
+
+
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://127.0.0.1:3000", "http://localhost:3000"], 
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80"], 
   allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
   exposeHeaders: ["Content-Length", "Set-Cookie"],
