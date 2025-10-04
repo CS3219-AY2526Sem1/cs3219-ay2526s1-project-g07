@@ -1,5 +1,5 @@
 # AI Assistance Disclosure:
-# Tool: GitHub Copilot (model: claude-sonnet-4.5), date: 2025‑10-04
+# Tool: GitHub Copilot (model: claude-sonnet-4.5), date: 2025-10-04
 # Scope: Generated Dockerfile steps for nginx setup and container healthchecks.
 # Author review: I validated correctness after building and running the container.
 
