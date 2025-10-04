@@ -1,29 +1,39 @@
-# ---------- Deps ----------
-FROM node:20-alpine AS deps
+# Dockerfile Source: https://hono.dev/docs/getting-started/nodejs#building-deployment
+FROM node:22-alpine AS base
+
+FROM base AS builder
+
+RUN apk add --no-cache gcompat
 WORKDIR /app
-COPY package*.json ./
+
+# Copy config files first for better caching
+COPY package*json tsconfig.json ./
 RUN npm ci
 
-# ---------- Build ----------
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
+COPY src ./src/
 
-# ---------- Runtime ----------
-FROM node:20-alpine AS runner
+# Builds the project and prunes dev dependencies
+RUN npm run build && \
+  npm prune --production
+
+FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
+# TODO: This should be removed in production for an .env file
+ENV BETTER_AUTH_SECRET=better_auth_secret
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 hono
 
 # Copy package.json for npm scripts
-COPY package*.json ./
+COPY --from=builder --chown=hono:nodejs /app/package.json /app/package.json
+# Copy application dependencies
+COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
 # Copy the built application
-COPY --from=build /app/dist ./dist
-RUN npm ci --omit=dev
-EXPOSE 5000
+COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
 
-# This should be removed in production for an .env file
-ENV BETTER_AUTH_SECRET=better_auth_secret
+USER hono
+EXPOSE 5002
 
 CMD ["npm", "run", "start"]
