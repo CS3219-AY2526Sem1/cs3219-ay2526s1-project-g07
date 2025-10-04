@@ -17,6 +17,13 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// Monaco Editor Setup
+// This removes the need to fetch monaco from a CDN at runtime.
+// See: https://github.com/suren-atoyan/monaco-react?tab=readme-ov-file#use-monaco-editor-as-an-npm-package
+import * as monaco from 'monaco-editor';
+import { loader } from '@monaco-editor/react';
+loader.config({ monaco });
+
 const rootEl = document.getElementById("root");
 if (rootEl) {
   const root = ReactDOM.createRoot(rootEl);
