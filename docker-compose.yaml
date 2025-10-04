@@ -5,40 +5,53 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=username
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=auth-db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     networks:
       - app-network
 
-  # auth-server:
-  #   build:
-  #     context: ./auth-server
-  #     dockerfile: Dockerfile
-  #   container_name: auth-server
-  #   ports:
-  #     - "5002:5002"
-  #   environment:
-  #     - JWT_SECRET=your_jwt_secret_key
-  #   depends_on:
-  #     - peerprep-auth-db
-  #   restart: unless-stopped
-  #   networks:
-  #     - app-network
+  auth-server:
+    build:
+      context: ./auth-server
+      dockerfile: Dockerfile
+    container_name: auth-server
+    ports:
+      - "5002:5002"
+    environment:
+      - JWT_SECRET=your_jwt_secret_key
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - BETTER_AUTH_SECRET=your_better_auth_secret_key
+    depends_on:
+      - peerprep-auth-db
+    restart: unless-stopped
+    networks:
+      - app-network
 
-  # question-service:
-  #   build:
-  #     context: ./question-service
-  #     dockerfile: Dockerfile
-  #   container_name: question-service
-  #   ports:
-  #     - "5001:5001"
-  #   restart: unless-stopped
-  #   networks:
-  #     - app-network
+  question-service:
+    build:
+      context: ./question-service
+      dockerfile: Dockerfile
+    container_name: question-service
+    environment:
+      - JWT_SECRET=your_jwt_secret_key
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    networks:
+      - app-network
 
   # frontend:
   #   build:

@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy config files first for better caching
 COPY package*json tsconfig.json ./
-RUN npm ci
+RUN npm install
 
 COPY src ./src/
 
@@ -20,8 +20,6 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# TODO: This should be removed in production for an .env file
-ENV BETTER_AUTH_SECRET=better_auth_secret
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 hono
