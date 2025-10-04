@@ -9,10 +9,9 @@ I also extracted the component from the parent file for better modularity.
 import Editor, { type OnChange, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
 import { MonacoBinding } from "y-monaco";
+import { WebsocketProvider } from "y-websocket";
+import * as Y from "yjs";
 
 /** Monaco Editor options
  * See: https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -37,17 +36,17 @@ const monacoEditorOptions: editor.IStandaloneEditorConstructionOptions = {
 };
 
 interface PythonMonacoEditorProps {
-  code: string;
   onCodeChange: (newCode: string) => void;
 }
 
 const roomname = `dummy-session-id`; // replace with actual session id
 
-function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
+function PythonMonacoEditor({ onCodeChange }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
-  const [codeEditor, setEditor] = useState<any | null>(null);
-  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
-  const [binding, setBinding] = useState<MonacoBinding | null>(null);
+  const [codeEditor, setCodeEditor] =
+    useState<editor.IStandaloneCodeEditor | null>(null);
+  const [websocketProvider, setWebsocketProvider] =
+    useState<WebsocketProvider | null>(null);
 
   // // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
@@ -57,7 +56,7 @@ function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
       roomname,
       ydoc
     );
-    setProvider(provider);
+    setWebsocketProvider(provider);
     return () => {
       provider?.destroy();
       ydoc.destroy();
@@ -66,21 +65,23 @@ function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
-    if (provider == null || codeEditor == null) {
+    if (websocketProvider === null || codeEditor === null) {
       return;
     }
-    console.log("reached", provider);
+    const editorModel = codeEditor.getModel();
+    if (editorModel === null) {
+      return;
+    }
     const binding = new MonacoBinding(
       ydoc.getText(),
-      codeEditor.getModel()!,
+      editorModel,
       new Set([codeEditor]),
-      provider?.awareness
+      websocketProvider?.awareness
     );
-    setBinding(binding);
     return () => {
       binding.destroy();
     };
-  }, [ydoc, provider, codeEditor]);
+  }, [ydoc, websocketProvider, codeEditor]);
 
   const handleCodeChange: OnChange = useCallback(
     (value) => {
@@ -94,12 +95,12 @@ function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
   // Reloads the editor after fonts are loaded to ensure correct cursor positioning
   // See: https://github.com/microsoft/monaco-editor/issues/4644
   const handleEditorMount: OnMount = useCallback(async (editor, monaco) => {
-    if (document.fonts && document.fonts.ready) {
+    if (document.fonts?.ready) {
       await document.fonts.ready;
     }
     monaco.editor.remeasureFonts();
     editor.layout();
-    setEditor(editor);
+    setCodeEditor(editor);
   }, []);
 
   return (
@@ -113,7 +114,6 @@ function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
           height="100%"
           language="python"
           theme="vs-dark"
-          value={code}
           onChange={handleCodeChange}
           onMount={handleEditorMount}
           options={monacoEditorOptions}

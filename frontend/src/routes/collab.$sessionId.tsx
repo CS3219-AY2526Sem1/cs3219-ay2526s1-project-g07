@@ -58,7 +58,6 @@ function RouteComponent() {
   const { sessionId } = Route.useParams();
   const [code, setCode] = useState(defaultCode);
   redirectIfNotAuthenticated();
-  
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -91,7 +90,7 @@ function RouteComponent() {
               className="flex-1 min-h-128 h-full"
             >
               <ResizablePanel>
-                <PythonMonacoEditor code={code} onCodeChange={setCode} />
+                <PythonMonacoEditor onCodeChange={setCode} />
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel defaultSize={30} minSize={10} maxSize={30}>
