@@ -11,7 +11,11 @@ export default defineConfig({
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
-    }
+    },
+    proxy: {
+      "/api/user": "http://localhost:5002",
+      "/api/questions": "http://localhost:5001",
+    },
   },
   tools: {
     rspack: {

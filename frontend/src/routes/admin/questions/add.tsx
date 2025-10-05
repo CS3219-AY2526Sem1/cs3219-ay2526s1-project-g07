@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import Navbar from "@/src/components/Navbar";
 import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
@@ -23,7 +23,7 @@ const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 
 const CATEGORY_OPTIONS = [
   "Array",
-  "String", 
+  "String",
   "Hash Table",
   "Dynamic Programming",
   "Math",
@@ -61,7 +61,7 @@ function RouteComponent() {
     categories: [] as string[],
     question: ""
   });
-  
+
   const [categoryInput, setCategoryInput] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   redirectIfNotAuthenticated();
@@ -76,34 +76,34 @@ function RouteComponent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.title.trim()) {
       alert("Title is required");
       return;
     }
-    
+
     if (!formData.difficulty) {
       alert("Difficulty is required");
       return;
     }
-    
+
     if (formData.categories.length === 0) {
       alert("At least one category is required");
       return;
     }
-    
+
     if (!formData.question.trim()) {
       alert("Question description is required");
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       // Call the question service API
       console.log("Submitting question:", formData);
-      const response = await fetch('http://localhost:5001/questions', {
+      const response = await fetch('/api/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,8 +160,8 @@ function RouteComponent() {
               {/* Difficulty */}
               <div className="space-y-2">
                 <Label htmlFor="difficulty">Difficulty *</Label>
-                <Select 
-                  value={formData.difficulty} 
+                <Select
+                  value={formData.difficulty}
                   onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
                 >
                   <SelectTrigger>
@@ -193,8 +193,8 @@ function RouteComponent() {
                     {showCategoryDropdown && (
                       <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                         {CATEGORY_OPTIONS
-                          .filter(cat => 
-                            !formData.categories.includes(cat) && 
+                          .filter(cat =>
+                            !formData.categories.includes(cat) &&
                             (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
                           )
                           .map(category => (
@@ -216,8 +216,8 @@ function RouteComponent() {
                           ))
                         }
                         {CATEGORY_OPTIONS
-                          .filter(cat => 
-                            !formData.categories.includes(cat) && 
+                          .filter(cat =>
+                            !formData.categories.includes(cat) &&
                             (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
                           ).length === 0 && (
                           <div className="px-3 py-2 text-gray-500 text-sm">
@@ -228,7 +228,7 @@ function RouteComponent() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Selected Categories */}
                 {formData.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -281,16 +281,16 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isLoading}
                   className="flex-1"
                 >
                   {isLoading ? 'Creating...' : 'Create Question'}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={handleCancel}
                   className="flex-1"
                 >
@@ -311,7 +311,7 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
               <div>
                 <h3 className="font-semibold text-lg">{formData.title || "Question Title"}</h3>
               </div>
-              
+
               <div className="flex gap-2 items-center">
                 <span className="text-sm font-medium">Difficulty:</span>
                 {formData.difficulty && (
