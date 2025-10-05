@@ -37,7 +37,7 @@ function RouteComponent() {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/question');
+        const response = await fetch('/api/questions');
 
         if (!response.ok) {
           throw new Error('Failed to fetch questions');
@@ -95,7 +95,7 @@ function RouteComponent() {
     }
 
     try {
-      const response = await fetch(`/api/question/${questionId}`, {
+      const response = await fetch(`/api/questions/${questionId}`, {
         method: 'DELETE',
       });
 

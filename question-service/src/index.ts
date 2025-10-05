@@ -17,7 +17,7 @@ app.get('/', (c) => {
 })
 
 // Question routes
-app.route('/api/question', questionController)
+app.route('/api/questions', questionController)
 
 const port = parseInt(process.env.PORT || '5001')
 

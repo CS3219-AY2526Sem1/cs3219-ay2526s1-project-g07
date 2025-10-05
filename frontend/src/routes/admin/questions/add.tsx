@@ -103,7 +103,7 @@ function RouteComponent() {
     try {
       // Call the question service API
       console.log("Submitting question:", formData);
-      const response = await fetch('/api/question', {
+      const response = await fetch('/api/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

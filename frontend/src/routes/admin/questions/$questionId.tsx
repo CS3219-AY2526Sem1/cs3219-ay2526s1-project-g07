@@ -74,7 +74,7 @@ function RouteComponent() {
     const fetchQuestion = async () => {
       try {
         setIsLoadingQuestion(true);
-        const response = await fetch(`/api/question/${questionId}`);
+        const response = await fetch(`/api/questions/${questionId}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch question');
@@ -141,7 +141,7 @@ function RouteComponent() {
     try {
       // Call the question service API to update
       console.log("Updating question:", formData);
-      const response = await fetch(`/api/question/${questionId}`, {
+      const response = await fetch(`/api/questions/${questionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

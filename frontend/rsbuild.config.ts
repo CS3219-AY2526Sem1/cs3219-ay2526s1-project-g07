@@ -14,7 +14,7 @@ export default defineConfig({
     },
     proxy: {
       "/api/user": "http://localhost:5002",
-      "/api/question": "http://localhost:5001",
+      "/api/questions": "http://localhost:5001",
     },
   },
   tools: {
