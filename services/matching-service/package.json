@@ -14,7 +14,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
