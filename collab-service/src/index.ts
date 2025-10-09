@@ -20,6 +20,7 @@ const server = http.createServer((_request, response) => {
 const sessions = new Map();
 sessions.set("session123", new Set(["userA", "userB"]));
 sessions.set("session456", new Set(["userC", "userD"]));
+sessions.set("dummy-session-id", new Set(["user1", "user2"]));
 
 // Keep track of connected clients per session (optional)
 const activeRooms = new Map(); // sessionId → Set of connected userIds
