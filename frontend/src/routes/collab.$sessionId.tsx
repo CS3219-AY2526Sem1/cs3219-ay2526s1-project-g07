@@ -169,7 +169,12 @@ function RouteComponent() {
               className="flex-1 min-h-128 h-full"
             >
               <ResizablePanel>
-                <PythonMonacoEditor code={code} onCodeChange={setCode} />
+                <div className="h-full w-full">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
+                    <h3 className="text-sm">Language: Python 3</h3>
+                  </div>
+                  <PythonMonacoEditor code={code} onCodeChange={setCode} />
+                </div>
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel defaultSize={30} minSize={10} maxSize={30}>
