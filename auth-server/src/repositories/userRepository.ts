@@ -48,5 +48,33 @@ export const userRepository = {
       throw new Error('Failed to update user data');
     }
 
+  },
+  async getAllUsers(): Promise<UserData[]> {
+    try {
+      const query = `
+        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role"
+        FROM "user"
+        ORDER BY "createdAt" DESC
+      `;
+      
+      const result = await db.query(query);
+      return result.rows as UserData[];
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw new Error('Failed to fetch all users');
+    }
+  },
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    try {
+      const query = `
+        UPDATE "user"
+        SET role = $1, "updatedAt" = NOW()
+        WHERE id = $2
+      `;
+      await db.query(query, [role, userId]);
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw new Error('Failed to update user role');
+    }
   }
 };

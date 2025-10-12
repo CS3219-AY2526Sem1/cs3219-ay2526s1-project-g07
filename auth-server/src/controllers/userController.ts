@@ -75,5 +75,57 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
   }
 })
 
+userController.get("/getAllUsers", async (c: Context) => {
+  console.log("Getting all users")
+  
+  try {
+    const users = await userService.getAllUsers()
+    
+    return c.json({
+      message: "Users retrieved successfully",
+      users: users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user',
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+      }))
+    })
+  } catch (error) {
+    console.error('Error in getAllUsers:', error)
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
+userController.patch("/:userId/role", async (c: Context) => {
+  console.log("Updating user role for user ID:", c.req.param('userId'))
+  const userId = c.req.param('userId')
+  
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400)
+  }
+
+  try {
+    const body = await c.req.json()
+    const { role } = body
+    
+    if (!role || (role !== 'admin' && role !== 'user')) {
+      return c.json({ error: "Valid role is required (admin or user)" }, 400)
+    }
+
+    await userService.updateUserRole(userId, role)
+    
+    return c.json({
+      message: "User role updated successfully",
+      userId,
+      role,
+    })
+  } catch (error) {
+    console.error('Error in updateUserRole:', error)
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
 
 export default userController;
