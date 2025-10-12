@@ -6,25 +6,25 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter 
+  DialogFooter
 } from '@/components/ui/dialog'
 import { getSession } from '@/lib/auth-client'
 import { redirectIfNotAuthenticated } from '@/src/hooks/user-hooks'
 
 export const Route = createFileRoute('/profile/$username/')({
-  component: RouteComponent, 
+  component: RouteComponent,
   loader: async () => {
     const userInfo = await getSession()
     const userId = userInfo?.data?.user.id
-    
+
     try {
-      const response = await fetch('http://localhost:5002/user/getUserData/' + userId)
+      const response = await fetch(`/api/user/getUserData/${userId}`)
       const data = await response.json()
       console.log('Profile data:', data)
       return data
@@ -37,27 +37,27 @@ export const Route = createFileRoute('/profile/$username/')({
 
 function RouteComponent() {
   redirectIfNotAuthenticated();
-  
+
   const { username } = Route.useParams()
   const data = Route.useLoaderData()
-  
+
   const [formData, setFormData] = useState({
     username: data?.name || username,
     description: data?.description || 'No description available'
   })
-  
+
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = async () => {
     setIsLoading(true)
-    
+
     try {
       const userInfo = await getSession()
       const userId = userInfo?.data?.user.id
-      
+
       // TODO: Replace with actual API call to save data
-      const response = await fetch(`http://localhost:5002/user/updateUserData/${userId}`, {
+      const response = await fetch(`/api/user/updateUserData/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ function RouteComponent() {
           description: formData.description
         })
       })
-      
+
       if (response.ok) {
         console.log('Profile updated successfully')
         setIsOpen(false)
@@ -88,7 +88,7 @@ function RouteComponent() {
   // Use data from backend or fallback values
   const displayName = data?.name || username
   const displayDescription = data?.description || 'No description available'
-  
+
   return (
     <>
       <Navbar />
@@ -145,7 +145,7 @@ function RouteComponent() {
                     >
                       Cancel
                     </Button>
-                    <Button 
+                    <Button
                       type="button"
                       onClick={handleSave}
                       disabled={isLoading}

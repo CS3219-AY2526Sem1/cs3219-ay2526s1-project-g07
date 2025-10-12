@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { auth, testDbConnection } from "./lib/auth"; 
+import { auth, testDbConnection } from "./lib/auth";
 import { cors } from "hono/cors";
 import type { Context } from "hono";
 import route from './routes/routes'
@@ -12,7 +12,7 @@ app.get('/', (c: Context) => c.text('Hello Hono!'))
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://127.0.0.1:3000", "http://localhost:3000"], 
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
   allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
   exposeHeaders: ["Content-Length", "Set-Cookie"],
@@ -21,24 +21,24 @@ app.use(cors({
 }))
 
 // On Request, in Route, use Auth Handler
-app.on(["POST", "GET"], "/api/auth/**", (c: Context) => {
+app.on(["POST", "GET"], "/api/user/auth/**", (c: Context) => {
   console.log(`${c.req.method} request to ${c.req.url}`);
   return auth.handler(c.req.raw);
 });
 
 // Add OPTIONS method support for CORS preflight
-app.options("/api/auth/**", (c: Context) => {
+app.options("/api/user/auth/**", (c: Context) => {
   return new Response(null, { status: 200 });
 });
 
-app.route("/", route);
+app.route("/api/user/", route);
 
 // Initialize database and start server
 const startServer = async () => {
   try {
     // Initialize database first
     await testDbConnection();
-    
+
     // Start the server
     serve({
       fetch: app.fetch,
@@ -53,4 +53,3 @@ const startServer = async () => {
 };
 
 startServer();
-

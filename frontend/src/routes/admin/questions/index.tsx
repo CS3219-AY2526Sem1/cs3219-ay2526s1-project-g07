@@ -4,12 +4,12 @@ import Navbar from "../../../components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
@@ -31,22 +31,22 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   redirectIfNotAuthenticated();
-  
+
   // Fetch questions from API
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5001/questions');
-        
+        const response = await fetch('/api/questions');
+
         if (!response.ok) {
           throw new Error('Failed to fetch questions');
         }
-        
+
         const data = await response.json();
         console.log(data)
         console.log('Fetched questions:', data);
-        
+
         // The API returns { message, questions, count }
         const questionsData = data.questions || [];
         setQuestions(questionsData);
@@ -72,7 +72,7 @@ function RouteComponent() {
       const filtered = questions.filter(question =>
         question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         question.difficulty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.categories.some(category => 
+        question.categories.some(category =>
           category.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
@@ -95,7 +95,7 @@ function RouteComponent() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/questions/${questionId}`, {
+      const response = await fetch(`/api/questions/${questionId}`, {
         method: 'DELETE',
       });
 
@@ -200,8 +200,8 @@ function RouteComponent() {
                             <div className="flex gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
+                                  <Button
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => setSelectedQuestion(question)}
                                   >
@@ -242,15 +242,15 @@ function RouteComponent() {
                                 </DialogContent>
                               </Dialog>
                               <Link to="/admin/questions/$questionId" params={{ questionId: question.id }}>
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
                                 >
                                   Edit
                                 </Button>
                               </Link>
-                              <Button 
-                                variant="destructive" 
+                              <Button
+                                variant="destructive"
                                 size="sm"
                                 onClick={() => handleDelete(question.id)}
                               >

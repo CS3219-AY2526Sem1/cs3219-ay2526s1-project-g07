@@ -23,38 +23,38 @@ export const initializeDatabase = async () => {
   try {
     const client = await pool.connect();
     console.log("✅ Database connected successfully");
-    
+
     // Check if tables already exist
     const tablesQuery = `
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
       AND table_name IN ('user', 'session', 'account', 'verification');
     `;
-    
+
     const result = await client.query(tablesQuery);
     console.log("📊 Existing tables found:", result.rows.map(row => row.table_name));
-    
+
     if (result.rows.length === 0) {
       console.log("🔧 No tables found, initializing database...");
-      
+
       // Read and execute init.sql
       const initSqlPath = path.join(process.cwd(), "db", "init.sql");
-      
+
       if (fs.existsSync(initSqlPath)) {
         const initSql = fs.readFileSync(initSqlPath, "utf8");
-        
+
         // Split SQL by semicolons and execute each statement
         const statements = initSql.split(';').filter(stmt => stmt.trim().length > 0);
-        
+
         for (const statement of statements) {
           if (statement.trim()) {
             await client.query(statement);
           }
         }
-        
+
         console.log("✅ Database initialized successfully!");
-        
+
         // Verify tables were created
         const verifyResult = await client.query(tablesQuery);
         console.log("📋 Created tables:", verifyResult.rows.map(row => row.table_name));
@@ -64,7 +64,7 @@ export const initializeDatabase = async () => {
     } else {
       console.log("✅ Database tables already exist, skipping initialization");
     }
-    
+
     client.release();
     return true;
   } catch (error) {
@@ -85,6 +85,7 @@ export const auth = betterAuth({
   //     rejectUnauthorized: false
   //   }
   // }),
+  basePath: "/api/user/auth",
   database: new Pool({
     // connection options
     user: "username",
@@ -93,15 +94,15 @@ export const auth = betterAuth({
     password: "password",
     port: 5433,
     // run npx @better-auth/cli generate, please have db on though
-    // this generates 
+    // this generates
   }),
-  emailAndPassword: {    
+  emailAndPassword: {
     enabled: true,
     autoSignIn: true //defaults to true
     // requireEmailVerification: true // defaults to false
   },
   trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000"], // your client URL
-  plugins: [ 
+  plugins: [
     jwt({
       jwks: {
         keyPairConfig: {
