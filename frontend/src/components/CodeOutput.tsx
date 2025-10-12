@@ -120,7 +120,7 @@ function CodeOutput({ code, onOutputChange }: CodeOutputProps) {
             <Button
               variant="destructive"
               onClick={interruptExecution}
-              className="px-3 py-1 text-xs h-6 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-amber-600 text-white rounded hover:bg-amber-700 cursor-pointer"
             >
               Interrupt
             </Button>
@@ -129,7 +129,7 @@ function CodeOutput({ code, onOutputChange }: CodeOutputProps) {
             <Button
               variant="destructive"
               onClick={killAndRestartWorker}
-              className="px-3 py-1 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
             >
               Kill
             </Button>
@@ -138,7 +138,7 @@ function CodeOutput({ code, onOutputChange }: CodeOutputProps) {
             <Button
               variant="default"
               onClick={runPythonCode}
-              className="px-3 py-1 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 cursor-pointer"
               disabled={!pyodideLoaded}
             >
               Run Code
