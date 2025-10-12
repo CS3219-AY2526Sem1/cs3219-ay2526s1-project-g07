@@ -50,10 +50,10 @@ async function debugCode(
     model: MODEL_FLASH_PREVIEW,
     config: {
       thinkingConfig: {
-        thinkingBudget: 1024,
+        thinkingBudget: 768,
       },
       systemInstruction: AI_DEBUG_SYSTEM_PROMPT,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 1024,
     },
     contents: [
       {

@@ -27,10 +27,10 @@ async function getHint(ai: GoogleGenAI, question: string = dummyQuestion) {
     model: MODEL_FLASH_PREVIEW,
     config: {
       thinkingConfig: {
-        thinkingBudget: 1024,
+        thinkingBudget: 768,
       },
       systemInstruction: AI_HINT_SYSTEM_PROMPT,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 1024,
     },
     contents: [
       {
