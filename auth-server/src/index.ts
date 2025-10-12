@@ -23,17 +23,17 @@ app.use(cors({
 }))
 
 // On Request, in Route, use Auth Handler
-app.on(["POST", "GET"], "/api/auth/**", (c: Context) => {
+app.on(["POST", "GET"], "/api/user/auth/**", (c: Context) => {
   console.log(`${c.req.method} request to ${c.req.url}`);
   return auth.handler(c.req.raw);
 });
 
 // Add OPTIONS method support for CORS preflight
-app.options("/api/auth/**", (c: Context) => {
+app.options("/api/user/auth/**", (c: Context) => {
   return new Response(null, { status: 200 });
 });
 
-app.route("/", route);
+app.route("/api/user/", route);
 
 // Initialize database and start server
 const startServer = async () => {
@@ -53,4 +53,3 @@ const startServer = async () => {
 };
 
 startServer();
-
