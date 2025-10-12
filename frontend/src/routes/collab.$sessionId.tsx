@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import {
   ResizableHandle,
@@ -57,8 +57,64 @@ export const Route = createFileRoute("/collab/$sessionId")({
 function RouteComponent() {
   const { sessionId } = Route.useParams();
   const [code, setCode] = useState(defaultCode);
-  redirectIfNotAuthenticated();
-  
+  const [output, setOutput] = useState("");
+  const [showDebugPanel, setShowDebugPanel] = useState(true);
+  const [aiHintContent, setAiHintContent] = useState({
+    loading: false,
+    content: "",
+    error: "",
+  });
+  const [aiDebugContent, setAiDebugContent] = useState({
+    loading: false,
+    content: "",
+    error: "",
+  });
+
+  const fetchAiHint = useCallback(async () => {
+    setAiHintContent({ loading: true, content: "", error: "" });
+    try {
+      const response = await fetch("/api/ai/hint", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: q }),
+      });
+      const data = await response.text();
+      setAiHintContent({ loading: false, content: data, error: "" });
+    } catch (e: unknown) {
+      console.error("Error fetching AI hint:", e);
+      setAiHintContent({
+        loading: false,
+        content: "",
+        error: `Failed to fetch hint: ${e instanceof Error ? e.message : String(e)}`,
+      });
+    }
+  }, []);
+
+  const fetchAiDebug = useCallback(async () => {
+    setAiDebugContent({ loading: true, content: "", error: "" });
+    try {
+      const response = await fetch("/api/ai/debug", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: q, code, output }),
+      });
+      const data = await response.text();
+      setAiDebugContent({ loading: false, content: data, error: "" });
+    } catch (e: unknown) {
+      console.error("Error fetching AI debug info:", e);
+      setAiDebugContent({
+        loading: false,
+        content: "",
+        error: `Failed to fetch debug info: ${e instanceof Error ? e.message : String(e)}`,
+      });
+    }
+  }, [code, output]);
+
+  // redirectIfNotAuthenticated();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -82,6 +138,28 @@ function RouteComponent() {
               <div className="whitespace-pre-wrap text-sm min-w-fit question-desc-markdown">
                 <Markdown>{q}</Markdown>
               </div>
+              <hr className="my-6" />
+              <div className="flex flex-col gap-6 text-sm">
+                <button
+                  type="button"
+                  className="px-3 py-1 bg-white text-violet-500 rounded border-1 border-violet-500 hover:bg-violet-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white"
+                  disabled={aiHintContent.loading}
+                  onClick={fetchAiHint}
+                >
+                  Get AI Hint
+                </button>
+                {aiHintContent.loading && <div>Loading...</div>}
+                {aiHintContent.error && (
+                  <div className="text-red-500">
+                    Error: {aiHintContent.error}
+                  </div>
+                )}
+                {aiHintContent.content && (
+                  <div className="whitespace-pre-wrap min-w-fit question-desc-markdown bg-violet-50 p-4 rounded">
+                    <Markdown>{aiHintContent.content}</Markdown>
+                  </div>
+                )}
+              </div>
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
@@ -95,7 +173,7 @@ function RouteComponent() {
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel defaultSize={30} minSize={10} maxSize={30}>
-                <CodeOutput code={code} />
+                <CodeOutput code={code} onOutputChange={setOutput} />
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>

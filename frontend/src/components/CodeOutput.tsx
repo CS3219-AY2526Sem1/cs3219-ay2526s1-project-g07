@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 
 interface CodeOutputProps {
   code: string;
+  onOutputChange?: (output: string) => void;
 }
 
-function CodeOutput({ code }: CodeOutputProps) {
+function CodeOutput({ code, onOutputChange }: CodeOutputProps) {
   const [output, setOutput] = useState("Loading Pyodide worker...");
   const [pyodideLoaded, setPyodideLoaded] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -103,6 +104,12 @@ function CodeOutput({ code }: CodeOutputProps) {
     createWorker();
     return killWorker;
   }, [createWorker, killWorker]);
+
+  useEffect(() => {
+    if (onOutputChange) {
+      onOutputChange(output);
+    }
+  }, [output, onOutputChange]);
 
   return (
     <div className="h-full flex flex-col">
