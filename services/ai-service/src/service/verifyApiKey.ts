@@ -9,6 +9,7 @@ async function verifyApiKey(apiKey: string | undefined) {
   const models = await ai.models.list();
 
   console.log("Available models:", models);
+  return ai;
 }
 
 export default verifyApiKey;
