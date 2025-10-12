@@ -25,16 +25,26 @@ You must do this by modifying the input array in-place with \`O(1)\` extra memor
 const dummyCode = `
 def reverseString(s):
     left, right = 0, len(s) - 1
-    while left > right:
+    while left <= right:
         s[left], s[right] = s[right], s[left]
         left += 1
+    return s
+
 print(reverseString(["h","e","l","l","o"]))
+`;
+
+const dummyOutput = `
+['o', 'h', 'e', 'l', 'l']
+
+Execution completed
+[Finished in 0.026s]
 `;
 
 async function debugCode(
   ai: GoogleGenAI,
   question: string = dummyQuestion,
-  code: string = dummyCode
+  code: string = dummyCode,
+  output: string = dummyOutput
 ) {
   const response = await ai.models.generateContent({
     model: MODEL_FLASH_PREVIEW,
@@ -55,11 +65,16 @@ async function debugCode(
           {
             text: `## Code\n\n\`\`\`py\n${code}\n\`\`\``,
           },
+          {
+            text: `## Output\n\n${output}`,
+          },
         ],
       },
     ],
   });
-  return response.text;
+
+  // Remove LaTeX formatting if any
+  return response.text?.replaceAll("$", "");
 }
 
 export default debugCode;

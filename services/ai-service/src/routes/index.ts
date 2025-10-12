@@ -29,14 +29,15 @@ app.post("/hint", async (c) => {
 
 app.post("/debug", async (c) => {
   const body = await c.req.json();
-  const { question, code } = body;
+  const { question, code, output } = body;
   const ai = c.var.ai;
   if (!ai) {
     return c.text("AI client not initialized", 500);
   }
   console.log("Received question:", question);
   console.log("Received code:", code);
-  const hint = await debugCode(ai, question, code);
+  console.log("Received output:", output);
+  const hint = await debugCode(ai, question, code, output);
   if (!hint) {
     return c.text("Failed to get hint from AI", 500);
   }
