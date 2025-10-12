@@ -148,5 +148,31 @@ export const questionRepository = {
       console.error('Error deleting question:', error);
       throw new Error('Failed to delete question');
     }
+  },
+
+  // From Chatgpt
+  async findMatchingQuestion(difficulty: string, categories: string[]): Promise<Question | null> {
+    try {
+      // Find a question that matches the difficulty and has at least one matching category
+      const query = `
+        SELECT id, title, question, difficulty, categories
+        FROM "question"
+        WHERE difficulty = $1
+          AND categories && $2
+        ORDER BY RANDOM()
+        LIMIT 1
+      `;
+      
+      const result = await db.query(query, [difficulty, categories]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return result.rows[0] as Question;
+    } catch (error) {
+      console.error('Error finding matching question:', error);
+      throw new Error('Failed to find matching question');
+    }
   }
 };

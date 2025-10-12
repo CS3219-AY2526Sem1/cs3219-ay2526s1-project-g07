@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import questionController from './controllers/questionController.js'
+import { startKafkaServices } from './kafka/index.js'
 
 const app = new Hono()
 
@@ -21,9 +22,16 @@ app.route('/api/questions', questionController)
 
 const port = parseInt(process.env.PORT || '5001')
 
+// Start HTTP server
 serve({
   fetch: app.fetch,
   port: port
 }, (info) => {
-  console.log(`Question service running on http://localhost:${info.port}`)
+  console.log(`✅ Question service running on http://localhost:${info.port}`)
+})
+
+// Start Kafka services
+startKafkaServices().catch((error) => {
+  console.error('❌ Failed to start Kafka services:', error)
+  process.exit(1)
 })

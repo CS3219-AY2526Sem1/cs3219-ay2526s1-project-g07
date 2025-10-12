@@ -9,15 +9,18 @@ export const auth = betterAuth({
     autoSignIn: true //defaults to true
     // requireEmailVerification: true // defaults to false
   },
+  basePath: "/api/user/auth",
   trustedOrigins: ["http://127.0.0.1:3000", "http://localhost:3000", "http://localhost:80"], // your client URL
-  plugins: [ 
-    jwt({
-      jwks: {
-        keyPairConfig: {
-          alg: "EdDSA",
-          crv: "Ed25519"
-        }
-      }
-    }),
-  ],
+  // plugins: [ 
+  //   jwt({
+  //     jwks: {
+  //       encryptPrivateKey: false, // DEV ONLY
+
+  //       keyPairConfig: {
+  //         alg: "EdDSA",
+  //         crv: "Ed25519"
+  //       }
+  //     }
+  //   }),
+  // ],
 })
