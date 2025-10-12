@@ -33,10 +33,11 @@ async function init() {
   serve(
     {
       fetch: app.fetch,
-      port: 3000,
+      hostname: "127.0.0.1",
+      port: parseInt(process.env.PORT || "5006", 10),
     },
     (info) => {
-      console.log(`Server is running on http://localhost:${info.port}`);
+      console.log(`Server is running on http://${info.address}:${info.port}`);
     }
   );
 }
