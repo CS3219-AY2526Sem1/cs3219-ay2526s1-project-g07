@@ -139,6 +139,24 @@
         padding: 0.2em 0.4em;
         border-radius: 3px;
         font-size: 13px;
-        font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", "Menlo", "Consolas", monospace
+        font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", "Menlo", "Consolas", monospace;
+    }
+    pre {
+        background-color: #818b981f;
+        color: #1f2328;
+        border-radius: 3px;
+        padding: 1em;
+        overflow-x: auto;
+        font-size: 13px;
+        font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", "Menlo", "Consolas", monospace;
+        margin: 0.5em 0;
+    }
+    pre code {
+        background: none;
+        color: inherit;
+        padding: 0;
+        border-radius: 0;
+        font-size: inherit;
+        font-family: inherit;
     }
 }
