@@ -4,10 +4,16 @@ import { Hono } from "hono";
 import { WebSocketServer } from "ws";
 import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
+import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 
 const wss = new WebSocketServer({ noServer: true });
 const host = process.env.HOST || "localhost";
 const port = Number.parseInt(process.env.PORT || "1234");
+const kafkaConfig: KafkaConfig = {
+  clientId: "collab-service",
+  brokers: (process.env.KAFKA_BROKERS || "localhost:9092").split(","),
+  retry: { initialRetryTime: 300, retries: 10 },
+};
 
 const app = new Hono();
 
@@ -108,6 +114,31 @@ server.on("upgrade", (request, socket, head) => {
 server.listen(port, host, () => {
   console.log(`running at '${host}' on port ${port}`);
 });
+
+// Setup Kafka Client
+const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+try {
+  await kafkaClient.connect();
+} catch (err) {
+  console.error("Failed to connect to Kafka, exiting...");
+  await shutdown(1);
+}
+
+async function shutdown(code: number = 0) {
+  console.log("Shutting down collab-service...");
+  try {
+    await kafkaClient.disconnect();
+  } catch (err) {
+    console.error("Error during shutdown of collab-service:", err);
+    process.exit(1)
+  }
+
+  process.exit(code);
+}
+
+//Handles exit signals - Termination, Interrupt
+process.on('SIGTERM', () => shutdown());
+process.on('SIGINT', () => shutdown());
 
 // ------------------- Hono Routes ------------------ //
 
