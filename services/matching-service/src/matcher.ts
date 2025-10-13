@@ -26,6 +26,9 @@ export class Matcher {
       },
       timestamp: Date.now()
     };
+
+    // Avoid duplicate entries for the same user
+    this.dequeue(userId);
     this.queue.push(userRequest);
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }

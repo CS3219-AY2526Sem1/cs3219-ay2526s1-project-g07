@@ -1,18 +1,32 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { Kafka } from 'kafkajs';
 import type { Request, Response, NextFunction } from 'express';
-import { TOPICS_MATCHING, API_ENDPOINTS_MATCHING } from './utils.ts';
+import { API_ENDPOINTS_MATCHING } from './utils.ts';
 import { MatchingServiceProducer } from './matching-service-producer.ts';
 import { MatchingServiceConsumer } from './matching-service-consumer.ts';
 import { Matcher } from './matcher.ts';
 import { ConsumerMessageHandler } from './consumer-message-handler.ts';
+import { MatchingWS } from './matching-ws.ts';
 
 const app = express();
+const httpServer = createServer(app);
 
 dotenv.config();
 const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
+const PORT = process.env.PORT || 4000;
+const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
+
+// Initialize Socket.IO server
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: WS_PORT,
+    methods: ["GET", "POST"]
+  }
+});
 
 app.use(cors({
   origin: HOST_URL
@@ -30,6 +44,14 @@ const messageHandler = new ConsumerMessageHandler(matcher);
 const producer = new MatchingServiceProducer(kafka, matcher);
 const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
+// Initialize WebSocket handling
+const ws = new MatchingWS(io, matcher);
+try {
+  ws.init();
+} catch (error) {
+  console.error('Error initializing WebSocket:', error);
+}
+
 const connectToKafka = async () => {
   try {
     await producer.init();
@@ -43,9 +65,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(err.status || 500).json(err.message);
 })
 
-app.listen(4000, () => {
+httpServer.listen(PORT, () => {
   connectToKafka();
-  console.log('Matching service listening on port 4000');
+  console.log(`Matching service listening on port ${PORT}`);
+  console.log('WebSocket server is ready for connections');
 });
 
 // API endpoints
