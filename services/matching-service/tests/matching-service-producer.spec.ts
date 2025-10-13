@@ -44,7 +44,6 @@ describe('MatchingServiceProducer', () => {
     await msProducer['produceMatchingSuccess'](
       match.firstUserId.toString(), 
       match.secondUserId.toString(), 
-      'session-123', 
       match.preferences
     );
     expect(sendSpy).toHaveBeenCalledWith({ 
@@ -52,7 +51,6 @@ describe('MatchingServiceProducer', () => {
       messages: [ { value: JSON.stringify({ 
         userId: match.firstUserId.toString(), 
         peerId: match.secondUserId.toString(), 
-        sessionId: 'session-123', 
         preferences: match.preferences 
       })}]
     });

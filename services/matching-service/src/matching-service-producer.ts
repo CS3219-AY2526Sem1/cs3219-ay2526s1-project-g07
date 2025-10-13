@@ -28,22 +28,17 @@ export class MatchingServiceProducer {
     this.matcher.emitter.on('matchFound', async (match) => this.handleMatchFound(match));
   }
 
-  private generateSessionId(): string {
-    return `session-${Date.now()}`;
-  }
-
   private async handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId, preferences } = match;
-    const sessionId = this.generateSessionId();
-    await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), sessionId, preferences);
+    await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), preferences);
   }
 
-  private async produceMatchingSuccess(userId: string, peerId: string, sessionId: string, preferences: MatchPreference) {
+  private async produceMatchingSuccess(userId: string, peerId: string, preferences: MatchPreference) {
     await this.send({
       topic: TOPICS_MATCHING.MATCHING_SUCCESS,
-      messages: [ { value: JSON.stringify({ userId, peerId, sessionId, preferences }) }]
+      messages: [ { value: JSON.stringify({ userId, peerId, preferences }) }]
     });
-    console.log(`Produced matching success for userId: ${userId}, peerId: ${peerId}, sessionId: ${sessionId}`);
+    console.log(`Produced matching success for userId: ${userId}, peerId: ${peerId}`);
   }
 
   async send({ topic, messages }: { topic: string; messages: { value: string }[] }) {
