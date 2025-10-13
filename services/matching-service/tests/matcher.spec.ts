@@ -1,4 +1,4 @@
-import { Matcher } from '../../../services/matching-service/matcher.ts';
+import { Matcher } from '../../../src/matcher.ts';
 
 describe('Matcher', () => {
   let matcher: Matcher;
