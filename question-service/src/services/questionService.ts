@@ -69,5 +69,18 @@ export const questionService = {
     }
     
     return await questionRepository.deleteQuestion(id);
+  },
+
+  // From ChatGPT
+  async findMatchingQuestion(difficulty: string, categories: string[]) {
+    if (!difficulty?.trim()) {
+      throw new Error('Difficulty is required');
+    }
+    
+    if (!categories || categories.length === 0) {
+      throw new Error('At least one category is required');
+    }
+    
+    return await questionRepository.findMatchingQuestion(difficulty, categories);
   }
 };

@@ -9,7 +9,9 @@
   "dependencies": {
     "@hono/node-server": "^1.19.4",
     "@types/uuid": "^11.0.0",
+    "dotenv": "^17.2.3",
     "hono": "^4.9.9",
+    "kafkajs": "^2.2.4",
     "pg": "^8.16.3",
     "uuid": "^13.0.0"
   },
