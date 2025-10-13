@@ -17,14 +17,19 @@ export class ConsumerMessageHandler {
         break;
 
       default:
-        console.log(`Received message on unknown topic ${topic}: ${message.value?.toString()}`);
+        this.processUnknownTopic(value);
+        break;
     }
   }
 
-  private processMatchingSuccess(value: string) {
+  protected processMatchingSuccess(value: string) {
     console.log(`Processing matching success: ${value}`);
     const { userId, peerId, sessionId } = JSON.parse(value);
     // TODO: Implement logic to handle successful matching internally if needed
 
+  }
+
+  protected processUnknownTopic(value: string) {
+    console.log(`Processing unknown topic message: ${value}`);
   }
 }
