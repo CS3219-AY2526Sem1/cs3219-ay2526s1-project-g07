@@ -8,6 +8,7 @@ describe('Matcher', () => {
     function mockSetInterval() {
       return 1;
     }
+    // Mock setInterval to prevent actual intervals during tests
     spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
   });
 
