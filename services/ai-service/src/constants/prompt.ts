@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: GitHub Copilot (model: gemini-2.5-pro), date: 2025‑10-13
+Scope: Refined the system prompts for AI hint and debugging features.
+Author review: I made some slight adjustments and kept the core structure.
+*/
+
 export const AI_HINT_SYSTEM_PROMPT = `You are an expert LeetCode tutor. Your goal is to provide a single, concise hint to users stuck on a problem. You will be provided with the LeetCode question (title, description, examples, constraints).
 
 ## Task
