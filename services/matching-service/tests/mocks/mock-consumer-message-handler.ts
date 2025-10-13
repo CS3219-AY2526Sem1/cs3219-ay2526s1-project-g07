@@ -16,7 +16,8 @@ export class MockConsumerMessageHandler extends ConsumerMessageHandler {
         break;
 
       default:
-        console.log(`Received message on unknown topic ${topic}: ${message.value?.toString()}`);
+        this.processUnknownTopic(value);
+        break;
     }
   }
 

@@ -7,16 +7,16 @@ describe('MatchingServiceConsumer', () => {
   let msConsumer: MatchingServiceConsumer;
   let kafkaConsumer: Consumer;
   let mockMessageHandler: jasmine.SpyObj<MockConsumerMessageHandler>;
+  const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
 
   // Mock Kafka instance
   const mockKafka = {
-      consumer: jasmine.createSpy('consumer').and.returnValue({
+    consumer: jasmine.createSpy('consumer').and.returnValue({
       connect: jasmine.createSpy('connect'),
       subscribe: jasmine.createSpy('subscribe'),
       run: jasmine.createSpy('run'),
     }),
   } as unknown as Kafka;
-  const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
 
   beforeEach(() => {
     mockMessageHandler = jasmine.createSpyObj('MockConsumerMessageHandler', ['handleMessage']);
@@ -33,7 +33,6 @@ describe('MatchingServiceConsumer', () => {
   });
 
   it('should handle messages using the message handler', async () => {
-    const eachMessageHandler = (msConsumer['run'] as jasmine.Spy).calls.argsFor(0)[0].eachMessage;
     const mockMessage = { 
       value: Buffer.from(JSON.stringify({ 
         userId: '1', 
@@ -42,16 +41,23 @@ describe('MatchingServiceConsumer', () => {
         preferences: { topic: 'Math', difficulty: 'easy' } 
       })) 
     } as KafkaMessage;
-    await eachMessageHandler({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
-    expect(kafkaConsumer.run).toHaveBeenCalled();
+    
+    await msConsumer['run']();
+    const runArgs = (kafkaConsumer.run as jasmine.Spy).calls.mostRecent().args[0];
+    // Run message callback with mock message
+    await runArgs.eachMessage({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
+
     expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, matchingSuccessTopic);
   });
 
   it('should handle empty message values gracefully', async () => {
-    const eachMessageHandler = (msConsumer['run'] as jasmine.Spy).calls.argsFor(0)[0].eachMessage;
     const mockMessage = { value: null } as KafkaMessage;
-    await eachMessageHandler({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
-    expect(kafkaConsumer.run).toHaveBeenCalled();
+    
+    await msConsumer['run']();
+    const runArgs = (kafkaConsumer.run as jasmine.Spy).calls.mostRecent().args[0];
+    // Run message callback with null value
+    await runArgs.eachMessage({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
+
     expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, matchingSuccessTopic);
   });
 });

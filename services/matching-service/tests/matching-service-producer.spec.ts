@@ -8,15 +8,15 @@ describe('MatchingServiceProducer', () => {
   let msProducer: MatchingServiceProducer;
   let kafkaProducer: Producer;
   let mockMatcher: MockMatcher;
+  const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
 
   // Mock Kafka instance
   const mockKafka = {
-      producer: jasmine.createSpy('producer').and.returnValue({
+    producer: jasmine.createSpy('producer').and.returnValue({
       connect: jasmine.createSpy('connect'),
       send: jasmine.createSpy('send'),
     }),
   } as unknown as Kafka;
-  const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
 
   beforeEach(() => {
     mockMatcher = new MockMatcher();
