@@ -4,7 +4,7 @@ import { TOPICS_MATCHING } from "../src/utils.ts";
 import { MockMatcher } from "./mocks/mock-matcher.ts";
 
 describe('ConsumerMessageHandler', () => {
-  let mockMatcher: MockMatcher
+  let mockMatcher: MockMatcher;
   let messageHandler: ConsumerMessageHandler;
 
   beforeEach(() => {
