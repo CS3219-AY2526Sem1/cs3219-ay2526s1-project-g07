@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "../../node_modules/@types/pg/index.js";
 import 'dotenv/config'  // loads .env.local
 // Test database connection first
 export const db = new Pool({
