@@ -2201,6 +2201,7 @@ I'll add a production-ready, multi-stage Dockerfile for
  (TypeScript -> dist, non-root runtime, healthcheck) and include short build/run instructions next.
 
 ## Actions taken
+
 - Inspected repository files to match build/runtime steps:
   - Read
  (build: `tsc`, start: `node dist/index.js`).
@@ -2211,13 +2212,17 @@ I'll add a production-ready, multi-stage Dockerfile for
  with a multi-stage build and small runtime image.
 
 ## Files changed
+
 -
+
  — added
-  - Build stage: `node:20-bullseye-slim`, runs `npm ci` and `npm run build` (TS compile to `dist`).
-  - Runtime stage: `node:20-alpine`, copies `dist` and
+
+- Build stage: `node:20-bullseye-slim`, runs `npm ci` and `npm run build` (TS compile to `dist`).
+- Runtime stage: `node:20-alpine`, copies `dist` and
 , installs production deps, creates a non-root user, exposes port `5001`, sets sensible env vars, and adds a healthcheck.
 
 ## Dockerfile content (summary)
+
 - Multi-stage: build with full Node image, runtime with Alpine for smaller image.
 - Uses `npm ci` for reproducible installs.
 - Copies `dist` from build stage and installs only production dependencies in runtime.
@@ -2230,39 +2235,51 @@ I'll add a production-ready, multi-stage Dockerfile for
 
 If you'd like the exact contents copied/pasted into your terminal, here's what was added to
  (already placed in the repo):
+
 - Multi-stage build from Node 20 (build on bullseye-slim, runtime on alpine)
 - Build step runs `npm run build` which runs `tsc`
 - Runtime installs production deps and runs the compiled `dist/index.js`
 
 ## How you can build and run locally
+
 (Requires Docker installed on macOS)
+
 - Build image:
+
   ```
   docker build -t question-service:latest ./question-service
   ```
+
 - Run container:
+
   ```
   docker run --rm -p 5001:5001 --env PORT=5001 question-service:latest
   ```
+
 - Quick health check (after container starts):
+
   ```
   curl http://localhost:5001/
   ```
+
   You should see the JSON health response defined in
 .
 
 ## Next steps (I set these in the todo list)
+
 - Optional: I can run `docker build` locally and report the result if you want (todo #3). Tell me if you want me to run that now.
 - Document build/run in
  (todo #4). I can add a short README update if you'd like.
 
 ## Notes / assumptions
+
 - I assumed the project uses npm (no lockfile seen in
  — if you use pnpm or yarn, tell me and I’ll adapt the Dockerfile).
 - The Dockerfile expects `npm ci` to work; if there's no lockfile and you prefer `npm install`, I can change it.
 - Healthcheck uses `wget`/`wget`-style `busybox` utilities available in Alpine; if you prefer `curl`, I can change to that.
 
 Would you like me to:
+
 - Run a local docker build to verify the image builds successfully?
 - Add the build/run instructions into
 ?
@@ -2554,43 +2571,57 @@ I'll update the top-level compose file to wire
 .
 
 ## What I changed
+
 - Replaced
  with a Compose v3.8 configuration that defines three services:
   - `peerprep-auth-db` (postgres:17-alpine) — existing DB service, with healthcheck and init script mount.
   -
- — build from
-, exposes port 5002, depends on the DB (waits for DB health).
+
+— build from
+, exposes port 5002, depends on the DB (waits for DB health)
   -
+
  — build from
 , exposes port 5001, depends on the DB; includes an example `AUTH_SERVER_URL` env var pointing to the auth server service.
+
 - All services join the
  bridge network.
 - Added healthchecks using `pg_isready` for Postgres and simple HTTP checks for the Node services.
 
-Files changed:
+Files changed
 -
+
  — replaced.
 
 ## How to use
+
 From repository root:
+
 - Build and start services in foreground:
+
   ```
   docker compose up --build
   ```
+
 - Start in background (detached):
+
   ```
   docker compose up --build -d
   ```
+
 - Stop and remove:
+
   ```
   docker compose down
   ```
 
 Then verify:
-- Auth server health: http://localhost:5002/
-- Question service health: http://localhost:5001/
+
+- Auth server health: <http://localhost:5002/>
+- Question service health: <http://localhost:5001/>
 
 ## Notes, assumptions, and next steps
+
 - I set DB credentials in compose as `username` / `password` /
  matching the existing init mount. If you want different credentials or a .env file, I can switch compose to use an env_file.
 - The
@@ -2605,6 +2636,7 @@ Then verify:
 . If the question service requires DB access or a different env var name, I can add it.
 
 Would you like me to:
+
 - Run `docker compose up --build` locally and report the build logs/results?
 - Add a `.env` file and switch
  to load credentials from it?
@@ -2773,10 +2805,13 @@ I've added a standalone Docker Compose file for the auth server at
 
 What I created
 -
- — runs:
+
+— runs
   -
- (postgres:17-alpine) with the same init SQL mount and credentials used elsewhere.
+
+(postgres:17-alpine) with the same init SQL mount and credentials used elsewhere
   -
+
  built from
 , depends on
 , exposes port 5002, and sets `DATABASE_URL`, `BETTER_AUTH_SECRET` and
@@ -2784,17 +2819,22 @@ What I created
 
 How to run (from repo root or from
  directory)
+
 - From repo root:
+
   ```
   docker compose -f auth-server/docker-compose.yaml up --build
   ```
+
 - Or change directory and run:
+
   ```
   cd auth-server
   docker compose up --build
   ```
 
 Notes and suggestions
+
 - The compose file reuses `../db/init.sql` for database initialization. If you prefer a separate init script or different credentials, I can adjust.
 - If you want the auth server to use `.env` instead of inline env vars, I can switch to `env_file: .env` and create a `.env.example`.
 - If you want me to run the compose up locally to verify everything starts (I can), say so and I'll run it and report the logs/status.
@@ -2932,6 +2972,7 @@ Done — I updated the top-level
  service alongside the existing Postgres DB.
 
 Summary of the top-level compose now:
+
 - peerprep-auth-db (postgres:17-alpine) — same init SQL mount, healthcheck, exposed on host port 5433.
 - auth-server — built from
 , depends on `peerprep-auth-db` (waits for DB health), exposes host port 5002, with env vars:
@@ -2942,15 +2983,19 @@ Summary of the top-level compose now:
 .
 
 How to run:
+
 ```
 docker compose up --build
 ```
+
 or detached:
+
 ```
 docker compose up --build -d
 ```
 
 If you'd like, I can:
+
 - Start the compose locally and stream logs to verify services come up (I can run `docker compose up --build` now).
 - Add
  to the top-level compose as well (if you want a single compose to start DB + auth + question services).
@@ -3175,6 +3220,7 @@ Done — I updated the top-level
  so `docker compose up` will start the Question Service as well.
 
 What changed
+
 - Added a
  service:
   - build context:
@@ -3186,28 +3232,34 @@ What changed
     - `peerprep-auth-server` (waits for service start)
   - environment:
     - PORT=5001
-    - AUTH_SERVER_URL=http://peerprep-auth-server:5002
+    - AUTH_SERVER_URL=<http://peerprep-auth-server:5002>
   - exposes port 5001 -> host 5001
   - healthcheck: HTTP check against / on port 5001
   - attached to the existing
 
 How to run
+
 - From repository root:
+
   ```
   docker compose up --build
   ```
+
 - Or detached:
+
   ```
   docker compose up --build -d
   ```
 
 Verification tips
+
 - After `up` completes, check:
-  - Auth server: http://localhost:5002/
-  - Question service: http://localhost:5001/
+  - Auth server: <http://localhost:5002/>
+  - Question service: <http://localhost:5001/>
   - DB is on host port 5433
 
 Notes and suggestions
+
 - I used `peerprep-auth-server` as the internal hostname for the auth service; if you'd rather use
  or
  service name as the internal host, I can change the env var to point to any service name you prefer.
@@ -3215,6 +3267,7 @@ Notes and suggestions
 - If you want `docker compose up` to skip building and use local images (or images from a registry), I can change the file to reference images instead of `build:`.
 
 Would you like me to:
+
 - Run `docker compose up --build` now and report logs/status?
 - Add an `.env.example` and switch sensitive vars to `env_file`?
 
@@ -3241,7 +3294,7 @@ Would you like me to:
 
 ### Participant
 
- cs3219-ay2526s1-project-g07 git:(add-docker-compose) ✗ docker compose up
+cs3219-ay2526s1-project-g07 git:(add-docker-compose) ✗ docker compose up
 [+] Building 3.6s (11/13)                                                                                                          docker:desktop-linux
  => [question-service internal] load build definition from Dockerfile                                                                              0.0s
  => => transferring dockerfile: 577B                                                                                                               0.0s
@@ -3258,6 +3311,7 @@ Would you like me to:
  => [question-service build 4/5] COPY . .                                                                                                          0.3s
  => ERROR [question-service build 5/5] RUN npm run build                                                                                           1.5s
 ------
+ >
  > [question-service build 5/5] RUN npm run build:
 0.277
 0.277 > build
@@ -3266,7 +3320,7 @@ Would you like me to:
 1.434 src/services/userService.ts(2,32): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
 1.444 npm notice
 1.444 npm notice New major version of npm available! 10.8.2 -> 11.6.1
-1.444 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.1
+1.444 npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.6.1>
 1.444 npm notice To update run: npm install -g npm@11.6.1
 1.444 npm notice
 ------
@@ -3307,7 +3361,7 @@ failed to solve: process "/bin/sh -c npm run build" did not complete successfull
 
 ### Participant
 
- cs3219-ay2526s1-project-g07 git:(add-docker-compose) ✗ docker compose up
+cs3219-ay2526s1-project-g07 git:(add-docker-compose) ✗ docker compose up
 [+] Building 3.6s (11/13)                                                                                                          docker:desktop-linux
  => [question-service internal] load build definition from Dockerfile                                                                              0.0s
  => => transferring dockerfile: 577B                                                                                                               0.0s
@@ -3324,6 +3378,7 @@ failed to solve: process "/bin/sh -c npm run build" did not complete successfull
  => [question-service build 4/5] COPY . .                                                                                                          0.3s
  => ERROR [question-service build 5/5] RUN npm run build                                                                                           1.5s
 ------
+ >
  > [question-service build 5/5] RUN npm run build:
 0.277
 0.277 > build
@@ -3332,7 +3387,7 @@ failed to solve: process "/bin/sh -c npm run build" did not complete successfull
 1.434 src/services/userService.ts(2,32): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
 1.444 npm notice
 1.444 npm notice New major version of npm available! 10.8.2 -> 11.6.1
-1.444 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.1
+1.444 npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.6.1>
 1.444 npm notice To update run: npm install -g npm@11.6.1
 1.444 npm notice
 ------
@@ -3708,6 +3763,7 @@ export const userService = {
   <summary>Read **userRepository.ts#1-1**, lines 1 to 50</summary>
 
 ````
+
 File: `/Users/tanshiyu/Desktop/cs3219-ay2526s1-project-g07/auth-server/src/repositories/userRepository.ts`. Lines 1 to 50 (53 lines total): ```typescript
 // 4. Repository (repositories/userRepository.ts)
 import { db } from '../db/connection';
@@ -3726,7 +3782,7 @@ export const userRepository = {
   async getUserData(userId: string): Promise<UserData | null> {
     try {
       const query = `
-        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role"
+SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role"
         FROM "user"
         WHERE id = $1
       `;
@@ -3744,7 +3800,7 @@ export const userRepository = {
     try {
       const { name, description } = data;
       const query = `
-        UPDATE "user"
+UPDATE "user"
         SET name = $1, description = $2, "updatedAt" = NOW()
         WHERE id = $3
       `;
@@ -3753,6 +3809,7 @@ export const userRepository = {
       console.error('Error updating user data:', error);
       throw new Error('Failed to update user data');
     }
+
 ```
 ````
 
@@ -4218,35 +4275,39 @@ function RouteComponent() {
 
 Perfect! Now let me mark the todos complete and provide you with a summary. Let me update the todo list:
 
-## 🎉 Complete Admin Users Page Built!
+## 🎉 Complete Admin Users Page Built
 
 I've created a full-stack admin users management system. Here's what I built:
 
-### Backend (auth-server) - 3 files updated:
+### Backend (auth-server) - 3 files updated
 
 **1. Repository (
 )**
+
 - ✅
- - Fetches all users from database
+- Fetches all users from database
 - ✅
- - Updates a user's role
+- Updates a user's role
 
 **2. Service (
 )**
+
 - ✅
- - Service layer for fetching users
+- Service layer for fetching users
 - ✅
- - Service layer for role updates
+- Service layer for role updates
 
 **3. Controller (
 )**
+
 - ✅ `GET /user/getAllUsers` - API endpoint to fetch all users
 - ✅ `PATCH /user/:userId/role` - API endpoint to update user role
 
-### Frontend - 1 file updated:
+### Frontend - 1 file updated
 
 **Admin Users Page (
 )**
+
 - ✅ Beautiful table showing all users with:
   - **Name** column
   - **Email** column
@@ -4259,7 +4320,8 @@ I've created a full-stack admin users management system. Here's what I built:
 - ✅ Responsive design using shadcn/ui components
 - ✅ Role badges with different colors (purple for admin, gray for user)
 
-### Features:
+### Features
+
 - 📊 Shows total user count
 - 🔄 Auto-refreshes after role updates
 - ⚡ Disabled button state during updates
@@ -4267,13 +4329,16 @@ I've created a full-stack admin users management system. Here's what I built:
 - 🔒 Protected route (redirects if not authenticated)
 - ✅ Proper error handling throughout
 
-### How to test:
+### How to test
+
 1. Start your services:
+
    ```bash
    docker compose up --build
    ```
 
 2. Navigate to the admin users page in your browser:
+
    ```
    http://localhost:3000/admin/users
    ```
@@ -5519,27 +5584,31 @@ docker exec kafka /opt/kafka/bin/kafka-consumer-groups.sh \
 
 Perfect! Now let me update the todo list and provide a summary:
 
-## 🎉 Complete Kafka Integration for Question Service Built!
+## 🎉 Complete Kafka Integration for Question Service Built
 
 I've created a full Kafka integration for your question service that consumes from
  and produces to
 . Here's what I built:
 
 ### 📁 Files Created (in
+
 )
 
 **1. `types.ts`** - TypeScript interfaces
+
 - `QuestionRequestMessage` - Request format
 - `QuestionSuccessMessage` - Success response format
 - `QuestionErrorMessage` - Error response format
 
 **2. `producer.ts`** - Kafka Producer
+
 - ✅ Connects to Kafka broker (localhost:9094)
 - ✅ `sendQuestionSuccess()` - Publishes found questions
 - ✅ `sendQuestionError()` - Publishes error messages
 - ✅ Connection management and error handling
 
 **3. `consumer.ts`** - Kafka Consumer
+
 - ✅ Subscribes to
  topic
 - ✅ Consumer group:
@@ -5548,6 +5617,7 @@ I've created a full Kafka integration for your question service that consumes fr
 - ✅ Automatic reconnection logic
 
 **4. `messageHandler.ts`** - Business Logic
+
 - ✅ Processes incoming question requests
 - ✅ Finds matching questions by difficulty + categories
 - ✅ Sends success or error responses
@@ -5555,14 +5625,16 @@ I've created a full Kafka integration for your question service that consumes fr
 
 **5.
 ** - Main Entry Point
+
 - ✅
- - Initializes everything
+- Initializes everything
 - ✅ `stopKafkaServices()` - Graceful shutdown
 - ✅ SIGINT/SIGTERM handlers
 - ✅ Exports all Kafka functionality
 
 **6.
 ** - Complete Documentation
+
 - Message formats and examples
 - Configuration guide
 - Testing instructions
@@ -5572,16 +5644,19 @@ I've created a full Kafka integration for your question service that consumes fr
 
 **
 **
+
 - Added Kafka service startup on app launch
 - Kafka runs alongside the HTTP server
 
 **
 **
+
 - Added
  method
 
 **
 **
+
 - Added
  with PostgreSQL array overlap query
 - Uses `RANDOM()` for fair question selection
@@ -5610,12 +5685,14 @@ I've created a full Kafka integration for your question service that consumes fr
 ### 🚀 How to Use
 
 **Start the service:**
+
 ```bash
 cd question-service
 npm run dev
 ```
 
 You'll see:
+
 ```
 🚀 Starting Kafka services for question-service...
 ✅ Producer connected
@@ -5626,6 +5703,7 @@ You'll see:
 ```
 
 **Test with Kafka console producer:**
+
 ```bash
 docker exec -it kafka /opt/kafka/bin/kafka-console-producer.sh \
   --bootstrap-server localhost:9092 \
@@ -5635,11 +5713,13 @@ docker exec -it kafka /opt/kafka/bin/kafka-console-producer.sh \
 ```
 
 Then send:
+
 ```
 req-test:{"requestId":"req-test","difficulty":"Easy","categories":["Array"],"timestamp":1697011200000}
 ```
 
 **Monitor responses:**
+
 ```bash
 docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh \
   --bootstrap-server localhost:9092 \
@@ -5661,13 +5741,15 @@ docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh \
 ### 🔍 Question Matching Logic
 
 Finds questions where:
+
 - Difficulty matches exactly
 - At least one category overlaps (using PostgreSQL `&&` operator)
 - Returns random result from matches
 
 ### 📊 Monitoring
 
-Access Kafka UI at http://localhost:8080 to:
+Access Kafka UI at <http://localhost:8080> to:
+
 - View all topics and messages
 - Monitor consumer lag
 - Check partition offsets
@@ -6028,6 +6110,7 @@ I've updated the Kafka integration to handle messages from the matching service 
 ### 🔄 Updated Files
 
 **1. `types.ts`** - Enhanced message interfaces
+
 - ✅ Added `userId1` and `userId2` to `QuestionRequestMessage`
 - ✅ Added `userId1`, `userId2`, and `questionId` to `QuestionSuccessMessage`
 - ✅ Added `userId1` and `userId2` to `QuestionErrorMessage`
@@ -6035,6 +6118,7 @@ I've updated the Kafka integration to handle messages from the matching service 
  object)
 
 **2. `messageHandler.ts`** - Updated processing logic
+
 - ✅ Extracts `userId1` and `userId2` from incoming messages
 - ✅ Logs both user IDs when processing requests
 - ✅ Includes user IDs in success and error responses
@@ -6042,6 +6126,7 @@ I've updated the Kafka integration to handle messages from the matching service 
 
 **3.
 ** - Updated documentation
+
 - ✅ Updated all message format examples
 - ✅ Added user IDs to all examples
 - ✅ Updated architecture diagram to show Matching → Question → Collaboration flow
@@ -6050,6 +6135,7 @@ I've updated the Kafka integration to handle messages from the matching service 
 ### 📨 New Message Structure
 
 **Question Request (from Matching Service):**
+
 ```json
 {
   "requestId": "req-123-abc",
@@ -6062,6 +6148,7 @@ I've updated the Kafka integration to handle messages from the matching service 
 ```
 
 **Question Success Response:**
+
 ```json
 {
   "requestId": "req-123-abc",
@@ -6088,6 +6175,7 @@ I've updated the Kafka integration to handle messages from the matching service 
 ### 🧪 Testing
 
 Test with the updated format:
+
 ```bash
 docker exec -it kafka /opt/kafka/bin/kafka-console-producer.sh \
   --bootstrap-server localhost:9092 \
@@ -6169,11 +6257,13 @@ docker exec -it kafka /opt/kafka/bin/kafka-console-producer.sh \
 Now paste these 2 messages (one at a time, press Enter after each):
 
 **Message 1:**
+
 ```
 req-001:{"requestId":"req-001","userId1":"user-alice","userId2":"user-bob","difficulty":"Easy","categories":["Array","Hash Table"],"timestamp":1697011200000}
 ```
 
 **Message 2:**
+
 ```
 req-002:{"requestId":"req-002","userId1":"user-charlie","userId2":"user-diana","difficulty":"Medium","categories":["Dynamic Programming"],"timestamp":1697011201000}
 ```
@@ -6198,7 +6288,8 @@ You should see the 2 responses with question details!
 
 ### Step 4: Monitor with Kafka UI (Optional)
 
-Open your browser to http://localhost:8080 and:
+Open your browser to <http://localhost:8080> and:
+
 1. Click on **Topics**
 2. Click **question-request** → **Messages** to see your input messages
 3. Click **question-success** → **Messages** to see the responses
@@ -6258,6 +6349,7 @@ echo "✨ Test complete!"
 ````
 
 Then run:
+
 ```bash
 chmod +x test-kafka.sh
 ./test-kafka.sh
@@ -6266,6 +6358,7 @@ chmod +x test-kafka.sh
 ## 🔍 What You'll See
 
 **In the question service logs:**
+
 ```
 📥 Received question request: {
   requestId: 'req-001',
@@ -6278,8 +6371,9 @@ chmod +x test-kafka.sh
 ```
 
 **In the consumer output:**
+
 ```json
-CreateTime:1697011201000	req-001	{"requestId":"req-001","userId1":"user-alice","userId2":"user-bob","questionId":"q-123","title":"Two Sum","question":"Given an array...","difficulty":"Easy","categories":["Array","Hash Table"],"timestamp":1697011201500}
+CreateTime:1697011201000 req-001 {"requestId":"req-001","userId1":"user-alice","userId2":"user-bob","questionId":"q-123","title":"Two Sum","question":"Given an array...","difficulty":"Easy","categories":["Array","Hash Table"],"timestamp":1697011201500}
 ```
 
 That's it! 🚀
@@ -6416,6 +6510,7 @@ export class KafkaClient {
 ````
 
 When you run `npm run dev`, this setup will:
+
 - Start the Kafka client
 - Handle any startup errors
 - Gracefully shut down on termination signals
@@ -6500,18 +6595,21 @@ services:
 ````
 
 The second approach is more robust because:
+
 1. It ensures topics are created after Kafka is fully started
 2. Provides clear feedback about topic creation
 3. Only runs once during initialization
 4. Uses `--if-not-exists` to prevent errors on container restarts
 
 To use this:
+
 1. Add the `kafka-setup` service to your docker-compose.yaml
 2. Run `docker compose up`
 3. The topics will be created automatically after Kafka starts
 
 You can verify the topics were created through:
-- Kafka UI at http://localhost:8080
+
+- Kafka UI at <http://localhost:8080>
 - Running `docker exec -it kafka kafka-topics.sh --list --bootstrap-server localhost:9092`
 
 > *Response time: 13.19 seconds*
@@ -6562,17 +6660,21 @@ services:
 ````
 
 Then:
+
 1. Stop and remove existing containers:
+
 ```bash
 docker compose down -v
 ```
 
 2. Start the containers again:
+
 ```bash
 docker compose up -d
 ```
 
 3. Verify topics were created (use one of these methods):
+
 ```bash
 # From host machine
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka:9092
@@ -6582,7 +6684,7 @@ docker exec -it kafka bash
 /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 ```
 
-You can also check the Kafka UI at http://localhost:8080 to verify the topics were created.
+You can also check the Kafka UI at <http://localhost:8080> to verify the topics were created.
 
 > *Response time: 9.34 seconds*
 > <br>*Model: claude-3.5-sonnet*
@@ -6645,28 +6747,32 @@ services:
 Then:
 
 1. Stop and remove existing containers:
+
 ```bash
 docker compose down -v
 ```
 
 2. Start everything up:
+
 ```bash
 docker compose up -d
 ```
 
 3. Verify topics were created:
+
 ```bash
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka:9092
 ```
 
 This approach:
+
 - Uses a dedicated initialization container
 - Waits for Kafka to start before creating topics
 - Uses `--if-not-exists` to prevent errors on restarts
 - Uses the same network as Kafka
 - Creates all topics with proper partitions and replication factors
 
-You can also verify the topics in Kafka UI at http://localhost:8080
+You can also verify the topics in Kafka UI at <http://localhost:8080>
 
 > *Response time: 12.70 seconds*
 > <br>*Model: claude-3.5-sonnet*
@@ -6681,5 +6787,116 @@ You can also verify the topics in Kafka UI at http://localhost:8080
 ### Author Notes
 
 - Topics start to show upon startup of kafka service when running `docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka:9092`
+
+---
+
+## request_28083672-6158-4b02-a26a-08c566c9b515
+
+**Participant:** jiakai-17
+**Assistant:** GitHub Copilot
+
+### Participant
+
+Refine my AI Prompts for a leetcode style ai assistant
+
+export const AI_HINT_SYSTEM_PROMPT = `You are a helpful LeetCode tutor. Your task is to provide short hints to users who are stuck on a LeetCode question. You will be provided with the LeetCode question, which includes the problem title, description, examples and constraints.
+
+Your task is to:
+
+Analyze the question.
+
+Identify the key concepts and techniques required to solve the problem.
+
+Provide a hint that guides the user towards the solution without giving it away completely.
+
+Important Constraints:
+
+The hint MUST be short, concise, and easy to understand.
+
+The hint MUST NOT be longer than a few sentences.
+
+The hint you provide MUST NOT contain any other text that are not part of the hint.
+
+The hint MUST NOT contain any code snippets.
+`;
+
+export const AI_DEBUG_SYSTEM_PROMPT = `You are a helpful LeetCode tutor. Your task is to provide debugging assistance to users who are stuck on a LeetCode question. You will be provided with the LeetCode question, which includes the problem title, description, examples and constraints. You will also be provided with the user's code and the error message they are encountering.
+
+Note that the user is coding using Python 3 in their local environment.
+You should ignore any environment-specific issues (such as a missing Solution class) and focus on the code.
+
+Your task is to:
+
+Analyze the question.
+
+Review the user's code and output and identify any issues or errors, if any.
+
+Provide a concise explanation of the issue, if any.
+
+Suggest code changes to fix the problem, if applicable.
+
+Important Constraints:
+
+The explanation MUST be short, concise and easy to understand.
+
+The explanation MUST be direct AND MUST NOT be longer than a few sentences.
+
+The explanation MUST NOT contain LaTeX formatting (i.e. should not have `$`). Replace any LaTeX formatting with plain text.
+
+The code changes MUST be wrapped in a Python Markdown code block.
+
+The code changes MUST directly address the issue.
+
+The code changes MUST ONLY contain the lines of code to be modified. Do NOT include any unnecessary context or surrounding code.
+`;
+
+### Assistant
+
+Here are the refined AI prompts.
+
+````typescript
+export const AI_HINT_SYSTEM_PROMPT = `You are an expert LeetCode tutor AI. Your role is to provide a single, concise hint to users stuck on a problem. You will receive the question's title, description, examples, and constraints.
+
+Your task is to:
+1.  Analyze the problem to identify the core concepts and algorithms required.
+2.  Formulate a hint that guides the user toward the solution without revealing it directly. Focus on the underlying logic or a general approach.
+
+Important Constraints:
+- Your response MUST contain ONLY the hint text. Do not include any introductory phrases like "Here's a hint:".
+- The hint MUST be a single, short sentence.
+- The hint MUST NOT contain code snippets.
+- The hint should encourage a line of thinking, not just name a specific data structure or algorithm (e.g., prefer "How can you keep track of elements you've already seen?" over "Use a hash map.").
+`;
+
+export const AI_DEBUG_SYSTEM_PROMPT = `You are an expert LeetCode debugging AI. Your task is to help users fix their Python 3 code. You will receive the LeetCode question, the user's code, and any error messages.
+
+Your task is to:
+1.  Analyze the user's code in the context of the problem description.
+2.  Identify the primary logical error or bug.
+3.  Provide a brief, one-sentence explanation of the error.
+4.  Suggest the minimal code change to fix the bug.
+
+Important Constraints:
+- Your entire response must follow this format: A single sentence explaining the bug, followed by a Python Markdown code block with the fix.
+- The explanation MUST be direct and easy to understand.
+- The explanation MUST NOT use LaTeX formatting (e.g., no '$').
+- The code block MUST ONLY contain the specific lines to be changed or added. Do not include existing, unchanged code.
+- Ignore environment-specific issues (like a missing 'Solution' class) and focus solely on the algorithm's logic.
+`;
+````
+
+> *Response time: 13.19 seconds*
+> <br>*Model: gemini-2.5-pro*
+> <br>*Timestamp: 2025-10-13 00:12:49 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [x] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Made some slight modifications to the refined system prompts.
 
 ---

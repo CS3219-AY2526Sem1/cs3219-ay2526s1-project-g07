@@ -36,12 +36,13 @@ const monacoEditorOptions: editor.IStandaloneEditorConstructionOptions = {
 };
 
 interface PythonMonacoEditorProps {
+  code: string;
   onCodeChange: (newCode: string) => void;
 }
 
 const roomname = `dummy-session-id`; // replace with actual session id
 
-function PythonMonacoEditor({ onCodeChange }: PythonMonacoEditorProps) {
+function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [codeEditor, setCodeEditor] =
     useState<editor.IStandaloneCodeEditor | null>(null);
@@ -80,10 +81,10 @@ function PythonMonacoEditor({ onCodeChange }: PythonMonacoEditorProps) {
 
   const handleCodeChange: OnChange = useCallback(
     (value) => {
-      if (value !== undefined) {
-        onCodeChange(value);
-      }
-    },
+        if (value !== undefined) {
+          onCodeChange(value);
+        }
+      },
     [onCodeChange]
   );
 
@@ -99,21 +100,17 @@ function PythonMonacoEditor({ onCodeChange }: PythonMonacoEditorProps) {
   }, []);
 
   return (
-    <div className="h-full w-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
-        <h3 className="text-sm">Language: Python 3</h3>
-      </div>
-      <div className="h-[calc(100%-44px)]">
-        <Editor
-          width="100%"
-          height="100%"
-          language="python"
-          theme="vs-dark"
-          onChange={handleCodeChange}
-          onMount={handleEditorMount}
-          options={monacoEditorOptions}
-        />
-      </div>
+    <div className="h-[calc(100%-44px)]">
+      <Editor
+        width="100%"
+        height="100%"
+        language="python"
+        theme="vs-dark"
+        value={code}
+        onChange={handleCodeChange}
+        onMount={handleEditorMount}
+        options={monacoEditorOptions}
+      />
     </div>
   );
 }

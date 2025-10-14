@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 
 interface CodeOutputProps {
   code: string;
+  onOutputChange?: (output: string) => void;
 }
 
-function CodeOutput({ code }: CodeOutputProps) {
+function CodeOutput({ code, onOutputChange }: CodeOutputProps) {
   const [output, setOutput] = useState("Loading Pyodide worker...");
   const [pyodideLoaded, setPyodideLoaded] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -104,6 +105,12 @@ function CodeOutput({ code }: CodeOutputProps) {
     return killWorker;
   }, [createWorker, killWorker]);
 
+  useEffect(() => {
+    if (onOutputChange) {
+      onOutputChange(output);
+    }
+  }, [output, onOutputChange]);
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
@@ -113,7 +120,7 @@ function CodeOutput({ code }: CodeOutputProps) {
             <Button
               variant="destructive"
               onClick={interruptExecution}
-              className="px-3 py-1 text-xs h-6 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-amber-600 text-white rounded hover:bg-amber-700 cursor-pointer"
             >
               Interrupt
             </Button>
@@ -122,7 +129,7 @@ function CodeOutput({ code }: CodeOutputProps) {
             <Button
               variant="destructive"
               onClick={killAndRestartWorker}
-              className="px-3 py-1 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
             >
               Kill
             </Button>
@@ -131,7 +138,7 @@ function CodeOutput({ code }: CodeOutputProps) {
             <Button
               variant="default"
               onClick={runPythonCode}
-              className="px-3 py-1 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 text-xs h-6 bg-green-600 text-white rounded hover:bg-green-700 cursor-pointer"
               disabled={!pyodideLoaded}
             >
               Run Code
