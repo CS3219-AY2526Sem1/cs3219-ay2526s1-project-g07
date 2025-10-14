@@ -72,6 +72,10 @@ function RouteComponent() {
     error: "",
   });
 
+  const resetCode = useCallback(() => {
+    setCode(defaultCode);
+  }, []);
+
   const fetchAiHint = useCallback(async () => {
     setAiHintContent({ loading: true, content: "", error: "" });
     try {
@@ -179,15 +183,24 @@ function RouteComponent() {
                 <div className="h-full w-full">
                   <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 h-11">
                     <h3 className="text-sm">Language: Python 3</h3>
-                    {!showDebugPanel && (
+                    <div className="flex items-center gap-4">
                       <Button
                         variant="outline"
-                        onClick={toggleAiDebugPanel}
-                        className="px-3 text-xs h-6 rounded text-violet-600 border-violet-500 hover:bg-violet-50 hover:text-violet-600 cursor-pointer"
+                        onClick={resetCode}
+                        className="px-3 text-xs h-6 rounded text-red-600 border-red-500 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                       >
-                        Open AI Panel
+                        Reset Code
                       </Button>
-                    )}
+                      {!showDebugPanel && (
+                        <Button
+                          variant="outline"
+                          onClick={toggleAiDebugPanel}
+                          className="px-3 text-xs h-6 rounded text-violet-600 border-violet-500 hover:bg-violet-50 hover:text-violet-600 cursor-pointer"
+                        >
+                          Open AI Panel
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <PythonMonacoEditor code={code} onCodeChange={setCode} />
                 </div>
