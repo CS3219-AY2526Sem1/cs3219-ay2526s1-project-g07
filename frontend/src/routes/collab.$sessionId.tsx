@@ -60,7 +60,7 @@ function RouteComponent() {
   const { sessionId } = Route.useParams();
   const [code, setCode] = useState(defaultCode);
   const [output, setOutput] = useState("");
-  const [showDebugPanel, setShowDebugPanel] = useState(true);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [aiHintContent, setAiHintContent] = useState({
     loading: false,
     content: "",
