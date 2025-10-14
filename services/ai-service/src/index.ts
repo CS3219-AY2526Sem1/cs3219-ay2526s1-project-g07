@@ -33,7 +33,7 @@ async function init() {
   serve(
     {
       fetch: app.fetch,
-      hostname: "127.0.0.1",
+      hostname: process.env.HOST || "127.0.0.1",
       port: parseInt(process.env.PORT || "5005", 10),
     },
     (info) => {
