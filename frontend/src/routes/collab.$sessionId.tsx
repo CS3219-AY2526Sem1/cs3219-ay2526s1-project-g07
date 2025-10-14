@@ -126,8 +126,8 @@ function RouteComponent() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="flex flex-1 flex-col mx-12 mb-16 min-h-148 max-h-[calc(100vh-160px)]">
-        <div className="border-red-500 border-2 h-14 shrink-0 mb-2">
-          Welcome {sessionId} - Collab and Tool Buttons
+        <div className="border-gray-200 border-2 h-10 shrink-0 mb-2">
+          Session ID: {sessionId}
         </div>
         <ResizablePanelGroup
           direction="horizontal"
