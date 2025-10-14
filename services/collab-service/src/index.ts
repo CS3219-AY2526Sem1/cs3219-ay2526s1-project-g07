@@ -1,3 +1,8 @@
+// AI Assistance Disclosure:
+// Tool: GitHub Copilot (model: claude-sonnet-3.5), date: 2025-10-12
+// Scope: Generated instantiation of kafka client for collab-service
+// Author review: I have reviewed the code for correctness and ran it in a test file to ensure that the event gets produced.
+
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 

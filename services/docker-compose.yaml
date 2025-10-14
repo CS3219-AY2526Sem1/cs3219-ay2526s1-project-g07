@@ -1,3 +1,9 @@
+# AI Assistance Disclosure:
+# Tool: GitHub Copilot (model: claude-sonnet-3.5), date: 2025-10-12
+# Scope: Generated command to initialise kafka topics in docker-compose.yaml
+# Author review: I have reviewed the bash script for correctness and run it to ensure that the topics get instantiated on startup.
+
+
 services:
   kafka:
     image: apache/kafka:4.0.0
