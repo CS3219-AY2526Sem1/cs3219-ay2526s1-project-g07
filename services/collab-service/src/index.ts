@@ -12,8 +12,9 @@ import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 
 const wss = new WebSocketServer({ noServer: true });
-const host = process.env.HOST || "localhost";
-const port = Number.parseInt(process.env.PORT || "1234");
+// TODO: maybe use Hono instead of node:http
+const host = process.env.HOST || "127.0.0.1";
+const port = Number.parseInt(process.env.PORT || "5004", 10);
 const kafkaConfig: KafkaConfig = {
   clientId: "collab-service",
   brokers: (process.env.KAFKA_BROKERS || "localhost:9094").split(","),
@@ -118,29 +119,30 @@ server.on("upgrade", (request, socket, head) => {
 
 // Websocket server
 server.listen(port, host, () => {
-  console.log(`running at '${host}' on port ${port}`);
+  console.log(`running websocket at '${host}' on port ${port}`);
 });
 
+// TODO: Enable Kafka once integration working
 // Setup Kafka Client
-const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
-try {
-  await kafkaClient.connect();
-} catch (err) {
-  console.error("Failed to connect to Kafka, exiting...");
-  await shutdown(1);
-}
+// const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+// try {
+//   await kafkaClient.connect();
+// } catch (err) {
+//   console.error("Failed to connect to Kafka, exiting...");
+//   await shutdown(1);
+// }
 
-async function shutdown(code: number = 0) {
-  console.log("Shutting down collab-service...");
-  try {
-    await kafkaClient.disconnect();
-  } catch (err) {
-    console.error("Error during shutdown of collab-service:", err);
-    process.exit(1)
-  }
+// async function shutdown(code: number = 0) {
+//   console.log("Shutting down collab-service...");
+//   try {
+//     await kafkaClient.disconnect();
+//   } catch (err) {
+//     console.error("Error during shutdown of collab-service:", err);
+//     process.exit(1)
+//   }
 
-  process.exit(code);
-}
+//   process.exit(code);
+// }
 
 //Handles exit signals - Termination, Interrupt
 process.on('SIGTERM', () => shutdown());
@@ -148,17 +150,17 @@ process.on('SIGINT', () => shutdown());
 
 // ------------------- Hono Routes ------------------ //
 
-app.get("/", (c) => {
-  return c.text("Hello Hono!");
-});
+// app.get("/", (c) => {
+//   return c.text("Hello Hono!");
+// });
 
-// Hono Http server
-serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
-  }
-);
+// // Hono Http server
+// serve(
+//   {
+//     fetch: app.fetch,
+//     port: 5004,
+//   },
+//   (info) => {
+//     console.log(`Server is running on http://${info.address}:${info.port}`);
+//   }
+// );

@@ -13,8 +13,11 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
     proxy: {
-      "/api/user": "http://localhost:5002",
-      "/api/questions": "http://localhost:5001",
+      "/api/questions": { target: "http://localhost:5001" },
+      "/api/user": { target: "http://localhost:5002" },
+      // TODO: add matching-service
+      "/api/match": { target: "http://localhost:5003" },
+      "/api/collab": { target: "http://localhost:5004", ws: true },
     },
   },
   tools: {
