@@ -4,5 +4,5 @@ npm run dev
 ```
 
 ```
-open http://localhost:5006
+open http://localhost:5005
 ```
