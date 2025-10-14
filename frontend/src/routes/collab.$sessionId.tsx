@@ -87,7 +87,15 @@ function RouteComponent() {
         body: JSON.stringify({ question: q }),
       });
       const data = await response.text();
-      setAiHintContent({ loading: false, content: data, error: "" });
+      if (response.ok) {
+        setAiHintContent({ loading: false, content: data, error: "" });
+      } else {
+        setAiHintContent({
+          loading: false,
+          content: "",
+          error: `Failed to fetch hint: ${data || response.statusText}`,
+        });
+      }
     } catch (e: unknown) {
       console.error("Error fetching AI hint:", e);
       setAiHintContent({
