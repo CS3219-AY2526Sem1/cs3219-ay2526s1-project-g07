@@ -6323,7 +6323,6 @@ If so, how may I also ensure graceful shutdown upon failure or exiting the progr
 Yes, you can set up Kafka and handle graceful shutdown in your `index.ts`. Here's how:
 
 ````typescript
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\collab-service\src\index.ts
 import { KafkaClient, type KafkaConfig } from './kafka/client.js';
 import { CollabConsumer } from './kafka/consumer.js';
 
@@ -6407,7 +6406,6 @@ This setup includes:
 You'll need to add a `getConsumer()` method to your `KafkaClient` class if you haven't already:
 
 ````typescript
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\collab-service\src\kafka\client.ts
 export class KafkaClient {
     // ...existing code...
 
@@ -6461,7 +6459,6 @@ ok, so is there anyway for me to create the topics when the containers get insta
 Yes, you can create Kafka topics automatically when the container starts up. Here's how to modify your docker-compose.yaml to include topic creation:
 
 ````yaml
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\services\kafka-service\docker-compose.yaml
 services:
   kafka:
     # ...existing code...
@@ -6481,7 +6478,6 @@ services:
 Or create a separate initialization service:
 
 ````yaml
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\services\kafka-service\docker-compose.yaml
 services:
   # ...existing services...
 
@@ -6555,7 +6551,6 @@ is this correct? i am not getting any topics auto created
 The format of `KAFKA_CREATE_TOPICS` in your docker-compose file needs to be adjusted. The double quotes are causing issues. Here's the correct format:
 
 ````yaml
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\services\kafka-service\docker-compose.yaml
 services:
   kafka:
     # ...existing code...
@@ -6626,7 +6621,6 @@ KAFKA_CREATE_TOPICS does not seem to be working for me regardless
 It seems the environment variable `KAFKA_CREATE_TOPICS` isn't supported in Apache Kafka 4.0.0. Let's create a separate initialization service instead to create the topics on startup:
 
 ````yaml
-// filepath: c:\Users\Sebastian Tay\Uni\CS3219\cs3219-ay2526s1-project-g07\services\kafka-service\docker-compose.yaml
 services:
   # ...existing kafka and kafka-ui services...
 
