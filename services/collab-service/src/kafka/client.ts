@@ -1,7 +1,7 @@
 import { Kafka, type Admin} from 'kafkajs';
 import { CollabProducer } from './producer.js';
 import { CollabConsumer } from './consumer.js';
-import { TOPICS_SUBSCRIBED } from '../utils.js';
+import { TOPICS_SUBSCRIBED } from './utils.js';
 
 export interface KafkaConfig {
     clientId: string;
