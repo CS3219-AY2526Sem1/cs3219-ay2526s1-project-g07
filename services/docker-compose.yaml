@@ -1,0 +1,64 @@
+# AI Assistance Disclosure:
+# Tool: GitHub Copilot (model: claude-sonnet-3.5), date: 2025-10-12
+# Scope: Generated command to initialise kafka topics in docker-compose.yaml
+# Author review: I have reviewed the bash script for correctness and run it to ensure that the topics get instantiated on startup.
+
+
+services:
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: kafka
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    ports:
+      - "9094:9094"
+    networks:
+      - kafka-network
+    
+  kafka-init: # Topic initialization service
+    image: apache/kafka:4.0.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    command: >
+      bash -c '
+      echo "Waiting for Kafka to start..." &&
+      sleep 10 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic matching-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic matching-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic question-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic question-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic collab-session-ready --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092
+      '
+    networks:
+      - kafka-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - '8080:8080'
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_READONLY=false
+      - KAFKA_CLUSTERS_0_TOPIC_AUTO_CREATE=true
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge
+    

@@ -1,0 +1,30 @@
+{
+  "name": "peerprep",
+  "version": "1.0.0",
+  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/QUdQy4ix)\r # CS3219 Project (PeerPrep) - AY2526S1\r ## Group: Gxx",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npx jasmine --require=ts-node/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07/issues"
+  },
+  "homepage": "https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07#readme",
+  "devDependencies": {
+    "@types/jasmine": "^5.1.9",
+    "jasmine": "^5.12.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

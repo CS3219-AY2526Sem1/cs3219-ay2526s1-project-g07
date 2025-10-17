@@ -1,0 +1,39 @@
+# Note: You will need to configure a GitHub access token to pull the images.
+
+services:
+
+  collab-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
+    container_name: collab-service
+    environment:
+      - HOST=0.0.0.0
+    ports:
+      - "5004:5004"
+    networks:
+      - app-network
+
+  ai-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-ai-service:latest
+    container_name: ai-service
+    environment:
+      - HOST=0.0.0.0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "5005:5005"
+    networks:
+      - app-network
+
+  frontend:
+    image: ghcr.io/cs3219-ay2526sem1/g07-frontend:latest
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - collab-service
+      - ai-service
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

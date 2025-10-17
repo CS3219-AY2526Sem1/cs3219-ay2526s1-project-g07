@@ -1,0 +1,16 @@
+# .dockerignore
+node_modules
+dist
+.git
+.gitignore
+Dockerfile*
+docker-compose*.yml
+*.log
+npm-debug.log*
+.yarn
+.pnpm-store
+.env*
+coverage
+.vscode
+.idea
+.husky
