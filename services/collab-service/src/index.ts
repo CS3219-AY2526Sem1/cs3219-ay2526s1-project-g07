@@ -145,8 +145,8 @@ server.listen(port, host, () => {
 // }
 
 //Handles exit signals - Termination, Interrupt
-process.on('SIGTERM', () => shutdown());
-process.on('SIGINT', () => shutdown());
+// process.on('SIGTERM', () => shutdown());
+// process.on('SIGINT', () => shutdown());
 
 // ------------------- Hono Routes ------------------ //
 

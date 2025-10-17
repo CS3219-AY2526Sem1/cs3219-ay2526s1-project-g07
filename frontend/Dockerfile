@@ -24,7 +24,10 @@ COPY src ./src/
 # Builds the project and prunes dev dependencies
 RUN pnpm run build
 
-FROM nginx:1.29.1-alpine-slim
+FROM nginx:1.29-alpine-slim
+
+LABEL org.opencontainers.image.source=https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07
+LABEL org.opencontainers.image.description="CS3219 AY2526S1 Project G07 PeerPrep Frontend"
 
 # Copy nginx config
 COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
