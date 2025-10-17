@@ -1,5 +1,5 @@
 import type { EachMessagePayload } from 'kafkajs';
-import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from '../utils.js';
+import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {

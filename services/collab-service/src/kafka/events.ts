@@ -1,4 +1,4 @@
-import { TOPICS_COLLAB } from '../utils.js';
+import { TOPICS_COLLAB } from './utils.js';
 
 export interface BaseEvent {
     eventId: string;
