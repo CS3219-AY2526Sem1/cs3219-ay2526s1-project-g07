@@ -11,6 +11,8 @@ import { MatchingServiceConsumer } from './matching-service-consumer.ts';
 import { Matcher } from './matcher.ts';
 import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 import { MatchingWS } from './matching-ws.ts';
+import { RedisClient } from './redis/client.ts';
+import Redis from 'redis';
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,72 +22,81 @@ const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 4000;
 const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
 
-// Initialize Socket.IO server
-const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: WS_PORT,
-    methods: ["GET", "POST"]
-  }
-});
+async function main() {
+  // Initialize Socket.IO server
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: WS_PORT,
+      methods: ["GET", "POST"]
+    }
+  });
 
-app.use(cors({
-  origin: HOST_URL
-}))
+  app.use(cors({
+    origin: HOST_URL
+  }))
 
-app.use(express.json());
+  app.use(express.json());
 
-const kafka = new Kafka({
-  clientId: 'matching-service',
-  brokers: ['localhost:9094']
-});
+  const kafka = new Kafka({
+    clientId: 'matching-service',
+    brokers: ['localhost:9094']
+  });
 
-const matcher = new Matcher();
-const messageHandler = new ConsumerMessageHandler(matcher);
-const producer = new MatchingServiceProducer(kafka, matcher);
-const consumer = new MatchingServiceConsumer(kafka, messageHandler);
+  const redisClient = await RedisClient.createClient() as Redis.RedisClientType;
 
-// Initialize WebSocket handling
-const ws = new MatchingWS(io, matcher);
-try {
-  ws.init();
-} catch (error) {
-  console.error('Error initializing WebSocket:', error);
-}
+  const matcher = new Matcher(redisClient);
+  const messageHandler = new ConsumerMessageHandler(matcher);
+  const producer = new MatchingServiceProducer(kafka, matcher);
+  const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
-const connectToKafka = async () => {
+  // Initialize WebSocket handling
+  const ws = new MatchingWS(io, matcher);
   try {
-    await producer.init();
-    await consumer.init();
+    ws.init();
   } catch (error) {
-    console.error('Error connecting to Kafka:', error);
+    console.error('Error initializing WebSocket:', error);
   }
+
+  const connectToKafka = async () => {
+    try {
+      await producer.init();
+      await consumer.init();
+    } catch (error) {
+      console.error('Error connecting to Kafka:', error);
+    }
+  }
+
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    res.status(err.status || 500).json(err.message);
+  })
+
+  httpServer.listen(PORT, () => {
+    connectToKafka();
+    console.log(`Matching service listening on port ${PORT}`);
+    console.log('WebSocket server is ready for connections');
+  });
+
+  // API endpoints
+  app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
+    const { userId, topic, difficulty } = req.body;
+    console.log(`Received matching request for user id: ${userId}`);
+
+    matcher.enqueue(userId, { topic, difficulty });
+
+    return res.status(200).send({ message: `Matching service received session id: ${userId}` });
+  });
+
+  app.post(API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req: Request, res: Response) => {
+    const { userId } = req.body;
+    console.log(`Received matching cancel request for user id: ${userId}`);
+
+    matcher.dequeue(userId);
+
+    return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId}` });
+  });
 }
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(err.status || 500).json(err.message);
-})
-
-httpServer.listen(PORT, () => {
-  connectToKafka();
-  console.log(`Matching service listening on port ${PORT}`);
-  console.log('WebSocket server is ready for connections');
-});
-
-// API endpoints
-app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
-  const { userId, topic, difficulty } = req.body;
-  console.log(`Received matching request for user id: ${userId}`);
-
-  matcher.enqueue(userId, { topic, difficulty });
-
-  return res.status(200).send({ message: `Matching service received session id: ${userId}` });
-});
-
-app.post(API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req: Request, res: Response) => {
-  const { userId } = req.body;
-  console.log(`Received matching cancel request for user id: ${userId}`);
-
-  matcher.dequeue(userId);
-
-  return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId}` });
+main().catch((err) => {
+  console.error('Failed to start matching service:', err);
+  process.exit(1);
 });
