@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jasmine --require=ts-node/register"
+    "test": "jasmine --require=ts-node/register",
+    "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest" 
   },
   "keywords": [],
   "author": "",

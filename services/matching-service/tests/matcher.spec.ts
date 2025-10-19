@@ -1,14 +1,17 @@
 import { Matcher } from '../src/matcher.ts';
 import { RedisClient } from '../src/redis/client.ts';
 import { type UserMatchingRequest } from '../src/types.ts';
+import redis from 'redis';
 
 describe('Matcher', () => {
   let matcher: Matcher;
-  let redisClient: RedisClient;
+  let redisClient: redis.RedisClientType;
 
-  beforeEach(() => {
-    redisClient = RedisClient.createClient() as unknown as RedisClient;
-    matcher = new Matcher(redisClient as any);
+  beforeEach(async () => {
+    redisClient = await RedisClient.createClient() as redis.RedisClientType;
+    await redisClient.del(Matcher.redisCacheKey);
+
+    matcher = new Matcher(redisClient);
 
     function mockSetInterval() {
       return 1;
@@ -19,7 +22,7 @@ describe('Matcher', () => {
 
   describe('enqueue', () => {
     it('should enqueue a user matching request', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
       const queue: UserMatchingRequest[] = await matcher['queue'];
       expect(queue.length).toBe(1);
       expect(queue[0].userId).toBe(1);
@@ -28,15 +31,15 @@ describe('Matcher', () => {
     });
 
     it('should handle multiple enqueues', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
-      matcher.enqueue(2, { topic: 'Science', difficulty: 'Medium' });
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.enqueue(2, { topic: 'Science', difficulty: 'Medium' });
       const queue: UserMatchingRequest[] = await matcher['queue'];
       expect(queue.length).toBe(2);
     });
 
     it('should not enqueue duplicate user IDs', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
-      matcher.enqueue(1, { topic: 'Science', difficulty: 'Medium' });
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.enqueue(1, { topic: 'Science', difficulty: 'Medium' });
       const queue: UserMatchingRequest[] = await matcher['queue'];
       expect(queue[0].preferences.topic).toBe('Science');
     });
@@ -44,15 +47,15 @@ describe('Matcher', () => {
 
   describe('dequeue', () => {
     it('should dequeue a user matching request', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
-      matcher.dequeue(1);
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.dequeue(1);
       const queue: UserMatchingRequest[] = await matcher['queue'];
       expect(queue.length).toBe(0);
     });
 
     it('should handle dequeueing a non-existent user ID gracefully', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
-      matcher.dequeue(2);
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.dequeue(2);
       const queue: UserMatchingRequest[] = await matcher['queue'];
       expect(queue.length).toBe(1); 
     });
@@ -60,8 +63,8 @@ describe('Matcher', () => {
 
   describe('findMatch', () => {
     it('should find a match based on preferences', async () => {
-      matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
-      matcher.enqueue(2, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.enqueue(1, { topic: 'Math', difficulty: 'Easy' });
+      await matcher.enqueue(2, { topic: 'Math', difficulty: 'Easy' });
       // Ensure the private method is called
       const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
 

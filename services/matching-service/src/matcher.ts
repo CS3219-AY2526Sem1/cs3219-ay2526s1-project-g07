@@ -5,7 +5,7 @@ import Redis from 'redis';
 
 export class Matcher {
   private readonly redisClient: Redis.RedisClientType;
-  private readonly redisCacheKey = 'matching_queue';
+  static readonly redisCacheKey = 'matching_queue';
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
@@ -31,7 +31,7 @@ export class Matcher {
 
     // Avoid duplicate entries for the same user
     await this.dequeue(userId);
-    this.redisClient.rPush(this.redisCacheKey, JSON.stringify(userRequest));
+    this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
@@ -41,11 +41,11 @@ export class Matcher {
     const filteredRequests = userRequests.filter(request => {
       return request.userId !== userId;
     });
-    
-    await this.redisClient.del(this.redisCacheKey);
+
+    await this.redisClient.del(Matcher.redisCacheKey);
 
     for (const request of filteredRequests) {
-      await this.redisClient.rPush(this.redisCacheKey, JSON.stringify(request));
+      await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(request));
     }
 
     console.log(`User ${userId} removed from the matching queue.`);
@@ -66,9 +66,9 @@ export class Matcher {
 
     if (timedOutRequests.length > 0) {
       // Replace the queue with only valid requests
-      await this.redisClient.del(this.redisCacheKey);
+      await this.redisClient.del(Matcher.redisCacheKey);
       if (validRequests.length > 0) {
-        await this.redisClient.rPush(this.redisCacheKey, validRequests.map(r => JSON.stringify(r)));
+        await this.redisClient.rPush(Matcher.redisCacheKey, validRequests.map(r => JSON.stringify(r)));
       }
 
       // Notify timed-out users
@@ -127,7 +127,7 @@ export class Matcher {
   }
 
   private get queue(): Promise<UserMatchingRequest[]> {
-    return this.redisClient.lRange(this.redisCacheKey, 0, -1)
+    return this.redisClient.lRange(Matcher.redisCacheKey, 0, -1)
       .then(requests => requests.map(request => JSON.parse(request) as UserMatchingRequest));
   }
 }
