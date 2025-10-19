@@ -2,15 +2,15 @@
 const sessions = new Map();
 sessions.set("dummy-session-id", new Set(["user1", "user2"])); // Example session
 
-const addSession = (sessionId: string, userIds: string[]) => {
+export const addSession = (sessionId: string, userIds: string[]) => {
   sessions.set(sessionId, new Set(userIds));
 };
 
-const removeSession = (sessionId: string) => {
+export const removeSession = (sessionId: string) => {
   sessions.delete(sessionId);
 };
 
-const checkSessionAndUsers = (sessionId: string, userId: string) => {
+export const checkSessionAndUsers = (sessionId: string, userId: string) => {
   const session = sessions.get(sessionId);
   if (!session) {
     return false;
