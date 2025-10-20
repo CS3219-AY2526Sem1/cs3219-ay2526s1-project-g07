@@ -84,8 +84,7 @@ export class Matcher {
   }
 
   private async tryTimeOut() {
-    // Lua script to atomically filter out timed-out requests and return them
-    const luaScript = `
+    const getTimedOutLuaScript = `
       local key = KEYS[1]
       local now = tonumber(ARGV[1])
       local timeout = tonumber(ARGV[2])
@@ -111,7 +110,7 @@ export class Matcher {
     const now = Date.now();
     const timeout = this.timeOutDuration;
     // @ts-ignore: redisClient.eval typing may vary
-    const timedOutRaw: string[] = await this.redisClient.eval(luaScript, {
+    const timedOutRaw: string[] = await this.redisClient.eval(getTimedOutLuaScript, {
       keys: [Matcher.redisCacheKey],
       arguments: [now.toString(), timeout.toString()]
     });
