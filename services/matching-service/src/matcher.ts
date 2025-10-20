@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria.ts';
 import { type RedisClientType } from 'redis';
 import { randomUUID } from 'crypto';
+import { RedisClient } from '../../../redis/client.ts';
 
 export class Matcher {
   private readonly redisClient: RedisClientType;
@@ -158,8 +159,8 @@ export class Matcher {
   }
 
   async cleanUp() {
-    await this.redisClient.del(Matcher.redisCacheKey);
-    await this.redisClient.quit();
+    await RedisClient.quit();
+    console.log('Matcher cleanup completed.');
   }
 
   private get queue(): Promise<UserMatchingRequest[]> {

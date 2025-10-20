@@ -11,8 +11,8 @@ import { MatchingServiceConsumer } from './matching-service-consumer.ts';
 import { Matcher } from './matcher.ts';
 import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 import { MatchingWS } from './matching-ws.ts';
-import { RedisClient } from './redis/client.ts';
-import Redis from 'redis';
+import { RedisClient } from '../../../redis/client.ts';
+import { type RedisClientType } from 'redis';
 
 const app = express();
 const httpServer = createServer(app);
@@ -21,6 +21,9 @@ dotenv.config();
 const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 4000;
 const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
+const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
+  ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
+  : 0;
 
 async function main() {
   // --- Middleware ---
@@ -40,7 +43,7 @@ async function main() {
   });
 
   // --- Core Components ---
-  const redisClient = await RedisClient.createClient() as Redis.RedisClientType;
+  const redisClient = await RedisClient.createClient(REDIS_DB_INDEX) as RedisClientType;
 
   const matcher = new Matcher(redisClient);
   const messageHandler = new ConsumerMessageHandler(matcher);

@@ -1,5 +1,5 @@
 import { Matcher } from '../src/matcher.ts';
-import { RedisClient } from '../src/redis/client.ts';
+import { RedisClient } from '../../../redis/client.ts';
 import { type UserMatchingRequest } from '../src/types.ts';
 import redis from 'redis';
 
@@ -18,7 +18,7 @@ describe('Matcher', () => {
     }
     // Mock setInterval to prevent actual intervals during tests
     spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
-    
+
     await redisClient.del(cacheKey);
 
     matcher = new Matcher(redisClient);
