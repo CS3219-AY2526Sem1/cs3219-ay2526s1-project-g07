@@ -1,17 +1,17 @@
 import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria.ts';
-import Redis from 'redis';
+import { type RedisClientType } from 'redis';
 import { randomUUID } from 'crypto';
 
 export class Matcher {
-  private readonly redisClient: Redis.RedisClientType;
+  private readonly redisClient: RedisClientType;
   static readonly redisCacheKey = 'matching_queue';
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
 
-  constructor(redisClient: Redis.RedisClientType) {
+  constructor(redisClient: RedisClientType) {
     this.emitter = new EventEmitter();
     this.redisClient = redisClient;
     setInterval(() => {
