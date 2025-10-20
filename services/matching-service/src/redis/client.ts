@@ -2,7 +2,14 @@ import redis from 'redis';
 import dotenv from 'dotenv';
 
 export class RedisClient {
+  static instance: ReturnType<typeof redis.createClient>;
+
   static async createClient() {
+    if (RedisClient.instance) {
+      // Should only create one instance (singleton)
+      return RedisClient.instance;
+    }
+    
     // Remember to set the .env variables in the root of this service
     // Start redis local with `npm run redis-local`
     dotenv.config();
@@ -24,6 +31,7 @@ export class RedisClient {
     const pong = await client.ping();
     console.log('Redis PING:', pong);
 
+    RedisClient.instance = client;
     return client;
   }
 }
