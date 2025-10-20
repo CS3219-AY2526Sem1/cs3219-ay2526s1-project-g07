@@ -23,25 +23,23 @@ const PORT = process.env.PORT || 4000;
 const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
 
 async function main() {
-  // Initialize Socket.IO server
-  const io = new SocketIOServer(httpServer, {
-    cors: {
-      origin: WS_PORT,
-      methods: ["GET", "POST"]
-    }
-  });
-
+  // --- Middleware ---
   app.use(cors({
     origin: HOST_URL
   }))
 
   app.use(express.json());
 
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    res.status(err.status || 500).json(err.message);
+  });
+
   const kafka = new Kafka({
     clientId: 'matching-service',
     brokers: ['localhost:9094']
   });
 
+  // --- Core Components ---
   const redisClient = await RedisClient.createClient() as Redis.RedisClientType;
 
   const matcher = new Matcher(redisClient);
@@ -49,7 +47,14 @@ async function main() {
   const producer = new MatchingServiceProducer(kafka, matcher);
   const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
-  // Initialize WebSocket handling
+  // --- Websocket & Kafka Connections ---
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: WS_PORT,
+      methods: ["GET", "POST"]
+    }
+  });
+
   const ws = new MatchingWS(io, matcher);
   try {
     ws.init();
@@ -64,19 +69,31 @@ async function main() {
     } catch (error) {
       console.error('Error connecting to Kafka:', error);
     }
-  }
+  };
 
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    res.status(err.status || 500).json(err.message);
-  })
-
+  // --- Server & Process Related Logic ---
   httpServer.listen(PORT, () => {
     connectToKafka();
     console.log(`Matching service listening on port ${PORT}`);
     console.log('WebSocket server is ready for connections');
   });
 
-  // API endpoints
+  httpServer.on('close', async () => {
+    await RedisClient.quit();
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('\n🛑 Caught SIGTERM. Shutting down...');
+    await RedisClient.quit();
+    httpServer.close(() => process.exit(0));
+  });
+
+  process.on('SIGTERM', async () => {
+    await RedisClient.quit();
+    httpServer.close(() => process.exit(0));
+  });
+
+  // --- API Endpoints ---
   app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
     const { userId, topic, difficulty } = req.body;
     console.log(`Received matching request for user id: ${userId}`);

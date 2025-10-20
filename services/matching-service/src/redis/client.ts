@@ -9,7 +9,7 @@ export class RedisClient {
       // Should only create one instance (singleton)
       return RedisClient.instance;
     }
-    
+
     // Remember to set the .env variables in the root of this service
     // Start redis local with `npm run redis-local`
     dotenv.config();
@@ -33,5 +33,15 @@ export class RedisClient {
 
     RedisClient.instance = client;
     return client;
+  }
+
+  static async quit() {
+    if (RedisClient.instance) {
+      // Clear all data as matching service is stateless
+      await RedisClient.instance.flushAll();
+      await RedisClient.instance.quit();
+      RedisClient.instance = null;
+      console.log('✅ Redis client disconnected');
+    }
   }
 }
