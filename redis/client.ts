@@ -36,11 +36,11 @@ export class RedisClient {
   }
 
   static async quit() {
-    if (RedisClient.instance) {
+    if (RedisClient.instance !== undefined) {
       // Clear all data of the current Redis database as matching service is stateless
       await RedisClient.instance.flushDb();
       await RedisClient.instance.quit();
-      RedisClient.instance = null;
+      RedisClient.instance = undefined;
       console.log('✅ Redis client disconnected');
     }
   }
