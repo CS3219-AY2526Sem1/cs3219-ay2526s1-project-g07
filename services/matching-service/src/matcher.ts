@@ -2,6 +2,7 @@ import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria.ts';
 import Redis from 'redis';
+import { randomUUID } from 'crypto';
 
 export class Matcher {
   private readonly redisClient: Redis.RedisClientType;
@@ -19,58 +20,66 @@ export class Matcher {
     }, this.matchInterval);
   }
 
-  async enqueue(userId: number, preferences: { topic: string; difficulty: string }) {
+  async enqueue(userId: number, preferences: { topic: string; difficulty: Difficulty }) {
     const userRequest: UserMatchingRequest = {
       userId: userId,
       preferences: {
         topic: preferences.topic,
-        difficulty: preferences.difficulty as Difficulty
+        difficulty: preferences.difficulty
       },
       timestamp: Date.now()
     };
 
-    await this.redisClient.watch(Matcher.redisCacheKey);
-
     const queue = await this.queue;
-    const updatedQueue = queue.filter(req => req.userId !== userId);
-    updatedQueue.push(userRequest);
-
-    const multi = this.redisClient.multi();
-    multi.del(Matcher.redisCacheKey);
-    updatedQueue.forEach(req => multi.rPush(Matcher.redisCacheKey, JSON.stringify(req)));
-
-    const result = await multi.exec();
-    if (result === null) {
-      console.log(`⏳ Conflict detected while enqueuing user ${userId}, retrying...`);
-      return this.enqueue(userId, preferences); // Retry on conflict
+    if (queue.some(request => request.userId === userId)) {
+      await this.dequeue(userId);
     }
+
+    await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
+
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
   async dequeue(userId: number) {
-    await this.redisClient.watch(Matcher.redisCacheKey);
+    const lockKey = 'dequeue_lock';
+    // Unique value for this lock instance, preventing accidental releases by other processes
+    const lockValue = randomUUID();
 
-    const multi = this.redisClient.multi();
-
-    const userRequests = await this.queue;
-
-    const filteredRequests = userRequests.filter(request => {
-      return request.userId !== userId;
+    const acquired = await this.redisClient.set(lockKey, lockValue, {
+      NX: true,
+      PX: 5000,
     });
 
-    multi.del(Matcher.redisCacheKey);
-
-    for (const request of filteredRequests) {
-      multi.rPush(Matcher.redisCacheKey, JSON.stringify(request));
-    }
-
-    const result = await multi.exec();
-
-    if (result === null) {
-      console.log(`⏳ Conflict detected while dequeuing user ${userId}, retrying...`);
+    if (!acquired) {
+      await new Promise(res => setTimeout(res, 50));
+      console.log(`Retrying dequeue for user ${userId}`);
       return this.dequeue(userId);
     }
-    console.log(`User ${userId} removed from the matching queue.`);
+
+    try {
+      const userRequests = await this.queue;
+      const filteredRequests = userRequests.filter(r => r.userId !== userId);
+
+      await this.redisClient.del(Matcher.redisCacheKey);
+      for (const r of filteredRequests) {
+        await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(r));
+      }
+
+      console.log(`✅ User ${userId} removed from the matching queue.`);
+    } finally {
+      // Release lock safely
+      const releaseLockLuaScript = `
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+          return redis.call("del", KEYS[1])
+        else
+          return 0
+        end
+      `;
+      await this.redisClient.eval(releaseLockLuaScript, {
+        keys: [lockKey],
+        arguments: [lockValue],
+      });
+    }
   }
 
   private async tryTimeOut() {
