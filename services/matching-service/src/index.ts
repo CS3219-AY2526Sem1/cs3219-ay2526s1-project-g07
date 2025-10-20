@@ -33,10 +33,6 @@ async function main() {
 
   app.use(express.json());
 
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    res.status(err.status || 500).json(err.message);
-  });
-
   const kafka = new Kafka({
     clientId: 'matching-service',
     brokers: ['localhost:9094']
@@ -113,6 +109,16 @@ async function main() {
     matcher.dequeue(userId);
 
     return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId}` });
+  });
+
+  // --- Error Handling Middleware ---
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('Error occurred:', err);
+    res.status(500).send({ error: 'An unexpected error occurred.' });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`✅ Matching Service API is running at http://localhost:${PORT}`);
   });
 }
 
