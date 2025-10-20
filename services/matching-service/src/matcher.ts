@@ -84,24 +84,39 @@ export class Matcher {
   }
 
   private async tryTimeOut() {
-    const userRequests = await this.queue;
-    const validRequests: UserMatchingRequest[] = [];
-    const timedOutRequests: UserMatchingRequest[] = [];
-
-    for (const req of userRequests) {
-      if (this.isTimedOut(req.timestamp)) {
-        timedOutRequests.push(req);
-      } else {
-        validRequests.push(req);
-      }
-    }
-
-    if (timedOutRequests.length > 0) {
-      // Replace the queue with only valid requests
-      await this.redisClient.del(Matcher.redisCacheKey);
-      if (validRequests.length > 0) {
-        await this.redisClient.rPush(Matcher.redisCacheKey, validRequests.map(r => JSON.stringify(r)));
-      }
+    // Lua script to atomically filter out timed-out requests and return them
+    const luaScript = `
+      local key = KEYS[1]
+      local now = tonumber(ARGV[1])
+      local timeout = tonumber(ARGV[2])
+      local requests = redis.call('LRANGE', key, 0, -1)
+      local valid = {}
+      local timedout = {}
+      for i, v in ipairs(requests) do
+        local ok, req = pcall(cjson.decode, v)
+        if ok and req and req.timestamp then
+          if (now - req.timestamp) >= timeout then
+            table.insert(timedout, v)
+          else
+            table.insert(valid, v)
+          end
+        end
+      end
+      redis.call('DEL', key)
+      if #valid > 0 then
+        redis.call('RPUSH', key, unpack(valid))
+      end
+      return timedout
+    `;
+    const now = Date.now();
+    const timeout = this.timeOutDuration;
+    // @ts-ignore: redisClient.eval typing may vary
+    const timedOutRaw: string[] = await this.redisClient.eval(luaScript, {
+      keys: [Matcher.redisCacheKey],
+      arguments: [now.toString(), timeout.toString()]
+    });
+    if (timedOutRaw && timedOutRaw.length > 0) {
+      const timedOutRequests: UserMatchingRequest[] = timedOutRaw.map(request => JSON.parse(request) as UserMatchingRequest);
 
       // Notify timed-out users
       for (const req of timedOutRequests) {
