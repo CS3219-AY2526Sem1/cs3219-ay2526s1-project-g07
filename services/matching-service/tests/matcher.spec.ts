@@ -13,15 +13,16 @@ describe('Matcher', () => {
   });
 
   beforeEach(async () => {
-    await redisClient.del(cacheKey);
-
-    matcher = new Matcher(redisClient);
-
     function mockSetInterval() {
       return 1;
     }
     // Mock setInterval to prevent actual intervals during tests
     spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
+    
+    await redisClient.del(cacheKey);
+
+    matcher = new Matcher(redisClient);
+
   });
 
   afterAll(async () => {
