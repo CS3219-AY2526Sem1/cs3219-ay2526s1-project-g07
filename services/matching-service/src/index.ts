@@ -83,7 +83,7 @@ async function main() {
   });
 
   process.on('SIGINT', async () => {
-    console.log('\n🛑 Caught SIGTERM. Shutting down...');
+    console.log('\n🛑 Caught SIGINT. Shutting down...');
     await RedisClient.quit();
     httpServer.close(() => process.exit(0));
   });
