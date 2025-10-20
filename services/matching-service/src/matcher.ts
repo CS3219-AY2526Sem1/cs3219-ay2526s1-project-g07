@@ -29,25 +29,47 @@ export class Matcher {
       timestamp: Date.now()
     };
 
-    // Avoid duplicate entries for the same user
-    await this.dequeue(userId);
-    this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
+    await this.redisClient.watch(Matcher.redisCacheKey);
+
+    const queue = await this.queue;
+    const updatedQueue = queue.filter(req => req.userId !== userId);
+    updatedQueue.push(userRequest);
+
+    const multi = this.redisClient.multi();
+    multi.del(Matcher.redisCacheKey);
+    updatedQueue.forEach(req => multi.rPush(Matcher.redisCacheKey, JSON.stringify(req)));
+
+    const result = await multi.exec();
+    if (result === null) {
+      console.log(`⏳ Conflict detected while enqueuing user ${userId}, retrying...`);
+      return this.enqueue(userId, preferences); // Retry on conflict
+    }
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
   async dequeue(userId: number) {
+    await this.redisClient.watch(Matcher.redisCacheKey);
+
+    const multi = this.redisClient.multi();
+
     const userRequests = await this.queue;
 
     const filteredRequests = userRequests.filter(request => {
       return request.userId !== userId;
     });
 
-    await this.redisClient.del(Matcher.redisCacheKey);
+    multi.del(Matcher.redisCacheKey);
 
     for (const request of filteredRequests) {
-      await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(request));
+      multi.rPush(Matcher.redisCacheKey, JSON.stringify(request));
     }
 
+    const result = await multi.exec();
+
+    if (result === null) {
+      console.log(`⏳ Conflict detected while dequeuing user ${userId}, retrying...`);
+      return this.dequeue(userId);
+    }
     console.log(`User ${userId} removed from the matching queue.`);
   }
 
@@ -124,6 +146,11 @@ export class Matcher {
       }
     }
     return null; // No match found
+  }
+
+  async cleanUp() {
+    await this.redisClient.del(Matcher.redisCacheKey);
+    await this.redisClient.quit();
   }
 
   private get queue(): Promise<UserMatchingRequest[]> {
