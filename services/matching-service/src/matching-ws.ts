@@ -20,7 +20,6 @@ export class MatchingWS {
       socket.on(WS_EVENTS.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
       socket.on(WS_EVENTS.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
       socket.on(WS_EVENTS.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
-      socket.on(WS_EVENTS.CLOSE, (reason) => this.OnClose(socket, reason));
       socket.on(WS_EVENTS.ERROR, (error) => this.OnError(error));
     });
   }
@@ -78,23 +77,12 @@ export class MatchingWS {
     socket.off(WS_EVENTS.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
     socket.off(WS_EVENTS.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
     socket.off(WS_EVENTS.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
-    socket.off(WS_EVENTS.CLOSE, (reason) => this.OnClose(socket, reason));
     socket.off(WS_EVENTS.ERROR, (error) => this.OnError(error));
 
     // Clean up user from matching queue if they disconnect
     if (socket.userId) {
       this.HandleConnectionInterrupt(socket.userId);
       console.log(`Removed user ${socket.userId} from matching queue due to disconnection`);
-    }
-  }
-
-  private OnClose = (socket: CustomSocket, reason: string) => {
-    console.log(`Client closed: ${socket.id}, reason: ${reason}`);
-
-    // Clean up user from matching queue if they disconnect
-    if (socket.userId) {
-      this.HandleConnectionInterrupt(socket.userId);
-      console.log(`Removed user ${socket.userId} from matching queue due to browser close`);
     }
   }
 

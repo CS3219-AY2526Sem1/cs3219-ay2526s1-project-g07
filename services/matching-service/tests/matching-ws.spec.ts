@@ -148,22 +148,4 @@ describe("Web socket events (async)", () => {
       );
     });
   });
-
-  describe("CLOSE event", () => {
-    let onCloseSpy: jasmine.Spy;
-    beforeEach(() => {
-      onCloseSpy = spyOn<any>(matchingWS, "OnClose").and.callThrough();
-    });
-
-    it("should handle client close event", async () => {
-      clientSocket.emit(WS_EVENTS.CLOSE, "client closed");
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      expect(onCloseSpy).toHaveBeenCalledWith(
-        jasmine.any(Object),
-        "client closed"
-      );
-    });
-  });
-
 });
