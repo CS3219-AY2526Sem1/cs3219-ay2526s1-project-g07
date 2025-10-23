@@ -17,6 +17,7 @@ async function init(): Promise<void> {
   httpServer = createServer();
   io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
 
+  // Resolve once server is listening
   await new Promise<void>((resolve) => {
     httpServer.listen(TEST_WEBSOCKET_PORT, resolve);
   });
@@ -38,9 +39,9 @@ async function init(): Promise<void> {
 }
 
 async function cleanup(): Promise<void> {
-  clientSocket?.close();
-  io?.close();
-  await new Promise((res) => httpServer.close(res));
+  clientSocket.close();
+  io.close();
+  await new Promise((resolve) => httpServer.close(resolve));
 }
 
 describe("Web socket events (async)", () => {
@@ -70,7 +71,7 @@ describe("Web socket events (async)", () => {
       // Emit the JOIN event and wait a tick for the server to handle it
       clientSocket.emit(WS_EVENTS.JOIN, { userId: 123 });
 
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(clientJoinSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
@@ -100,7 +101,7 @@ describe("Web socket events (async)", () => {
       const testData = { userId: 456, topic: "Math", difficulty: "easy" };
       clientSocket.emit(WS_EVENTS.MATCHING_REQUEST, testData);
 
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(matchingRequestSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
@@ -121,7 +122,7 @@ describe("Web socket events (async)", () => {
       const testData = { userId: 789 };
       matcher.enqueue(789, { topic: "Science", difficulty: "medium" });
       clientSocket.emit(WS_EVENTS.MATCHING_CANCEL, testData);
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(matchingCancelSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
@@ -139,7 +140,7 @@ describe("Web socket events (async)", () => {
 
     it("should handle client disconnect event", async () => {
       clientSocket.close();
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(clientDisconnectSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
@@ -156,7 +157,7 @@ describe("Web socket events (async)", () => {
 
     it("should handle client close event", async () => {
       clientSocket.emit(WS_EVENTS.CLOSE, "client closed");
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(onCloseSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
