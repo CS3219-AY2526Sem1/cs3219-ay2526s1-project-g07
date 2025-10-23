@@ -32,7 +32,7 @@ export class MatchingWS {
   private OnClientJoin = (socket: CustomSocket, data: any) => {
     const { userId } = data;
     if (!userId) {
-      console.error('JOIN event missing userId');
+      socket.emit(WS_EVENTS.ERROR, 'JOIN event missing userId');
       return;
     }
     socket.userId = Number(userId);
