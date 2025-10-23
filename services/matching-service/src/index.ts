@@ -46,10 +46,12 @@ const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
 // Initialize WebSocket handling
 const ws = new MatchingWS(io, matcher);
-try {
-  ws.init();
-} catch (error) {
-  console.error('Error initializing WebSocket:', error);
+const connectToWebSocket = () => {
+  try {
+    ws.init();
+  } catch (error) {
+    console.error('Error initializing WebSocket:', error);
+  }
 }
 
 const connectToKafka = async () => {
@@ -68,6 +70,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 httpServer.listen(PORT, () => {
   connectToKafka();
   console.log(`Matching service listening on port ${PORT}`);
+  
+  connectToWebSocket();
   console.log('WebSocket server is ready for connections');
 });
 

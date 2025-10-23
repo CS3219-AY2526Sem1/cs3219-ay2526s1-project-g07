@@ -10,6 +10,7 @@ export const API_ENDPOINTS_MATCHING = {
 
 export const WS_EVENTS = {
   JOIN: 'join',
+  CONNECT: 'connect',
   DISCONNECT: 'disconnect',
   CLOSE: 'close',
   ERROR: 'error',
