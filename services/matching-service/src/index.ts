@@ -69,8 +69,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 httpServer.listen(PORT, () => {
   connectToKafka();
-  connectToWebSocket();
   console.log(`Matching service listening on port ${PORT}`);
+  
+  connectToWebSocket();
   console.log('WebSocket server is ready for connections');
 });
 
