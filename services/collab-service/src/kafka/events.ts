@@ -9,6 +9,8 @@ export interface CollabSessionReadyEvent extends BaseEvent {
     eventType: (typeof TOPICS_COLLAB)['COLLAB_SESSION_READY'];
     data: {
         collabSessionId: string;
+        userIdOne: string;
+        userIdTwo: string;
     }
 }
 
