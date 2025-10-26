@@ -1,5 +1,8 @@
 import type { EachMessagePayload } from 'kafkajs';
 import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
+import { addSession } from '../sessions.js';
+import type { CollabSessionReadyEvent } from './events.js';
+// import { kafkaClient } from '../index.js'; //TODO uncomment once index.ts uncomments kafkaClient
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {
@@ -20,30 +23,49 @@ export class CollabMessageHandler {
     }
 
 
-    private processMatchingSessionWithQuestion(value: string) {
+    private async processMatchingSessionWithQuestion(value: string) {
         console.log(`Preparing collab session for matching session found...`);
 
-        //TODO verify the kafka message keys
-        const { userIdOne, userIdTwo, sessionId, questionId, questionDetails } = JSON.parse(value);
+        //Extract details from message
+        const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = JSON.parse(value);
 
-        /*
-        question-success
-            QuestionId
-            UserId1
-            UserId2
-            title
-            question
-            difficulty
-            categories (array)
-        */
+        // Do not proceed if there are any missing values
+        const isThereMissingValue = !requestId || !userIdOne || !userIdTwo || !questionId || !title || !question || !difficulty || !categories || !timestamp;
+        if (isThereMissingValue) {
+            console.error(`Invalid message format for matching session with question`);
+            return;
+        }
         
-        //TODO: Setup collab session from the information received
-        
+        // Setup collab session from the information received
+        const collabSessionId = "dummy-session-id"; //TODO placeholder; generate collabSessionId?
+        const sessionDetails = new Map<string, string>(
+            [
+                ["user1", userIdOne], 
+                ["user2", userIdTwo],
+                ["questionId", questionId],
+                ["title", title],
+                ["question", question],
+                ["difficulty", difficulty],
+                ["categories", categories.join(",")],
+            ]
+        );
+        addSession(collabSessionId, sessionDetails);
 
-        //TODO: Publish to collab-session-ready topic
-        console.log(`Collab session ready for sessionId: ${sessionId}, questionId: ${questionId} \n 
-            Publishing to topic ${TOPICS_COLLAB.COLLAB_SESSION_READY}`);
-        
-        
+        console.log(
+            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp} \n
+            Publishing to topic ${TOPICS_COLLAB.COLLAB_SESSION_READY}`
+        );
+
+        // Publish CollabSessionReadyEvent to kafka
+        const collabSessionReadyEvent: Omit<CollabSessionReadyEvent, 'eventId'> = {
+            eventType: TOPICS_COLLAB.COLLAB_SESSION_READY,
+            data: {
+                collabSessionId: collabSessionId,
+                userIdOne: userIdOne,
+                userIdTwo: userIdTwo
+            }
+        };
+        //TODO uncomment once kafkaClient is setup in index.ts
+        // await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
     }
 }

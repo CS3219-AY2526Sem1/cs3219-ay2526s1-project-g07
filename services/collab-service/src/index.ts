@@ -84,7 +84,7 @@ server.listen(port, host, () => {
 
 // TODO: Enable Kafka once integration working
 // Setup Kafka Client
-// const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+// export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
 // try {
 //   await kafkaClient.connect();
 // } catch (err) {
