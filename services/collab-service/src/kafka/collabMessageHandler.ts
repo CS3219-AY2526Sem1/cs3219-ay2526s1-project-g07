@@ -11,7 +11,7 @@ export class CollabMessageHandler {
 
         const value = message.value.toString();
         switch (topic) {
-            case TOPICS_SUBSCRIBED.QUESTION_FOUND:
+            case TOPICS_SUBSCRIBED.QUESTION_SUCCESS:
                 this.processMatchingSessionWithQuestion(value);
                 break;
             default:
@@ -25,6 +25,17 @@ export class CollabMessageHandler {
 
         //TODO verify the kafka message keys
         const { userIdOne, userIdTwo, sessionId, questionId, questionDetails } = JSON.parse(value);
+
+        /*
+        question-success
+            QuestionId
+            UserId1
+            UserId2
+            title
+            question
+            difficulty
+            categories (array)
+        */
         
         //TODO: Setup collab session from the information received
         

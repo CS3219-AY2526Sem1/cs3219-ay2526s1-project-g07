@@ -3,5 +3,5 @@ export const TOPICS_COLLAB = {
 } as const;
 
 export const TOPICS_SUBSCRIBED = {
-    QUESTION_FOUND: 'question-success', // Produced by question service from matching service event
+    QUESTION_SUCCESS: 'question-success', // Produced by question service from matching service event
 }
