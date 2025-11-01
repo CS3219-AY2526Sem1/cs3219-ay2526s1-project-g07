@@ -1,18 +1,19 @@
 // Kafka message types for question service
 
-export interface QuestionRequestMessage {
-  requestId: string;
-  userId1: string;
-  userId2: string;
-  difficulty: string;
-  categories: string[];
-  timestamp: number;
+// Message received from matching-service on matching-success topic
+export interface MatchingSuccessMessage {
+  user1: string;
+  user2: string;
+  preferences: {
+    topic: string;
+    difficulty: string;
+  };
 }
 
+// Message sent to question-success topic
 export interface QuestionSuccessMessage {
-  requestId: string;
-  userId1: string;
-  userId2: string;
+  user1: string;
+  user2: string;
   questionId: string;
   title: string;
   question: string;
@@ -22,9 +23,8 @@ export interface QuestionSuccessMessage {
 }
 
 export interface QuestionErrorMessage {
-  requestId: string;
-  userId1: string;
-  userId2: string;
+  user1: string;
+  user2: string;
   error: string;
   timestamp: number;
 }
