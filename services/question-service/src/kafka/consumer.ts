@@ -66,12 +66,12 @@ export class QuestionConsumer {
 
     try {
       await this.consumer.subscribe({
-        topic: 'question-request',
+        topic: 'matching-success',
         fromBeginning: false
       });
-      console.log('✅ Subscribed to question-request topic');
+      console.log('✅ Subscribed to matching-success topic');
     } catch (error) {
-      console.error('❌ Failed to subscribe to question-request topic:', error);
+      console.error('❌ Failed to subscribe to matching-success topic:', error);
       throw error;
     }
   }
