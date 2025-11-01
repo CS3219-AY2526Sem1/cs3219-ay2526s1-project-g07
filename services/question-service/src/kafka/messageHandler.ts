@@ -34,7 +34,7 @@ export async function handleMatchingSuccess(message: MatchingSuccessMessage): Pr
       title: question.title,
       question: question.question,
       difficulty: question.difficulty,
-      categories: question.categories,
+      topic: topic,
       timestamp: Date.now()
     });
 

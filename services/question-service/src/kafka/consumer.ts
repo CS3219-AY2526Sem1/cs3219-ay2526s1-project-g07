@@ -103,7 +103,7 @@ export class QuestionConsumer {
               user1: parsedMessage.user1,
               user2: parsedMessage.user2,
               difficulty: parsedMessage.preferences.difficulty,
-              category: parsedMessage.preferences.topic,
+              topic: parsedMessage.preferences.topic,
               kafkaTopic: topic,
               partition,
               offset: message.offset

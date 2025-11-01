@@ -18,7 +18,7 @@ export interface QuestionSuccessMessage {
   title: string;
   question: string;
   difficulty: string;
-  categories: string[];
+  topic: string;
   timestamp: number;
 }
 
