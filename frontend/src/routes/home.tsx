@@ -5,8 +5,8 @@ Scope: Generated initial implementation of the criteria selection UI.
 Author review: I validated correctness of the components and edited their styles.
 */
 
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 // import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
