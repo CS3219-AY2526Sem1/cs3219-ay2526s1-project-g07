@@ -8,7 +8,7 @@ export interface UserMatchingCancelRequest {
   userId: UserId;
 }
 
-export interface MatchingResponse {
+export interface MatchFoundData {
   firstUserId: UserId;
   secondUserId: UserId;
   collabSessionId: string;

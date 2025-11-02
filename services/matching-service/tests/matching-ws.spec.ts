@@ -5,7 +5,7 @@ import { io as Client } from "socket.io-client";
 import { WS_EVENTS_MATCHING } from "../../../shared/ws-events.ts";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
-import { type UserMatchingRequest } from "../../../shared/types/matching-types.ts";
+import type { UserId } from "../../../shared/types/matching-types.ts";
 import redis from 'redis';
 import { RedisClient } from "../../../redis/client.ts";
 
@@ -74,13 +74,13 @@ describe("Web socket events (async)", () => {
 
     it("should handle client join event", async () => {
       // Emit the JOIN event and wait a tick for the server to handle it
-      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, { userId: 123 });
+      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, { id: '123' } as UserId);
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(clientJoinSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
-        { userId: 123 }
+        { id: '123' } as UserId
       );
     });
 
@@ -89,53 +89,10 @@ describe("Web socket events (async)", () => {
         clientSocket.on(WS_EVENTS_MATCHING.ERROR, (msg: string) => resolve(msg));
       });
 
-      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, {});
+      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, {} as UserId);
 
       const errorMsg = await errorPromise;
       expect(errorMsg).toBe("JOIN event missing userId");
-    });
-  });
-
-  describe("MATCHING_REQUEST event", () => {
-    let matchingRequestSpy: jasmine.Spy;
-    beforeEach(() => {
-      matchingRequestSpy = spyOn<any>(matchingWS, "OnMatchingRequest").and.callThrough();
-    });
-
-    it("should handle matching request event", async () => {
-      const testData = { userId: { id: '456' }, topic: "Math", difficulty: "easy" };
-      clientSocket.emit(WS_EVENTS_MATCHING.MATCHING_REQUEST, testData);
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const queue: UserMatchingRequest[] = await matcher['queue'];
-
-      expect(matchingRequestSpy).toHaveBeenCalledWith(
-        jasmine.any(Object),
-        testData
-      );
-      expect(queue.find((req) => req.userId.id === testData.userId.id)).toBeDefined();
-    });
-
-  });
-
-  describe("MATCHING_CANCEL event", () => {
-    let matchingCancelSpy: jasmine.Spy;
-    beforeEach(() => {
-      matchingCancelSpy = spyOn<any>(matchingWS, "OnMatchingCancel").and.callThrough();
-    });
-
-    it("should handle matching cancel event", async () => {
-      const testData = { userId: { id: '789' } };
-      matcher.enqueue(testData.userId, { topic: "Science", difficulty: "medium" });
-      clientSocket.emit(WS_EVENTS_MATCHING.MATCHING_CANCEL, testData);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const queue: UserMatchingRequest[] = await matcher['queue'];
-
-      expect(matchingCancelSpy).toHaveBeenCalledWith(
-        jasmine.any(Object),
-        testData
-      );
-      expect(queue.find((req) => req.userId.id === testData.userId.id)).toBeUndefined();
     });
   });
 

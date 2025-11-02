@@ -14,6 +14,10 @@ describe('ConsumerMessageHandler', () => {
     redisClient = await RedisClient.createClient() as redis.RedisClientType;
   });
 
+  afterAll(async () => {
+    await redisClient.quit();
+  });
+
   beforeEach(async () => {
     mockMatcher = new MockMatcher(redisClient);
     messageHandler = new ConsumerMessageHandler(mockMatcher);

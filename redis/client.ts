@@ -2,14 +2,9 @@ import redis from 'redis';
 import dotenv from 'dotenv';
 
 export class RedisClient {
-  static instance: ReturnType<typeof redis.createClient>;
+  instance: ReturnType<typeof redis.createClient>;
 
   static async createClient(database = 0) {
-    if (RedisClient.instance) {
-      // Should only create one instance (singleton)
-      return RedisClient.instance;
-    }
-
     // Start redis local with `npm run redis-local`
     dotenv.config();
     const host = process.env.REDIS_HOST;
@@ -30,17 +25,16 @@ export class RedisClient {
 
     const pong = await client.ping();
     console.log('Redis PING:', pong);
-
-    RedisClient.instance = client;
+    
     return client;
   }
 
-  static async quit() {
-    if (RedisClient.instance !== undefined) {
+  async quit() {
+    if (this.instance !== undefined) {
       // Clear all data of the current Redis database as matching service is stateless
-      await RedisClient.instance.flushDb();
-      await RedisClient.instance.quit();
-      RedisClient.instance = undefined;
+      await this.instance.flushDb();
+      await this.instance.quit();
+      this.instance = undefined;
       console.log('✅ Redis client disconnected');
     }
   }

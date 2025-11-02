@@ -38,10 +38,15 @@ export class Matcher {
 
     await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
 
-    console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
+    console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
   async dequeue(userId: UserId) {
+    if (!userId) {
+      console.error('dequeue called with invalid userId');
+      return;
+    }
+
     const lockKey = 'dequeue_lock';
     // Unique value for this lock instance, preventing accidental releases by other processes
     const lockValue = randomUUID();
@@ -53,7 +58,7 @@ export class Matcher {
 
     if (!acquired) {
       await new Promise(res => setTimeout(res, 50));
-      console.log(`Retrying dequeue for user ${userId}`);
+      console.log(`Retrying dequeue for user ${userId.id}`);
       return this.dequeue(userId);
     }
 
@@ -66,7 +71,7 @@ export class Matcher {
         await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(r));
       }
 
-      console.log(`✅ User ${userId} removed from the matching queue.`);
+      console.log(`✅ User ${userId.id} removed from the matching queue.`);
     } finally {
       // Release lock safely
       const releaseLockLuaScript = `
@@ -144,8 +149,9 @@ export class Matcher {
     console.log(`Match found between users ${firstUserId} and ${secondUserId} with topic ${topic} and difficulty ${difficulty}`);
   }
 
-  private handleNoMatch() {
+  private async handleNoMatch() {
     console.log('No suitable match found at this time.');
+    console.log(JSON.stringify(await this.queue));
   }
 
   private async findMatch(): Promise<MatchResult | null> {
@@ -173,7 +179,7 @@ export class Matcher {
   }
 
   async cleanUp() {
-    await RedisClient.quit();
+    await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
   }
 

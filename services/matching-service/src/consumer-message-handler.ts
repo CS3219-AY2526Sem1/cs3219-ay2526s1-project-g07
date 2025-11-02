@@ -23,8 +23,8 @@ export class ConsumerMessageHandler {
   }
 
   protected processMatchingSuccess(value: string) {
-    console.log(`Processing matching success: ${value}`);
     const { userId, peerId, sessionId } = JSON.parse(value);
+    console.log(`Processing matching success: ${userId}, ${peerId}, ${sessionId}`);
     // TODO: Implement logic to handle successful matching internally if needed
 
   }

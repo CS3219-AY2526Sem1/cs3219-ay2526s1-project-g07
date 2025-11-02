@@ -25,6 +25,10 @@ describe('MatchingServiceProducer', () => {
     redisClient = await RedisClient.createClient() as redis.RedisClientType;
   });
 
+  afterAll(async () => {
+    await redisClient.quit();
+  });
+
   beforeEach(() => {
     mockMatcher = new MockMatcher(redisClient);
     msProducer = new MatchingServiceProducer(mockKafka, mockMatcher);

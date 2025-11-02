@@ -38,7 +38,7 @@ export class MatchingServiceProducer {
       topic: TOPICS_MATCHING.MATCHING_SUCCESS,
       messages: [ { value: JSON.stringify({ userId, peerId, preferences }) }]
     });
-    console.log(`Produced matching success for userId: ${userId}, peerId: ${peerId}`);
+    console.log(`Produced matching success for userId: ${JSON.stringify(userId)}, peerId: ${JSON.stringify(peerId)}`);
   }
 
   async send({ topic, messages }: { topic: string; messages: { value: string }[] }) {
