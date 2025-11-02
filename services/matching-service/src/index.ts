@@ -13,7 +13,7 @@ import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 import { MatchingWS } from './matching-ws.ts';
 import { RedisClient } from '../../../redis/client.ts';
 import { type RedisClientType } from 'redis';
-import { UserMatchingRequest, UserMatchingCancelRequest } from '@shared/types/matching-types.ts';
+import type { UserMatchingRequest, UserMatchingCancelRequest } from '../../../shared/types/matching-types.ts';
 
 const app = express();
 const httpServer = createServer(app);
@@ -25,11 +25,12 @@ const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
 const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
   ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
   : 0;
+const allowedOrigins = [HOST_URL, "http://127.0.0.1:3000"];
 
 async function main() {
   // --- Middleware ---
   app.use(cors({
-    origin: HOST_URL
+    origin: allowedOrigins,
   }))
 
   app.use(express.json());
@@ -68,14 +69,6 @@ async function main() {
     res.status(err.status || 500).json(err.message);
   })
 
-  httpServer.listen(PORT, () => {
-    connectToKafka();
-    console.log(`Matching service listening on port ${PORT}`);
-    
-    connectToWebSocket();
-    console.log('WebSocket server is ready for connections');
-  });
-
   const connectToKafka = async () => {
     try {
       await producer.init();
@@ -89,6 +82,8 @@ async function main() {
   httpServer.listen(PORT, () => {
     connectToKafka();
     console.log(`Matching service listening on port ${PORT}`);
+    
+    connectToWebSocket();
     console.log('WebSocket server is ready for connections');
   });
 
