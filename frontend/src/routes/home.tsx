@@ -6,7 +6,7 @@ Author review: I validated correctness of the components and edited their styles
 */
 
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
+import { redirectIfNotAuthenticated, useCurrentUser } from "../hooks/user-hooks";
 
 export const Route = createFileRoute("/home")({
   //   loader: async () => {
@@ -38,6 +38,13 @@ function RouteComponent() {
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("");
   redirectIfNotAuthenticated();
+  const { user, isPending } = useCurrentUser();
+
+  if (isPending) {
+    return <></>;
+  }
+
+  console.log("User data in Home route:", user);
 
   return (
     <div>
