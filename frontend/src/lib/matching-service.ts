@@ -1,4 +1,4 @@
-import type { MatchingResponse, UserMatchingCancelRequest, UserMatchingRequest } from '../../../shared/types/matching-types.ts';
+import type { UserMatchingCancelRequest, UserMatchingRequest } from '../../../shared/types/matching-types.ts';
 import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints.ts';
 
 const MATCHING_SERVICE_BASE_URL = import.meta.env.VITE_MATCHING_SERVICE_URL || 'http://localhost:4000';
