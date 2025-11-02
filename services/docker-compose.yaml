@@ -40,7 +40,8 @@ services:
       /opt/kafka/bin/kafka-topics.sh --create --topic question-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-hint-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-response --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
-      /opt/kafka/bin/kafka-topics.sh --create --topic collab-session-ready --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092
+      /opt/kafka/bin/kafka-topics.sh --create --topic collab-session-ready --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic user-status-update --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092
       '
     networks:
       - kafka-network

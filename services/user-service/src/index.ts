@@ -5,12 +5,17 @@ import { auth } from "./lib/auth";
 import { cors } from "hono/cors";
 import type { Context } from "hono";
 import route from './routes/routes'
+import { KafkaClient } from './kafka/client';
 
 const app = new Hono()
 
 app.get('/', (c: Context) => c.text('Hello Hono!'))
 
-
+const kafkaConfig = {
+  clientId: "user-service",
+  brokers: (process.env.KAFKA_BROKERS || "localhost:9094").split(","),
+  retry: { initialRetryTime: 300, retries: 10 },
+};
 
 // Enable CORS for all routes
 app.use(cors({
@@ -46,6 +51,18 @@ const startServer = async () => {
     }, (info: { address: string; port: number }) => {
       console.log(`🚀 Server running at http://localhost:${info.port}`)
     });
+
+    const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+    await kafkaClient.connect();
+    console.log("Kafka client connected");
+
+    // Disconnect Kafka client on server close
+    process.on("SIGINT", async () => {
+      console.log("SIGINT received: closing HTTP server");
+      await kafkaClient.disconnect();
+      process.exit(0);
+    });
+
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     process.exit(1);

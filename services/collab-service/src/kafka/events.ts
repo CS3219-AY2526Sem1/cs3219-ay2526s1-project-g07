@@ -23,4 +23,12 @@ export interface AIQuestionResponseEvent extends BaseEvent {
     }
 }
 
-export type EventType = CollabSessionReadyEvent | AIQuestionResponseEvent; // Add collab-related kafka event topics here as needed after defining
+export interface UserStatusUpdateEvent extends BaseEvent {
+    eventType: (typeof TOPICS_COLLAB)['USER_STATUS_UPDATE'];
+    data: {
+        userId: string;
+        status: 'collaborating' | 'available';
+    }
+}
+
+export type EventType = CollabSessionReadyEvent | AIQuestionResponseEvent | UserStatusUpdateEvent; // Add collab-related kafka event topics here as needed after defining
