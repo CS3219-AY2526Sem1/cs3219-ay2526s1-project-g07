@@ -13,6 +13,7 @@ import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 import { MatchingWS } from './matching-ws.ts';
 import { RedisClient } from '../../../redis/client.ts';
 import { type RedisClientType } from 'redis';
+import { UserMatchingRequest, UserMatchingCancelRequest } from '@shared/types/matching-types.ts';
 
 const app = express();
 const httpServer = createServer(app);
@@ -108,16 +109,19 @@ async function main() {
 
   // --- API Endpoints ---
   app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
-    const { userId, topic, difficulty } = req.body;
-    console.log(`Received matching request for user id: ${userId}`);
+    const matchingRequest = req.body as UserMatchingRequest;
+    console.log(`Received matching request for user id: ${matchingRequest.userId}`);
+    
+    matcher.enqueue(matchingRequest.userId, {
+      topic: matchingRequest.preferences.topic,
+      difficulty: matchingRequest.preferences.difficulty,
+    });
 
-    matcher.enqueue(userId, { topic, difficulty });
-
-    return res.status(200).send({ message: `Matching service received session id: ${userId}` });
+    return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId}` });
   });
 
   app.post(API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req: Request, res: Response) => {
-    const { userId } = req.body;
+    const { userId } = req.body as UserMatchingCancelRequest;
     console.log(`Received matching cancel request for user id: ${userId}`);
 
     matcher.dequeue(userId);

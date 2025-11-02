@@ -4,6 +4,16 @@ export interface UserMatchingRequest {
   timestamp: number;
 }
 
+export interface UserMatchingCancelRequest {
+  userId: UserId;
+}
+
+export interface MatchingResponse {
+  firstUserId: UserId;
+  secondUserId: UserId;
+  collabSessionId: string;
+}
+
 export interface MatchPreference {
   topic: string;
   difficulty: Difficulty;
