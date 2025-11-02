@@ -5,6 +5,9 @@ import { io as Client } from "socket.io-client";
 import { WS_EVENTS } from "../src/utils.ts";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
+import { type UserMatchingRequest } from "../src/types.ts";
+import redis from 'redis';
+import { RedisClient } from "../../../redis/client.ts";
 
 let io: SocketIOServer;
 let matcher: Matcher;
@@ -12,10 +15,12 @@ let matchingWS: MatchingWS;
 let clientSocket: ReturnType<typeof Client>;
 let httpServer: ReturnType<typeof createServer>;
 const TEST_WEBSOCKET_PORT = 5000;
+let redisClient: redis.RedisClientType;
 
 async function init(): Promise<void> {
   httpServer = createServer();
   io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
+  redisClient = await RedisClient.createClient() as redis.RedisClientType;
 
   // Resolve once server is listening
   await new Promise<void>((resolve) => {
@@ -24,7 +29,7 @@ async function init(): Promise<void> {
 
   const port = (httpServer.address() as AddressInfo).port;
 
-  matcher = new Matcher();
+  matcher = new Matcher(redisClient);
   matchingWS = new MatchingWS(io, matcher);
   matchingWS.init();
 
@@ -102,12 +107,13 @@ describe("Web socket events (async)", () => {
       clientSocket.emit(WS_EVENTS.MATCHING_REQUEST, testData);
 
       await new Promise((resolve) => setTimeout(resolve, 50));
+      const queue: UserMatchingRequest[] = await matcher['queue'];
 
       expect(matchingRequestSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
         testData
       );
-      expect(matcher.queue.find((req) => req.userId === testData.userId)).toBeDefined();
+      expect(queue.find((req) => req.userId === testData.userId)).toBeDefined();
     });
 
   });
@@ -123,12 +129,13 @@ describe("Web socket events (async)", () => {
       matcher.enqueue(789, { topic: "Science", difficulty: "medium" });
       clientSocket.emit(WS_EVENTS.MATCHING_CANCEL, testData);
       await new Promise((resolve) => setTimeout(resolve, 50));
+      const queue: UserMatchingRequest[] = await matcher['queue'];
 
       expect(matchingCancelSpy).toHaveBeenCalledWith(
         jasmine.any(Object),
         testData
       );
-      expect(matcher.queue.find((req) => req.userId === testData.userId)).toBeUndefined();
+      expect(queue.find((req) => req.userId === testData.userId)).toBeUndefined();
     });
   });
 
