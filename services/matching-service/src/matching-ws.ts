@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Matcher } from './matcher.ts';
-import { WS_EVENTS } from './utils.ts';
+import { WS_EVENTS_MATCHING } from '../../../shared/ws-events.ts'
+import { type UserId } from '../../../shared/types/matching-types.ts';
 
 export class MatchingWS {
   private io: SocketIOServer;
@@ -16,25 +17,25 @@ export class MatchingWS {
       console.log(`Client connected: ${socket.id}`);
   
       // Set up event listeners for this socket
-      socket.on(WS_EVENTS.JOIN, (data) => this.OnClientJoin(socket, data));
-      socket.on(WS_EVENTS.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
-      socket.on(WS_EVENTS.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
-      socket.on(WS_EVENTS.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
-      socket.on(WS_EVENTS.ERROR, (error) => this.OnError(error));
+      socket.on(WS_EVENTS_MATCHING.JOIN, (data) => this.OnClientJoin(socket, data));
+      socket.on(WS_EVENTS_MATCHING.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
+      socket.on(WS_EVENTS_MATCHING.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
+      socket.on(WS_EVENTS_MATCHING.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
+      socket.on(WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(error));
     });
   }
 
-  private HandleConnectionInterrupt(userId: number) {
+  private HandleConnectionInterrupt(userId: UserId) {
     this.matcher.dequeue(userId);
   }
 
   private OnClientJoin = (socket: CustomSocket, data: any) => {
     const { userId } = data;
     if (!userId) {
-      socket.emit(WS_EVENTS.ERROR, 'JOIN event missing userId');
+      socket.emit(WS_EVENTS_MATCHING.ERROR, 'JOIN event missing userId');
       return;
     }
-    socket.userId = Number(userId);
+    socket.userId = userId;
     socket.join(`user_${userId}`);
     console.log(`User ${userId} joined with socket ${socket.id}`);
   }
@@ -46,7 +47,7 @@ export class MatchingWS {
     this.matcher.enqueue(userId, { topic, difficulty });
     
     // Emit confirmation back to client
-    socket.emit(WS_EVENTS.MATCHING_REQUEST_RECEIVED, {
+    socket.emit(WS_EVENTS_MATCHING.MATCHING_REQUEST_RECEIVED, {
       message: `Matching request received for user ${userId}`,
       status: 'queued'
     });
@@ -63,7 +64,7 @@ export class MatchingWS {
     this.HandleConnectionInterrupt(userId);
 
     // Emit confirmation back to client
-    socket.emit(WS_EVENTS.MATCHING_CANCEL, {
+    socket.emit(WS_EVENTS_MATCHING.MATCHING_CANCEL, {
       message: `Matching cancelled for user ${userId}`,
       status: 'cancelled'
     });
@@ -73,11 +74,11 @@ export class MatchingWS {
     console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
 
     // Clean up event listeners
-    socket.off(WS_EVENTS.JOIN, (data) => this.OnClientJoin(socket, data));
-    socket.off(WS_EVENTS.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
-    socket.off(WS_EVENTS.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
-    socket.off(WS_EVENTS.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
-    socket.off(WS_EVENTS.ERROR, (error) => this.OnError(error));
+    socket.off(WS_EVENTS_MATCHING.JOIN, (data) => this.OnClientJoin(socket, data));
+    socket.off(WS_EVENTS_MATCHING.MATCHING_REQUEST, (data) => this.OnMatchingRequest(socket, data));
+    socket.off(WS_EVENTS_MATCHING.MATCHING_CANCEL, (data) => this.OnMatchingCancel(socket, data));
+    socket.off(WS_EVENTS_MATCHING.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
+    socket.off(WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(error));
 
     // Clean up user from matching queue if they disconnect
     if (socket.userId) {
@@ -93,5 +94,5 @@ export class MatchingWS {
 
 // Extend Socket interface to include userId
 interface CustomSocket extends Socket {
-  userId?: number;
+  userId?: UserId;
 }

@@ -1,7 +1,7 @@
 import { Kafka, type Producer } from 'kafkajs';
 import { Matcher } from './matcher.ts';
-import { TOPICS_MATCHING } from './utils.ts';
-import type { MatchPreference, MatchResult } from './types.ts';
+import { TOPICS_MATCHING } from '../../../shared/kafka-topics.ts';
+import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types.ts';
 
 export class MatchingServiceProducer {
   producer: Producer;

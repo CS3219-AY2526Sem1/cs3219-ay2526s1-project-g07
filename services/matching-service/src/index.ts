@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { Kafka } from 'kafkajs';
 import type { Request, Response, NextFunction } from 'express';
-import { API_ENDPOINTS_MATCHING } from './utils.ts';
+import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints.ts';
 import { MatchingServiceProducer } from './matching-service-producer.ts';
 import { MatchingServiceConsumer } from './matching-service-consumer.ts';
 import { Matcher } from './matcher.ts';

@@ -1,4 +1,4 @@
-import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
+import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types.ts';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria.ts';
 import { type RedisClientType } from 'redis';
@@ -21,7 +21,7 @@ export class Matcher {
     }, this.matchInterval);
   }
 
-  async enqueue(userId: number, preferences: { topic: string; difficulty: Difficulty }) {
+  async enqueue(userId: UserId, preferences: { topic: string; difficulty: Difficulty }) {
     const userRequest: UserMatchingRequest = {
       userId: userId,
       preferences: {
@@ -32,7 +32,7 @@ export class Matcher {
     };
 
     const queue = await this.queue;
-    if (queue.some(request => request.userId === userId)) {
+    if (queue.some(request => request.userId.id === userId.id)) {
       await this.dequeue(userId);
     }
 
@@ -41,7 +41,7 @@ export class Matcher {
     console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
-  async dequeue(userId: number) {
+  async dequeue(userId: UserId) {
     const lockKey = 'dequeue_lock';
     // Unique value for this lock instance, preventing accidental releases by other processes
     const lockValue = randomUUID();
@@ -59,7 +59,7 @@ export class Matcher {
 
     try {
       const userRequests = await this.queue;
-      const filteredRequests = userRequests.filter(r => r.userId !== userId);
+      const filteredRequests = userRequests.filter(r => r.userId.id !== userId.id);
 
       await this.redisClient.del(Matcher.redisCacheKey);
       for (const r of filteredRequests) {
@@ -161,7 +161,7 @@ export class Matcher {
         // Found a match
         this.dequeue(firstUser.userId);
         this.dequeue(potentialMatch.userId);
-        console.log(`Matched users ${firstUser.userId} and ${potentialMatch.userId}`);
+        console.log(`Matched users ${firstUser.userId.id} and ${potentialMatch.userId.id}`);
         return {
           firstUserId: firstUser.userId,
           secondUserId: potentialMatch.userId,

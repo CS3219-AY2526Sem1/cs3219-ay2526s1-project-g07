@@ -2,10 +2,10 @@ import { Server as SocketIOServer } from "socket.io";
 import { MatchingWS } from "../src/matching-ws.ts";
 import { Matcher } from "../src/matcher.ts";
 import { io as Client } from "socket.io-client";
-import { WS_EVENTS } from "../src/utils.ts";
+import { WS_EVENTS_MATCHING } from "../../../shared/ws-events.ts";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
-import { type UserMatchingRequest } from "../src/types.ts";
+import { type UserMatchingRequest } from "../../../shared/types/matching-types.ts";
 import redis from 'redis';
 import { RedisClient } from "../../../redis/client.ts";
 
@@ -39,7 +39,7 @@ async function init(): Promise<void> {
 
   // Wait for connection to complete
   await new Promise<void>((resolve) => {
-    clientSocket.on(WS_EVENTS.CONNECT, resolve);
+    clientSocket.on(WS_EVENTS_MATCHING.CONNECT, resolve);
   });
 }
 
@@ -74,7 +74,7 @@ describe("Web socket events (async)", () => {
 
     it("should handle client join event", async () => {
       // Emit the JOIN event and wait a tick for the server to handle it
-      clientSocket.emit(WS_EVENTS.JOIN, { userId: 123 });
+      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, { userId: 123 });
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -86,10 +86,10 @@ describe("Web socket events (async)", () => {
 
     it("should emit error if userId is missing", async () => {
       const errorPromise = new Promise<string>((resolve) => {
-        clientSocket.on(WS_EVENTS.ERROR, (msg: string) => resolve(msg));
+        clientSocket.on(WS_EVENTS_MATCHING.ERROR, (msg: string) => resolve(msg));
       });
 
-      clientSocket.emit(WS_EVENTS.JOIN, {});
+      clientSocket.emit(WS_EVENTS_MATCHING.JOIN, {});
 
       const errorMsg = await errorPromise;
       expect(errorMsg).toBe("JOIN event missing userId");
@@ -103,8 +103,8 @@ describe("Web socket events (async)", () => {
     });
 
     it("should handle matching request event", async () => {
-      const testData = { userId: 456, topic: "Math", difficulty: "easy" };
-      clientSocket.emit(WS_EVENTS.MATCHING_REQUEST, testData);
+      const testData = { userId: { id: '456' }, topic: "Math", difficulty: "easy" };
+      clientSocket.emit(WS_EVENTS_MATCHING.MATCHING_REQUEST, testData);
 
       await new Promise((resolve) => setTimeout(resolve, 50));
       const queue: UserMatchingRequest[] = await matcher['queue'];
@@ -113,7 +113,7 @@ describe("Web socket events (async)", () => {
         jasmine.any(Object),
         testData
       );
-      expect(queue.find((req) => req.userId === testData.userId)).toBeDefined();
+      expect(queue.find((req) => req.userId.id === testData.userId.id)).toBeDefined();
     });
 
   });
@@ -125,9 +125,9 @@ describe("Web socket events (async)", () => {
     });
 
     it("should handle matching cancel event", async () => {
-      const testData = { userId: 789 };
-      matcher.enqueue(789, { topic: "Science", difficulty: "medium" });
-      clientSocket.emit(WS_EVENTS.MATCHING_CANCEL, testData);
+      const testData = { userId: { id: '789' } };
+      matcher.enqueue(testData.userId, { topic: "Science", difficulty: "medium" });
+      clientSocket.emit(WS_EVENTS_MATCHING.MATCHING_CANCEL, testData);
       await new Promise((resolve) => setTimeout(resolve, 50));
       const queue: UserMatchingRequest[] = await matcher['queue'];
 
@@ -135,7 +135,7 @@ describe("Web socket events (async)", () => {
         jasmine.any(Object),
         testData
       );
-      expect(queue.find((req) => req.userId === testData.userId)).toBeUndefined();
+      expect(queue.find((req) => req.userId.id === testData.userId.id)).toBeUndefined();
     });
   });
 
