@@ -12,7 +12,8 @@
     "@hono/node-server": "^1.19.5",
     "dotenv": "17.2.3",
     "hono": "^4.9.11",
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.5",

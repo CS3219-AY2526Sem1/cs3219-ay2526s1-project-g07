@@ -1,8 +1,8 @@
 import type { EachMessagePayload } from 'kafkajs';
 import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
-import { addSession } from '../sessions.js';
-import type { CollabSessionReadyEvent } from './events.js';
-// import { kafkaClient } from '../index.js'; //TODO uncomment once index.ts uncomments kafkaClient
+import { addSession, getSessionDetails } from '../sessions.js';
+import type { AIQuestionResponseEvent, CollabSessionReadyEvent } from './events.js';
+import { kafkaClient } from '../index.js'; //TODO uncomment once index.ts uncomments kafkaClient
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {
@@ -13,21 +13,60 @@ export class CollabMessageHandler {
         }
 
         const value = message.value.toString();
+        const event = JSON.parse(value);
         switch (topic) {
             case TOPICS_SUBSCRIBED.QUESTION_SUCCESS:
-                this.processMatchingSessionWithQuestion(value);
+                await this.processMatchingSessionWithQuestion(event);
+                break;
+            case TOPICS_SUBSCRIBED.AI_QUESTION_HINT_REQUEST:
+                await this.processAiServiceHintRequest(event);
                 break;
             default:
                 console.log(`Received message on unknown topic ${topic}: ${message.value?.toString()}`);
         }
     }
 
+    private async processAiServiceHintRequest(event: any) {
+        console.log(`Processing AI service hint request...`);
 
-    private async processMatchingSessionWithQuestion(value: string) {
+        console.log('Received kafka event on Ai-question-hint-request:', event);
+        //Extract details from message
+        const { userId, collabSessionId } = event.data;
+
+        if (!userId || !collabSessionId) {
+            console.error(`Missing userId or collabSessionId in AI hint request message`);
+            return;
+        }
+
+        //Retrieve session details
+        const sessionDetails = getSessionDetails(collabSessionId);
+        if (!sessionDetails) {
+            console.error(`No session details found for collabSessionId: ${collabSessionId}`);
+            return;
+        }
+
+        const questionDetails = sessionDetails.get("title") +
+            '\n' + 
+            sessionDetails.get("question");
+
+        const aiQuestionResponseEvent: Omit<AIQuestionResponseEvent, 'eventId'> = {
+            eventType: TOPICS_COLLAB.AI_QUESTION_RESPONSE,
+            data: {
+                collabSessionId: collabSessionId,
+                userId: userId,
+                question: questionDetails
+            }
+        };
+
+        await kafkaClient.getProducer().publishEvent(aiQuestionResponseEvent);
+
+    }
+
+    private async processMatchingSessionWithQuestion(event: any) {
         console.log(`Preparing collab session for matching session found...`);
 
         //Extract details from message
-        const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = JSON.parse(value);
+        const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = event.data;
 
         // Do not proceed if there are any missing values
         const isThereMissingValue = !requestId || !userIdOne || !userIdTwo || !questionId || !title || !question || !difficulty || !categories || !timestamp;

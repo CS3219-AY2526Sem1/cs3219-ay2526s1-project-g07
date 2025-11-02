@@ -29,3 +29,5 @@ lerna-debug.log*
 
 # use pnpm
 package-lock.json
+
+dist/

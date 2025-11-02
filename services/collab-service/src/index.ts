@@ -84,29 +84,29 @@ server.listen(port, host, () => {
 
 // TODO: Enable Kafka once integration working
 // Setup Kafka Client
-// export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
-// try {
-//   await kafkaClient.connect();
-// } catch (err) {
-//   console.error("Failed to connect to Kafka, exiting...");
-//   await shutdown(1);
-// }
+export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+try {
+  await kafkaClient.connect();
+} catch (err) {
+  console.error("Failed to connect to Kafka, exiting...");
+  await shutdown(1);
+}
 
-// async function shutdown(code: number = 0) {
-//   console.log("Shutting down collab-service...");
-//   try {
-//     await kafkaClient.disconnect();
-//   } catch (err) {
-//     console.error("Error during shutdown of collab-service:", err);
-//     process.exit(1)
-//   }
+async function shutdown(code: number = 0) {
+  console.log("Shutting down collab-service...");
+  try {
+    await kafkaClient.disconnect();
+  } catch (err) {
+    console.error("Error during shutdown of collab-service:", err);
+    process.exit(1)
+  }
 
-//   process.exit(code);
-// }
+  process.exit(code);
+}
 
-//Handles exit signals - Termination, Interrupt
-// process.on('SIGTERM', () => shutdown());
-// process.on('SIGINT', () => shutdown());
+// Handles exit signals - Termination, Interrupt
+process.on('SIGTERM', () => shutdown());
+process.on('SIGINT', () => shutdown());
 
 // ------------------- Hono Routes ------------------ //
 

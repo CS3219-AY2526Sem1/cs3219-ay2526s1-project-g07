@@ -1,6 +1,6 @@
-import { Kafka, type Admin} from 'kafkajs';
-import { CollabProducer } from './producer.js';
-import { CollabConsumer } from './consumer.js';
+import {Kafka } from 'kafkajs';
+import { AiKafkaProducer } from './producer.js';
+import { AiKafkaConsumer } from './consumer.js';
 import { TOPICS_SUBSCRIBED } from './utils.js';
 
 export interface KafkaConfig {
@@ -14,9 +14,8 @@ export interface KafkaConfig {
 
 export class KafkaClient {
     private kafka : Kafka;
-    private producer: CollabProducer;
-    private consumer: CollabConsumer;
-    // private admin: Admin;
+    private producer: AiKafkaProducer
+    private consumer: AiKafkaConsumer;
 
     constructor(config: KafkaConfig) {
         //Initialize Kafka client
@@ -25,41 +24,43 @@ export class KafkaClient {
             brokers: config.brokers,
             retry: config.retry || { initialRetryTime: 300, retries: 10 },
         });
-
         //Setup Producer
-        this.producer = new CollabProducer(
+        this.producer = new AiKafkaProducer(
             this.kafka.producer({
                 idempotent: true, // to ensure message deduplication
                 transactionTimeout: 30000,
+                allowAutoTopicCreation: true,
             })
         );
 
         //Setup Consumer
-        this.consumer = new CollabConsumer(
-            this.kafka.consumer({ 
+        this.consumer = new AiKafkaConsumer(
+            this.kafka.consumer({
                 groupId: `${config.clientId}-group`,
-                sessionTimeout: 30000,
-                heartbeatInterval: 10000,
+                allowAutoTopicCreation: true,
             })
         );
-        this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
 
-        // this.admin = this.kafka.admin();
+        this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
     }
 
-    getProducer(): CollabProducer {
+    getProducer(): AiKafkaProducer {
         return this.producer;
     }
 
-    getConsumer(): CollabConsumer {
+    getConsumer(): AiKafkaConsumer {
         return this.consumer;
+    }
+
+    getClient(): Kafka {
+        return this.kafka;
     }
 
     async connect(): Promise<void> {
         try {
             await this.producer.getProducer().connect();
             await this.consumer.getConsumer().connect();
-            // await this.admin.connect();
+
             await this.consumer.startConsuming();
             console.log('Kafka Client connected successfully');
         } catch (err) {
@@ -72,10 +73,8 @@ export class KafkaClient {
         try {
             await this.producer.getProducer().disconnect();
             await this.consumer.getConsumer().disconnect();
-            // await this.admin.disconnect();
-
             console.log('Kafka Client disconnected successfully');
-        }  catch (err) {
+        } catch (err) {
             console.error('Error disconnecting from Kafka:', err);
             throw err;
         }

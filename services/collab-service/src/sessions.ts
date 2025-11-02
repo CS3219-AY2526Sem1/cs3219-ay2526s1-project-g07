@@ -26,3 +26,7 @@ export const checkSessionAndUsers = (sessionId: string, userId: string) => {
   }
   return session?.get("user1") === userId || session.get("user2") === userId;
 };
+
+export const getSessionDetails = (sessionId: string) => {
+  return sessions.get(sessionId);
+};
