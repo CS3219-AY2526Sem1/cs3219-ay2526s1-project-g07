@@ -1,7 +1,9 @@
 export const TOPICS_COLLAB = {
-    COLLAB_SESSION_READY: 'collab-session-ready'
+    COLLAB_SESSION_READY: 'collab-session-ready',
+    AI_QUESTION_RESPONSE: 'ai-question-response', //Response to TOPICS_SUBSCRIBED.AI_QUESTION_HINT_REQUEST
 } as const;
 
 export const TOPICS_SUBSCRIBED = {
     QUESTION_SUCCESS: 'question-success', // Produced by question service from matching service event
+    AI_QUESTION_HINT_REQUEST: 'ai-question-hint-request', // Produced by ai-service when user requests hint
 }

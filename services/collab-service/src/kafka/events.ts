@@ -14,4 +14,13 @@ export interface CollabSessionReadyEvent extends BaseEvent {
     }
 }
 
-export type EventType = CollabSessionReadyEvent; // Add collab-related kafka event topics here as needed after defining
+export interface AIQuestionResponseEvent extends BaseEvent {
+    eventType: (typeof TOPICS_COLLAB)['AI_QUESTION_RESPONSE'];
+    data: {
+        collabSessionId: string;
+        userId: string;
+        question: string; // question_title + '\n' + question_body
+    }
+}
+
+export type EventType = CollabSessionReadyEvent | AIQuestionResponseEvent; // Add collab-related kafka event topics here as needed after defining
