@@ -55,25 +55,29 @@ async function main() {
   });
 
   const ws = new MatchingWS(io, matcher);
-  const connectToWebSocket = () => {
-    try {
-      ws.init();
-    } catch (error) {
-      console.error('Error initializing WebSocket:', error);
-    }
+  try {
+    ws.init();
+  } catch (error) {
+    console.error('Error initializing WebSocket:', error);
   }
+}
 
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    res.status(err.status || 500).json(err.message);
-  })
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  res.status(err.status || 500).json(err.message);
+})
 
-  httpServer.listen(PORT, () => {
-    connectToKafka();
-    console.log(`Matching service listening on port ${PORT}`);
-    
-    connectToWebSocket();
-    console.log('WebSocket server is ready for connections');
-  });
+httpServer.listen(PORT, () => {
+  connectToKafka();
+  console.log(`Matching service listening on port ${PORT}`);
+  
+  connectToWebSocket();
+  console.log('WebSocket server is ready for connections');
+});
+
+// API endpoints
+app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
+  const { userId, topic, difficulty } = req.body;
+  console.log(`Received matching request for user id: ${userId}`);
 
   const connectToKafka = async () => {
     try {
