@@ -27,7 +27,7 @@ export interface UserStatusUpdateEvent extends BaseEvent {
     eventType: (typeof TOPICS_COLLAB)['USER_STATUS_UPDATE'];
     data: {
         userId: string;
-        status: 'collaborating' | 'available';
+        collabSessionId: string | null; // null if user leaves collab session
     }
 }
 

@@ -23,17 +23,18 @@ export class MessageHandler {
     private async processUserStatusUpdate(event: any) {
         console.log('Received kafka event on User-status-update:', event);
 
-        const { userId, status } = event.data;
-        console.log(`User ${userId} status updated to ${status}`);
+        const { userId, collabSessionId } = event.data;
+        console.log(`User ${userId} status updated to ${collabSessionId ? 'collaborating' : 'available'}`);
 
-        if (!userId || !status) {
-            console.error(`Missing userId or status in user status update message`);
+        if (!userId) {
+            console.error(`Missing userId in user status update message`);
             return;
         }
 
-        //TODO Update the user's status in the database
+        //TODO Update the user's status in the database based on collabSessionId - null means available, otherwise collaborating
 
-        console.log(`Updated user ${userId} status to ${status} in the database`);
+        //TODO DB to store both status and collabSessionId - new attributes
 
+        console.log(`Updated user ${userId} status to ${collabSessionId ? 'collaborating' : 'available'} in the database`);
     }
 }
