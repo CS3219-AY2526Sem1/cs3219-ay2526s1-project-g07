@@ -5,7 +5,7 @@ const MATCHING_SERVICE_BASE_URL = import.meta.env.VITE_MATCHING_SERVICE_URL || '
 
 export const matchingService = {
   // Start matching request
-  async startMatching(request: UserMatchingRequest): Promise<MatchingResponse> {
+  async startMatching(request: UserMatchingRequest): Promise<void> {
     try {
       const response = await fetch(`${MATCHING_SERVICE_BASE_URL}${API_ENDPOINTS_MATCHING.MATCHING_REQUEST}`, {
         method: 'POST',
@@ -19,8 +19,6 @@ export const matchingService = {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
     } catch (error) {
       console.error('Error starting matching:', error);
       throw new Error('Failed to start matching. Please try again.');
@@ -28,7 +26,7 @@ export const matchingService = {
   },
 
   // Cancel matching request
-  async cancelMatching(request: UserMatchingCancelRequest): Promise<MatchingResponse> {
+  async cancelMatching(request: UserMatchingCancelRequest): Promise<void> {
     try {
       const response = await fetch(`${MATCHING_SERVICE_BASE_URL}${API_ENDPOINTS_MATCHING.MATCHING_CANCEL}`, {
         method: 'POST',
@@ -42,8 +40,6 @@ export const matchingService = {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
     } catch (error) {
       console.error('Error cancelling matching:', error);
       throw new Error('Failed to cancel matching. Please try again.');

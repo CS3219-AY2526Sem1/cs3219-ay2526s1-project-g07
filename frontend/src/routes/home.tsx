@@ -72,10 +72,7 @@ function RouteComponent() {
       };
 
       console.log("Starting matching with request:", matchingRequest);
-      const response = await matchingService.startMatching(matchingRequest);
-
-      setMatchingSuccess(`Matched Successfully! ${response.collabSessionId}`);
-      console.log("Matching started successfully:", response);
+      await matchingService.startMatching(matchingRequest);
       
       // TODO: You might want to redirect to a waiting/matching page here
       // or start listening to WebSocket for matching updates
@@ -83,8 +80,6 @@ function RouteComponent() {
     } catch (error) {
       console.error("Failed to start matching:", error);
       setMatchingError(error instanceof Error ? error.message : "Failed to start matching");
-    } finally {
-      setIsMatching(false);
     }
   };
 
@@ -103,11 +98,9 @@ function RouteComponent() {
       const matchingCancelRequest: UserMatchingCancelRequest = {
         userId: { id: user.id },
       };
-      const response = await matchingService.cancelMatching(matchingCancelRequest);
-
-      setMatchingSuccess(`Matched Successfully! ${response.collabSessionId}`);
-      console.log("Matching cancelled successfully:", response);
       
+      await matchingService.cancelMatching(matchingCancelRequest);
+
     } catch (error) {
       console.error("Failed to cancel matching:", error);
       setMatchingError(error instanceof Error ? error.message : "Failed to cancel matching");

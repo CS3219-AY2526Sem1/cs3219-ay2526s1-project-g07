@@ -107,10 +107,7 @@ async function main() {
     const matchingRequest = req.body as UserMatchingRequest;
     console.log(`Received matching request for user id: ${matchingRequest.userId}`);
     
-    matcher.enqueue(matchingRequest.userId, {
-      topic: matchingRequest.preferences.topic,
-      difficulty: matchingRequest.preferences.difficulty,
-    });
+    matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
 
     return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId}` });
   });
