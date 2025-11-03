@@ -29,18 +29,43 @@ const kafkaConfig: KafkaConfig = {
   retry: { initialRetryTime: 300, retries: 10 },
 };
 
+console.log("Collab-service starting...");
 const app = new Hono();
 
+// ------------------- Hono Routes ------------------ //
 
-const server = http.createServer((_request, response) => {
-  response.writeHead(200, { "Content-Type": "text/plain" });
-  response.end("okay");
+app.get("/", (c) => {
+  return c.text("Hello Hono!");
 });
+
+app.get("/health", (c) => {
+  return c.json({ status: "ok" });
+});
+
+// ------------------- End of Hono Routes ------------------ //
+
+// ------------------- WebSocket & HTTP Server Setup ------------------ //
+// const server = http.createServer((_request, response) => {
+//   response.writeHead(200, { "Content-Type": "text/plain" });
+//   response.end("okay");
+// });
+
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: 5004,
+  },
+  (info) => {
+    console.log(`Server is running on http://${info.address}:${info.port}`);
+  }
+);
+// ------------------- End of WebSocket & HTTP Server Setup ------------------ //
 
 // Handle WebSocket connections
 wss.on("connection", (ws, request) => {
   console.log("New WebSocket connection");
   setupWSConnection(ws, request);
+
   console.log(`User ${ ws.userId } connected to session ${ ws.sessionId }`);
   addActiveRoom(ws.sessionId, ws.userId, ws as any);
 
@@ -88,10 +113,6 @@ server.on("upgrade", (request, socket, head) => {
   })
 });
 
-// Websocket server
-server.listen(port, host, () => {
-  console.log(`running websocket at '${host}' on port ${port}`);
-});
 
 // TODO: Enable Kafka once integration working
 // Setup Kafka Client
@@ -119,19 +140,4 @@ async function shutdown(code: number = 0) {
 process.on('SIGTERM', () => shutdown());
 process.on('SIGINT', () => shutdown());
 
-// ------------------- Hono Routes ------------------ //
 
-// app.get("/", (c) => {
-//   return c.text("Hello Hono!");
-// });
-
-// // Hono Http server
-// serve(
-//   {
-//     fetch: app.fetch,
-//     port: 5004,
-//   },
-//   (info) => {
-//     console.log(`Server is running on http://${info.address}:${info.port}`);
-//   }
-// );
