@@ -11,7 +11,14 @@ import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
-import { addActiveRoom } from "./rooms.js";
+import { addActiveRoom, getActiveRoom, removeActiveRoom } from "./rooms.js";
+
+declare module "ws" {
+  interface WebSocket {
+    userId: string;
+    sessionId: string;
+  }
+}
 
 const wss = new WebSocketServer({ noServer: true });
 const host = process.env.HOST || "127.0.0.1";
@@ -24,6 +31,7 @@ const kafkaConfig: KafkaConfig = {
 
 const app = new Hono();
 
+
 const server = http.createServer((_request, response) => {
   response.writeHead(200, { "Content-Type": "text/plain" });
   response.end("okay");
@@ -33,23 +41,20 @@ const server = http.createServer((_request, response) => {
 wss.on("connection", (ws, request) => {
   console.log("New WebSocket connection");
   setupWSConnection(ws, request);
-  console.log(`User ${ (ws as any).userId } connected to session ${ (ws as any).sessionId }`);
-  addActiveRoom((ws as any).sessionId, (ws as any).userId, ws as any);
+  console.log(`User ${ ws.userId } connected to session ${ ws.sessionId }`);
+  addActiveRoom(ws.sessionId, ws.userId, ws as any);
 
   ws.on('error', console.error);
-
+  
   ws.on('message', function message(data) {
     console.log(`Received message ${data} from user`);
   });
 
-  // ws.on("close", () => {
-  //   // Clean up when user disconnects
-  //   const room = activeRooms.get(ws.sessionId);
-  //   if (room) {
-  //     room.delete(ws.userId);
-  //     if (room.size === 0) activeRooms.delete(ws.sessionId);
-  //   }
-  // });
+  ws.on("close", () => {
+    // Clean up when user disconnects
+    console.log(`User ${ ws.userId } disconnected from session ${ ws.sessionId }`);
+    removeActiveRoom(ws.sessionId, ws.userId);
+  });
 });
 server.on("upgrade", (request, socket, head) => {
   // Call `wss.HandleUpgrade` *after* you checked whether the client has access
@@ -57,7 +62,6 @@ server.on("upgrade", (request, socket, head) => {
   // See https://github.com/websockets/ws#client-authentication
 
   console.log("Upgrade request received, Host:", request.headers.host, "URL:", request.url);
-  // console.log(request);
   const url= new URL(request.url || "", `http://${request.headers.host}`);
   const collabSessionId = url.searchParams.get("sessionId");
   const userId = url.searchParams.get("userId");
@@ -78,8 +82,8 @@ server.on("upgrade", (request, socket, head) => {
   console.log("Authentication successful");
   console.log(`Upgrading connection for user ${userId} in session ${collabSessionId}`);
   wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
-      (ws as any).userId = userId;
-      (ws as any).sessionId = collabSessionId;
+      ws.userId = userId;
+      ws.sessionId = collabSessionId;
     wss.emit('connection', ws, request)
   })
 });
