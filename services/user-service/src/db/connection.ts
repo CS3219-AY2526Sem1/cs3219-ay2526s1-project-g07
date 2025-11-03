@@ -16,3 +16,7 @@ export const db = new Pool({
   password: process.env.DB_PASSWORD,
   port: Number(process.env.DB_PORT) || 5432,
 });
+
+// export const db = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+// });

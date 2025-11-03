@@ -6,13 +6,17 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
   if (!room) {
     room = new Map<string, WebSocket>();
     activeRooms.set(sessionId, room);
+    console.log(`Created new room for session ${sessionId}`);
   }
 
   if (room.has(userId)) {
     room.get(userId)?.close(); // Disconnect existing connection for the same user
   }
 
+  console.log(`Adding user ${userId} to room with session ${sessionId}`);
   room.set(userId, ws);
+  
+  // console.log('Current active rooms:', activeRooms);
 };
 
 export const removeActiveRoom = (sessionId: string, userId: string) => {

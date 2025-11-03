@@ -1,6 +1,6 @@
 // In-memory store of authorised rooms and their matched users (FROM KAFKA)
 const sessions: Map<string, Map<string, string>> = new Map();
-sessions.set("dummy-session-id", 
+sessions.set("dummyId", 
   new Map([
     ["user1", "user1"], 
     ["user2", "user2"],
@@ -13,6 +13,8 @@ sessions.set("dummy-session-id",
 
 export const addSession = (sessionId: string, sessionDetails: Map<string, string>) => {
   sessions.set(sessionId, sessionDetails);
+  console.log("Added session:", sessionId, "Details:", sessionDetails);
+  console.log("Current sessions:", sessions);
 };
 
 export const removeSession = (sessionId: string) => {
