@@ -98,7 +98,6 @@ async function shutdown(code: number = 0) {
     await kafkaClient.disconnect();
   } catch (err) {
     console.error("Error during shutdown of collab-service:", err);
-    process.exit(1)
   }
 
   process.exit(code);
