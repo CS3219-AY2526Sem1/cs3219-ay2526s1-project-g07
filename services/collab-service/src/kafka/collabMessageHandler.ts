@@ -1,8 +1,8 @@
 import type { EachMessagePayload } from 'kafkajs';
 import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
-import { addSession, getSessionDetails } from '../sessions.js';
+import { addSession, generateRandomSessionId, getSessionDetails } from '../sessions.js';
 import type { AIQuestionResponseEvent, CollabSessionReadyEvent } from './events.js';
-import { kafkaClient } from '../index.js'; //TODO uncomment once index.ts uncomments kafkaClient
+import { kafkaClient } from '../index.js';
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {
@@ -85,7 +85,7 @@ export class CollabMessageHandler {
         }
         
         // Setup collab session from the information received
-        const collabSessionId = "dummy-session-id"; //TODO placeholder; generate collabSessionId?
+        const collabSessionId: string = generateRandomSessionId();
         const sessionDetails = new Map<string, string>(
             [
                 ["user1", userIdOne], 
@@ -100,7 +100,7 @@ export class CollabMessageHandler {
         addSession(collabSessionId, sessionDetails);
 
         console.log(
-            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp} \n
+            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp}, collabSessionId: ${collabSessionId} \n
             Publishing to topic ${TOPICS_COLLAB.COLLAB_SESSION_READY}`
         );
 
@@ -113,7 +113,7 @@ export class CollabMessageHandler {
                 userIdTwo: userIdTwo
             }
         };
-        //TODO uncomment once kafkaClient is setup in index.ts
-        // await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
+
+        await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
     }
 }
