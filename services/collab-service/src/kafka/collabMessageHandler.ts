@@ -94,7 +94,7 @@ export class CollabMessageHandler {
                 ["title", title],
                 ["question", question],
                 ["difficulty", difficulty],
-                ["categories", categories.join(",")],
+                ["categories", Array.isArray(categories) ? categories.join(",") : String(categories)],
             ]
         );
         addSession(collabSessionId, sessionDetails);
