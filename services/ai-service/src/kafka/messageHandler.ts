@@ -11,7 +11,13 @@ export class MessageHandler {
             return;
         }
         const value = message.value.toString();
-        const event = JSON.parse(value);
+        let event;
+        try {
+            event = JSON.parse(value);
+        } catch (err) {
+            console.error(`Failed to parse JSON message on topic ${topic}, partition ${partition}:`, value, err);
+            return;
+        }
         switch (topic) {
             case TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE:
                 //TODO integrate into /hint endpoint

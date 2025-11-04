@@ -13,7 +13,13 @@ export class CollabMessageHandler {
         }
 
         const value = message.value.toString();
-        const event = JSON.parse(value);
+        let event;
+        try {
+            event = JSON.parse(value);
+        } catch (err) {
+            console.error(`Failed to parse message value as JSON on topic ${topic}, partition ${partition}:`, value, err);
+            return;
+        }
         switch (topic) {
             case TOPICS_SUBSCRIBED.QUESTION_SUCCESS:
                 await this.processMatchingSessionWithQuestion(event);
@@ -45,9 +51,9 @@ export class CollabMessageHandler {
             return;
         }
 
-        const questionDetails = sessionDetails.get("title") +
+        const questionDetails = (sessionDetails.get("title") ?? "") +
             '\n' + 
-            sessionDetails.get("question");
+            (sessionDetails.get("question") ?? "");
 
         const aiQuestionResponseEvent: Omit<AIQuestionResponseEvent, 'eventId'> = {
             eventType: TOPICS_COLLAB.AI_QUESTION_RESPONSE,
@@ -69,9 +75,12 @@ export class CollabMessageHandler {
         const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = event.data;
 
         // Do not proceed if there are any missing values
-        const isThereMissingValue = !requestId || !userIdOne || !userIdTwo || !questionId || !title || !question || !difficulty || !categories || !timestamp;
-        if (isThereMissingValue) {
-            console.error(`Invalid message format for matching session with question`);
+        const requiredFields = { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp };
+        const missingFields = Object.entries(requiredFields)
+            .filter(([key, value]) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))
+            .map(([key]) => key);
+        if (missingFields.length > 0) {
+            console.error(`Invalid message format for matching session with question. Missing fields: ${missingFields.join(', ')}`);
             return;
         }
         
