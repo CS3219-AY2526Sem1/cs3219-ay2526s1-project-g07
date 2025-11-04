@@ -16,7 +16,6 @@ const kafkaConfig: KafkaConfig = {
 };
 
 export const kafkaClient = new KafkaClient(kafkaConfig);
-await kafkaClient.connect();
 const app = new Hono();
 app.use(logger());
 
@@ -26,6 +25,13 @@ app.get("/", (c) => {
 
 async function init() {
   const ai = await verifyApiKey(process.env.GEMINI_API_KEY);
+  
+  try {
+    await kafkaClient.connect();
+  } catch (error) {
+    console.error("Failed to connect to Kafka, process exiting...");
+    process.exit(1); // Kafka is required for this service to retrieve questions as input to the AI model
+  }
 
   // Pass the AI client to routes via middleware
   const aiMiddleware = createMiddleware<{
