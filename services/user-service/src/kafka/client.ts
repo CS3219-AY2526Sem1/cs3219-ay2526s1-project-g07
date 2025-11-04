@@ -30,7 +30,6 @@ export class KafkaClient {
                 heartbeatInterval: 10000,
             })
         );
-        this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
     }
 
     getConsumer(): UserConsumer {
@@ -40,6 +39,8 @@ export class KafkaClient {
     async connect(): Promise<void> {
         try {
             await this.consumer.getConsumer().connect();
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+
             await this.consumer.startConsuming();
 
             console.log('Kafka Client connected successfully');
