@@ -1,4 +1,4 @@
-import { type KafkaMessage } from "kafkajs";
+import type { KafkaMessage } from "kafkajs";
 import { ConsumerMessageHandler } from "../src/consumer-message-handler";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 import { MockMatcher } from "./mocks/mock-matcher";

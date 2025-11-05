@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build:spec": "tsc -p tsconfig.spec.json && node src/rename-cjs.js",
-    "test": "npm run build:spec && jasmine",
+    "test": "node --loader esbuild-register/dist/node spec/support/jasmine.mjs",
     "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
     "start": "node src/index",
     "build": "tsc -p tsconfig.json"
   },
   "keywords": [],
-  "type": "module",
+  "type": "commonjs",
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -29,6 +29,8 @@
     "@types/jasmine": "^5.1.12",
     "@types/node": "^24.5.2",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.25.12",
+    "esbuild-register": "^3.6.0",
     "jasmine": "^5.12.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

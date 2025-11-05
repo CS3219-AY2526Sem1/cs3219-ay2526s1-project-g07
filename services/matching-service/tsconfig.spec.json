@@ -7,11 +7,14 @@
     "types": ["jasmine", "node"],
     "paths": {
       "redis/*": ["../../redis/*"]
-    }
+    },
+    "baseUrl": ".",
+    "moduleResolution": "node"
   },
   "include": [
     "tests/**/*.spec.ts",
-    "../../redis/**/*"
+    "../../shared/**/*.ts",
+    "**/*.d.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }
