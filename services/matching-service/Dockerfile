@@ -2,21 +2,30 @@
 FROM node:20-alpine AS base
 
 FROM base AS builder
+# Set working directory
+WORKDIR /app
 
 RUN apk add --no-cache gcompat
 
-# Set working directory
+# Copy and build Redis package first
+COPY redis ./redis
+WORKDIR /app/redis
+RUN npm ci && npm run build
+
+# Copy shared modules
+WORKDIR /app
+COPY shared ./shared
+
+# Now set up matching service
 WORKDIR /app/services/matching-service
-
-# Copy config files first for better caching
 COPY services/matching-service/package*.json services/matching-service/tsconfig.json ./
+
+# Install dependencies (this will link the Redis package)
 RUN npm ci
+RUN npm dedupe 
 
-# Copy modules
-COPY shared /app/shared
-COPY redis /app/redis
+# Build the project
 COPY services/matching-service/src ./src
-
 RUN npm run build
 
 FROM base AS runner
@@ -30,7 +39,7 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Copy built shared and redis packages if they have dist folders
+# Copy built shared and redis packages (with dependencies)
 COPY --from=builder --chown=nodejs:nodejs /app/shared /app/shared
 COPY --from=builder --chown=nodejs:nodejs /app/redis /app/redis
 

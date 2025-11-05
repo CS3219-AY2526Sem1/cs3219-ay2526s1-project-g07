@@ -15,7 +15,7 @@ const matching_service_consumer_1 = require("./matching-service-consumer");
 const matcher_js_1 = require("./matcher.js");
 const consumer_message_handler_1 = require("./consumer-message-handler");
 const matching_ws_1 = require("./matching-ws");
-const client_1 = require("@peerprep/redis/src/client");
+const client_1 = require("../../../redis/src/client");
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 dotenv_1.default.config();

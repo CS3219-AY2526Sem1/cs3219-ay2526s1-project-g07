@@ -1,7 +1,7 @@
 import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria';
-import { RedisClient } from '@peerprep/redis/src/client';
+import { RedisClient } from '../../../redis/src/client';
 import { randomUUID } from 'crypto';
 
 export class Matcher {

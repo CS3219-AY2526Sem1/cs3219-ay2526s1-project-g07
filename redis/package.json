@@ -2,11 +2,12 @@
   "name": "@peerprep/redis",
   "version": "1.0.0",
   "description": "",
-  "main": "src/client.ts",
-  "types": "src/client.ts",
+  "main": "dist/src/client.js",
+  "types": "dist/src/client.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "start": "node dist/src/client.js"
   },
   "keywords": [],
   "author": "",
@@ -14,12 +15,18 @@
   "type": "commonjs",
   "exports": {
     ".": {
-      "import": "./src/client.ts",
-      "require": "./src/client.ts"
+      "import": "./dist/src/client.js",
+      "require": "./dist/src/client.js",
+      "types": "./dist/src/client.d.ts"
     }
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "redis": "^5.8.3"
+    "path": "^0.12.7",
+    "redis": "^5.8.3",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0"
   }
 }

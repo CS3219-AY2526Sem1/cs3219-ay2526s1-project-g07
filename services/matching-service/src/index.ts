@@ -11,7 +11,7 @@ import { MatchingServiceConsumer } from './matching-service-consumer';
 import { Matcher } from './matcher.js';
 import { ConsumerMessageHandler } from './consumer-message-handler';
 import { MatchingWS } from './matching-ws';
-import { RedisClient } from '@peerprep/redis/src/client';
+import { RedisClient } from '../../../redis/src/client';
 import type { UserMatchingRequest, UserMatchingCancelRequest } from '../../../shared/types/matching-types';
 
 const app = express();

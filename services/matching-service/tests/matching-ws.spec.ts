@@ -6,7 +6,7 @@ import { WS_EVENTS_MATCHING } from "../../../shared/ws-events";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
 import type { UserId } from "../../../shared/types/matching-types";
-import { RedisClient } from '@peerprep/redis';
+import { RedisClient } from '../../../redis/src/client';
 
 let io: SocketIOServer;
 let matcher: Matcher;

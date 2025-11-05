@@ -1,6 +1,6 @@
 import { Matcher } from '../src/matcher';
 import { type UserMatchingRequest } from '../../../shared/types/matching-types';
-import { RedisClient } from '@peerprep/redis';
+import { RedisClient } from '../../../redis/src/client';
 
 describe('Matcher', () => {
   let matcher: Matcher;
