@@ -10,9 +10,17 @@ import { WebSocketServer } from "ws";
 import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
+import { checkSessionAndUsers } from "./sessions.js";
+import { addActiveRoom, removeActiveRoom } from "./rooms.js";
+
+declare module "ws" {
+  interface WebSocket {
+    userId: string;
+    sessionId: string;
+  }
+}
 
 const wss = new WebSocketServer({ noServer: true });
-// TODO: maybe use Hono instead of node:http
 const host = process.env.HOST || "127.0.0.1";
 const port = Number.parseInt(process.env.PORT || "5004", 10);
 const kafkaConfig: KafkaConfig = {
@@ -21,66 +29,90 @@ const kafkaConfig: KafkaConfig = {
   retry: { initialRetryTime: 300, retries: 10 },
 };
 
+console.log("Collab-service starting...");
 const app = new Hono();
 
-const server = http.createServer((_request, response) => {
-  response.writeHead(200, { "Content-Type": "text/plain" });
-  response.end("okay");
+// ------------------- Hono Routes ------------------ //
+
+app.get("/", (c) => {
+  return c.text("Hello Hono!");
 });
+
+app.get("/health", (c) => {
+  return c.json({ status: "ok" });
+});
+
+// ------------------- End of Hono Routes ------------------ //
+
+// ------------------- WebSocket & HTTP Server Setup ------------------ //
+// const server = http.createServer((_request, response) => {
+//   response.writeHead(200, { "Content-Type": "text/plain" });
+//   response.end("okay");
+// });
+
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: 5004,
+  },
+  (info) => {
+    console.log(`Server is running on http://${info.address}:${info.port}`);
+  }
+);
+// ------------------- End of WebSocket & HTTP Server Setup ------------------ //
 
 // Handle WebSocket connections
 wss.on("connection", (ws, request) => {
+  console.log("New WebSocket connection");
   setupWSConnection(ws, request);
 
-  // ws.on("close", () => {
-  //   // Clean up when user disconnects
-  //   const room = activeRooms.get(ws.sessionId);
-  //   if (room) {
-  //     room.delete(ws.userId);
-  //     if (room.size === 0) activeRooms.delete(ws.sessionId);
-  //   }
-  // });
+  console.log(`User ${ ws.userId } connected to session ${ ws.sessionId }`);
+  addActiveRoom(ws.sessionId, ws.userId, ws as any);
+
+  ws.on('error', console.error);
+  
+  ws.on('message', function message(data) {
+    console.log(`Received message ${data} from user`);
+  });
+
+  ws.on("close", () => {
+    // Clean up when user disconnects
+    console.log(`User ${ ws.userId } disconnected from session ${ ws.sessionId }`);
+    removeActiveRoom(ws.sessionId, ws.userId);
+  });
 });
 server.on("upgrade", (request, socket, head) => {
-  // You may check auth of request here..
   // Call `wss.HandleUpgrade` *after* you checked whether the client has access
   // (e.g. by checking cookies, or url parameters).
   // See https://github.com/websockets/ws#client-authentication
 
-  // const { query } = url.parse(request.url, true);
-  const sessionId = "dummy-session-id"; // extract from request url or cookies
-  const userId = "user1"; // extract from request url or cookies
-  if (!sessionId || !userId) {
+  console.log("Upgrade request received, Host:", request.headers.host, "URL:", request.url);
+  const url= new URL(request.url || "", `http://${request.headers.host}`);
+  const collabSessionId = url.searchParams.get("sessionId");
+  const userId = url.searchParams.get("userId");
+
+  if (!collabSessionId || !userId) {
     socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
     socket.destroy();
     return;
   }
 
-  // TODO: Session verification logic here
-  
-
-  wss.handleUpgrade(
-    request,
-    socket,
-    head,
-    /** @param {any} ws */ (ws) => {
-      wss.emit("connection", ws, request);
-    }
-  );
-
-  // // Upgrade connection
-  // wss.handleUpgrade(request, socket, head, (ws) => {
-  //   ws.userId = userId;
-  //   ws.sessionId = sessionId;
-
-  //   wss.emit("connection", ws, request);
-  // });
+  console.log(`Authenticating user ${userId} for session ${collabSessionId}`);
+  const isValidUser = checkSessionAndUsers(collabSessionId, userId);
+  if (!isValidUser) {
+    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+  console.log("Authentication successful");
+  console.log(`Upgrading connection for user ${userId} in session ${collabSessionId}`);
+  wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
+      ws.userId = userId;
+      ws.sessionId = collabSessionId;
+    wss.emit('connection', ws, request);
+  })
 });
 
-// Websocket server
-server.listen(port, host, () => {
-  console.log(`running websocket at '${host}' on port ${port}`);
-});
 
 // TODO: Enable Kafka once integration working
 // Setup Kafka Client
@@ -107,19 +139,11 @@ async function shutdown(code: number = 0) {
 process.on('SIGTERM', () => shutdown());
 process.on('SIGINT', () => shutdown());
 
-// ------------------- Hono Routes ------------------ //
+  process.exit(code);
+}
 
-// app.get("/", (c) => {
-//   return c.text("Hello Hono!");
-// });
+// Handles exit signals - Termination, Interrupt
+process.on('SIGTERM', () => shutdown());
+process.on('SIGINT', () => shutdown());
 
-// // Hono Http server
-// serve(
-//   {
-//     fetch: app.fetch,
-//     port: 5004,
-//   },
-//   (info) => {
-//     console.log(`Server is running on http://${info.address}:${info.port}`);
-//   }
-// );
+

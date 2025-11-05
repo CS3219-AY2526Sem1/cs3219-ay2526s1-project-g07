@@ -15,6 +15,8 @@ sessions.set("dummy-session-id",
 
 export const addSession = (sessionId: string, sessionDetails: Map<string, string>) => {
   sessions.set(sessionId, sessionDetails);
+  console.log("Added session:", sessionId, "Details:", sessionDetails);
+  console.log("Current sessions:", sessions);
 };
 
 export const removeSession = (sessionId: string) => {
