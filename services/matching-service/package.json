@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jasmine --require=ts-node/register",
+    "build:spec": "tsc -p tsconfig.spec.json && node src/rename-cjs.js",
+    "test": "npm run build:spec && jasmine",
     "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
-    "start": "node src/index.ts",
-    "build": "npx tsc -p tsconfig.json"
+    "start": "node src/index",
+    "build": "tsc -p tsconfig.json"
   },
   "keywords": [],
+  "type": "module",
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@peerprep/redis": "file:../../redis/dist",
     "cors": "^2.8.5",

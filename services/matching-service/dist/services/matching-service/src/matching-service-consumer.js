@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchingServiceConsumer = void 0;
-const kafka_topics_js_1 = require("../../../shared/kafka-topics.js");
+const kafka_topics_1 = require("../../../shared/kafka-topics");
 class MatchingServiceConsumer {
     constructor(kafka, messageHandler) {
-        this.topics = [kafka_topics_js_1.TOPICS_MATCHING.MATCHING_SUCCESS];
+        this.topics = [kafka_topics_1.TOPICS_MATCHING.MATCHING_SUCCESS];
         this.consumer = kafka.consumer({ groupId: 'matching-group' });
         this.messageHandler = messageHandler;
     }

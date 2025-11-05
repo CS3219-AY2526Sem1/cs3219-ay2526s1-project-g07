@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/spec",
+    "module": "CommonJS",
+    "target": "ES2020",
+    "types": ["jasmine", "node"],
+    "paths": {
+      "redis/*": ["../../redis/*"]
+    }
+  },
+  "include": [
+    "tests/**/*.spec.ts",
+    "../../redis/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

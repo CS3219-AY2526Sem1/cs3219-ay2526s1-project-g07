@@ -7,7 +7,6 @@ exports.RedisClient = void 0;
 const redis_1 = __importDefault(require("redis"));
 const dotenv_1 = __importDefault(require("dotenv"));
 class RedisClient {
-    instance;
     constructor() {
         this.instance = {};
     }

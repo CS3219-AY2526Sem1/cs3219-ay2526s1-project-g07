@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Matcher = void 0;
 const events_1 = require("events");
-const match_criteria_js_1 = require("./match-criteria.js");
+const match_criteria_1 = require("./match-criteria");
 const crypto_1 = require("crypto");
 class Matcher {
     constructor(redisClient) {
@@ -141,7 +141,7 @@ class Matcher {
         const firstUser = userRequests[0];
         for (let i = 1; i < userRequests.length; i++) {
             const potentialMatch = userRequests[i];
-            if (match_criteria_js_1.MatchCriteria.isMatch(firstUser, potentialMatch)) {
+            if (match_criteria_1.MatchCriteria.isMatch(firstUser, potentialMatch)) {
                 // Found a match
                 this.dequeue(firstUser.userId);
                 this.dequeue(potentialMatch.userId);

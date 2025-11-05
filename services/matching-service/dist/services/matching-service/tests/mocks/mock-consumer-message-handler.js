@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConsumerMessageHandler = void 0;
-const kafka_topics_1 = require("../../../shared/kafka-topics");
-class ConsumerMessageHandler {
+exports.MockConsumerMessageHandler = void 0;
+const consumer_message_handler_1 = require("../../src/consumer-message-handler");
+const kafka_topics_1 = require("../../../../shared/kafka-topics");
+class MockConsumerMessageHandler extends consumer_message_handler_1.ConsumerMessageHandler {
     constructor(matcher) {
-        this.matcher = matcher;
+        super(matcher);
     }
     handleMessage(message, topic) {
         const value = message.value?.toString() || '';
@@ -18,12 +19,10 @@ class ConsumerMessageHandler {
         }
     }
     processMatchingSuccess(value) {
-        const { userId, peerId, sessionId } = JSON.parse(value);
-        console.log(`Processing matching success: ${userId}, ${peerId}, ${sessionId}`);
-        // TODO: Implement logic to handle successful matching internally if needed
+        return; // No-op for testing
     }
     processUnknownTopic(value) {
-        console.log(`Processing unknown topic message: ${value}`);
+        return; // No-op for testing
     }
 }
-exports.ConsumerMessageHandler = ConsumerMessageHandler;
+exports.MockConsumerMessageHandler = MockConsumerMessageHandler;

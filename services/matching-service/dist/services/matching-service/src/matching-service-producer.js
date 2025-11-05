@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchingServiceProducer = void 0;
-const kafka_topics_js_1 = require("../../../shared/kafka-topics.js");
+const kafka_topics_1 = require("../../../shared/kafka-topics");
 class MatchingServiceProducer {
     constructor(kafka, matcher) {
         this.producer = kafka.producer();
@@ -25,7 +25,7 @@ class MatchingServiceProducer {
     }
     async produceMatchingSuccess(userId, peerId, preferences) {
         await this.send({
-            topic: kafka_topics_js_1.TOPICS_MATCHING.MATCHING_SUCCESS,
+            topic: kafka_topics_1.TOPICS_MATCHING.MATCHING_SUCCESS,
             messages: [{ value: JSON.stringify({ userId, peerId, preferences }) }]
         });
         console.log(`Produced matching success for userId: ${JSON.stringify(userId)}, peerId: ${JSON.stringify(peerId)}`);

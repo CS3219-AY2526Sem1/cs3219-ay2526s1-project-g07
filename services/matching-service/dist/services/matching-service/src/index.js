@@ -9,13 +9,13 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const kafkajs_1 = require("kafkajs");
-const api_endpoints_js_1 = require("../../../shared/api-endpoints.js");
-const matching_service_producer_js_1 = require("./matching-service-producer.js");
-const matching_service_consumer_js_1 = require("./matching-service-consumer.js");
+const api_endpoints_1 = require("../../../shared/api-endpoints");
+const matching_service_producer_1 = require("./matching-service-producer");
+const matching_service_consumer_1 = require("./matching-service-consumer");
 const matcher_js_1 = require("./matcher.js");
-const consumer_message_handler_js_1 = require("./consumer-message-handler.js");
-const matching_ws_js_1 = require("./matching-ws.js");
-const client_js_1 = require("@peerprep/redis/client.js");
+const consumer_message_handler_1 = require("./consumer-message-handler");
+const matching_ws_1 = require("./matching-ws");
+const client_1 = require("@peerprep/redis/client");
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 dotenv_1.default.config();
@@ -35,12 +35,12 @@ async function main() {
         brokers: ['localhost:9094']
     });
     // --- Core Components ---
-    const redisClient = new client_js_1.RedisClient();
+    const redisClient = new client_1.RedisClient();
     await redisClient.init();
     const matcher = new matcher_js_1.Matcher(redisClient);
-    const messageHandler = new consumer_message_handler_js_1.ConsumerMessageHandler(matcher);
-    const producer = new matching_service_producer_js_1.MatchingServiceProducer(kafka, matcher);
-    const consumer = new matching_service_consumer_js_1.MatchingServiceConsumer(kafka, messageHandler);
+    const messageHandler = new consumer_message_handler_1.ConsumerMessageHandler(matcher);
+    const producer = new matching_service_producer_1.MatchingServiceProducer(kafka, matcher);
+    const consumer = new matching_service_consumer_1.MatchingServiceConsumer(kafka, messageHandler);
     // --- Websocket & Kafka Connections ---
     const io = new socket_io_1.Server(httpServer, {
         cors: {
@@ -48,7 +48,7 @@ async function main() {
             methods: ["GET", "POST"]
         }
     });
-    const ws = new matching_ws_js_1.MatchingWS(io, matcher);
+    const ws = new matching_ws_1.MatchingWS(io, matcher);
     const connectToWebSocket = () => {
         try {
             ws.init();
@@ -98,13 +98,13 @@ async function main() {
             uptime: process.uptime()
         });
     });
-    app.post(api_endpoints_js_1.API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req, res) => {
+    app.post(api_endpoints_1.API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req, res) => {
         const matchingRequest = req.body;
         console.log(`Received matching request for user id: ${matchingRequest.userId.id}`);
         matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
         return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId.id}` });
     });
-    app.post(api_endpoints_js_1.API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req, res) => {
+    app.post(api_endpoints_1.API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req, res) => {
         const { userId } = req.body;
         console.log(`Received matching cancel request for user id: ${userId.id}`);
         matcher.dequeue(userId);

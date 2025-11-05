@@ -1,8 +1,8 @@
 import { type KafkaMessage } from "kafkajs";
-import { ConsumerMessageHandler } from "../src/consumer-message-handler.ts";
-import { TOPICS_MATCHING } from "../../../shared/kafka-topics.ts";
-import { MockMatcher } from "./mocks/mock-matcher.ts";
-import { RedisClient } from "@peerprep/redis/client.js";
+import { ConsumerMessageHandler } from "../src/consumer-message-handler";
+import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
+import { MockMatcher } from "./mocks/mock-matcher";
+import { RedisClient } from "redis/client";
 
 describe('ConsumerMessageHandler', () => {
   let mockMatcher: MockMatcher;
@@ -19,7 +19,7 @@ describe('ConsumerMessageHandler', () => {
   });
 
   beforeEach(async () => {
-    mockMatcher = new MockMatcher(redisClient);
+    mockMatcher = new MockMatcher();
     messageHandler = new ConsumerMessageHandler(mockMatcher);
   });
 

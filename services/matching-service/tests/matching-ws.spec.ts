@@ -1,12 +1,12 @@
 import { Server as SocketIOServer } from "socket.io";
-import { MatchingWS } from "../src/matching-ws.ts";
-import { Matcher } from "../src/matcher.ts";
+import { MatchingWS } from "../src/matching-ws";
+import { Matcher } from "../src/matcher";
 import { io as Client } from "socket.io-client";
-import { WS_EVENTS_MATCHING } from "../../../shared/ws-events.ts";
+import { WS_EVENTS_MATCHING } from "../../../shared/ws-events";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
-import type { UserId } from "../../../shared/types/matching-types.ts";
-import { RedisClient } from '@peerprep/redis/client.js';
+import type { UserId } from "../../../shared/types/matching-types";
+import { RedisClient } from '@peerprep/redis/client';
 
 let io: SocketIOServer;
 let matcher: Matcher;

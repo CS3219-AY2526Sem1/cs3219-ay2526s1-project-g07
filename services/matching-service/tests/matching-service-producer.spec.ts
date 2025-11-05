@@ -1,9 +1,9 @@
-import { MatchingServiceProducer } from "../src/matching-service-producer.ts";
+import { MatchingServiceProducer } from "../src/matching-service-producer";
 import { Kafka, type Producer } from 'kafkajs';
-import { MockMatcher } from "./mocks/mock-matcher.ts";
-import { TOPICS_MATCHING } from '../../../shared/kafka-topics.ts';
-import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types.ts';
-import { RedisClient } from "@peerprep/redis/client.js";
+import { MockMatcher } from "./mocks/mock-matcher";
+import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
+import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types';
+import { RedisClient } from "redis/client";
 
 describe('MatchingServiceProducer', () => {
   let msProducer: MatchingServiceProducer;
@@ -30,7 +30,7 @@ describe('MatchingServiceProducer', () => {
   });
 
   beforeEach(() => {
-    mockMatcher = new MockMatcher(redisClient);
+    mockMatcher = new MockMatcher();
     msProducer = new MatchingServiceProducer(mockKafka, mockMatcher);
     kafkaProducer = (msProducer as any).producer;
   });

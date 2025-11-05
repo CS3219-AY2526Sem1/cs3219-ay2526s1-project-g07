@@ -1,5 +1,5 @@
-import { MatchCriteria } from '../src/match-criteria.ts';
-import type { UserMatchingRequest } from '../../../shared/types/matching-types.ts';
+import { MatchCriteria } from '../src/match-criteria';
+import type { UserMatchingRequest } from '../../../shared/types/matching-types';
 
 describe('MatchCriteria', () => {
   it('should return true for matching preferences', () => {

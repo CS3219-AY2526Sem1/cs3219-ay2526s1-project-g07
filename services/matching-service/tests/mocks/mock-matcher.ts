@@ -1,8 +1,7 @@
-import { RedisClient } from '@peerprep/redis/client.js';
-import { Matcher } from '../../src/matcher.ts';
+import { Matcher } from '../../src/matcher';
 
 export class MockMatcher extends Matcher {
-  constructor(redisClient: RedisClient) {
-    super(redisClient);
+  constructor() {
+    super(undefined as any);
   }
 }
