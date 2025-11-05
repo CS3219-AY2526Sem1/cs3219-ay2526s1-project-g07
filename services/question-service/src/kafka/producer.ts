@@ -81,7 +81,7 @@ export class QuestionProducer {
     }
 
     const record: ProducerRecord = {
-      topic: 'question-success', // Using same topic for errors, can be changed if needed
+      topic: 'question-failure',
       messages: [
         {
           key: message.userId,
@@ -93,9 +93,9 @@ export class QuestionProducer {
 
     try {
       await this.producer.send(record);
-      console.log(`⚠️ Sent question error for users: ${message.userId} & ${message.peerId}`);
+      console.log(`⚠️ Sent question failure for users: ${message.userId} & ${message.peerId}`);
     } catch (error) {
-      console.error('❌ Failed to send question error message:', error);
+      console.error('❌ Failed to send question failure message:', error);
       throw error;
     }
   }
