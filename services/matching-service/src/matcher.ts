@@ -1,18 +1,17 @@
-import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types.ts';
+import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types';
 import { EventEmitter } from 'events';
-import { MatchCriteria } from './match-criteria.ts';
-import { type RedisClientType } from 'redis';
+import { MatchCriteria } from './match-criteria';
+import { RedisClient } from '@peerprep/redis/client';
 import { randomUUID } from 'crypto';
-import { RedisClient } from '../../../redis/client.ts';
 
 export class Matcher {
-  private readonly redisClient: RedisClientType;
+  private readonly redisClient: RedisClient;
   static readonly redisCacheKey = 'matching_queue';
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
 
-  constructor(redisClient: RedisClientType) {
+  constructor(redisClient: RedisClient) {
     this.emitter = new EventEmitter();
     this.redisClient = redisClient;
     setInterval(() => {
@@ -21,7 +20,7 @@ export class Matcher {
     }, this.matchInterval);
   }
 
-  async enqueue(userId: UserId, preferences: { topic: string; difficulty: Difficulty }) {
+  async enqueue(userId: UserId, preferences: { topic: string; difficulty: Difficulty }): Promise<void> {
     const userRequest: UserMatchingRequest = {
       userId: userId,
       preferences: {
@@ -36,12 +35,12 @@ export class Matcher {
       await this.dequeue(userId);
     }
 
-    await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
+    await this.redisClient.instance.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
 
     console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
-  async dequeue(userId: UserId) {
+  async dequeue(userId: UserId): Promise<void> {
     if (!userId) {
       console.error('dequeue called with invalid userId');
       return;
@@ -51,7 +50,7 @@ export class Matcher {
     // Unique value for this lock instance, preventing accidental releases by other processes
     const lockValue = randomUUID();
 
-    const acquired = await this.redisClient.set(lockKey, lockValue, {
+    const acquired = await this.redisClient.instance.set(lockKey, lockValue, {
       NX: true,
       PX: 5000,
     });
@@ -66,9 +65,9 @@ export class Matcher {
       const userRequests = await this.queue;
       const filteredRequests = userRequests.filter(r => r.userId.id !== userId.id);
 
-      await this.redisClient.del(Matcher.redisCacheKey);
+      await this.redisClient.instance.del(Matcher.redisCacheKey);
       for (const r of filteredRequests) {
-        await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(r));
+        await this.redisClient.instance.rPush(Matcher.redisCacheKey, JSON.stringify(r));
       }
 
       console.log(`✅ User ${userId.id} removed from the matching queue.`);
@@ -81,7 +80,7 @@ export class Matcher {
           return 0
         end
       `;
-      await this.redisClient.eval(releaseLockLuaScript, {
+      await this.redisClient.instance.eval(releaseLockLuaScript, {
         keys: [lockKey],
         arguments: [lockValue],
       });
@@ -184,7 +183,7 @@ export class Matcher {
   }
 
   private get queue(): Promise<UserMatchingRequest[]> {
-    return this.redisClient.lRange(Matcher.redisCacheKey, 0, -1)
-      .then(requests => requests.map(request => JSON.parse(request) as UserMatchingRequest));
+    return this.redisClient.instance.lRange(Matcher.redisCacheKey, 0, -1)
+      .then(requests => requests.map(request => JSON.parse(request as string) as UserMatchingRequest));
   }
 }

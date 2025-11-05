@@ -1,7 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { Matcher } from './matcher.ts';
-import { WS_EVENTS_MATCHING } from '../../../shared/ws-events.ts'
-import type { UserMatchingRequest, UserId } from '../../../shared/types/matching-types.ts';
+import { Matcher } from './matcher';
+import { WS_EVENTS_MATCHING } from '../../../shared/ws-events'
+import type { UserId } from '../../../shared/types/matching-types';
 
 export class MatchingWS {
   private io: SocketIOServer;
@@ -23,7 +23,8 @@ export class MatchingWS {
     });
   }
 
-  private async HandleConnectionInterrupt(userId: UserId) {
+  private async HandleConnectionInterrupt(userId: UserId | undefined) {
+    if (!userId) return;
     await this.matcher.dequeue(userId);
   }
 

@@ -2,16 +2,16 @@ import { type KafkaMessage } from "kafkajs";
 import { ConsumerMessageHandler } from "../src/consumer-message-handler.ts";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics.ts";
 import { MockMatcher } from "./mocks/mock-matcher.ts";
-import redis from 'redis';
-import { RedisClient } from "../../../redis/client.ts";
+import { RedisClient } from "@peerprep/redis/client.js";
 
 describe('ConsumerMessageHandler', () => {
   let mockMatcher: MockMatcher;
   let messageHandler: ConsumerMessageHandler;
-  let redisClient: redis.RedisClientType;
+  let redisClient: RedisClient;
 
   beforeAll(async () => {
-    redisClient = await RedisClient.createClient() as redis.RedisClientType;
+    redisClient = new RedisClient();
+    await redisClient.init();
   });
 
   afterAll(async () => {

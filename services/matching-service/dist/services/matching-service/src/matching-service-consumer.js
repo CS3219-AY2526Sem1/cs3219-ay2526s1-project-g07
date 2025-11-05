@@ -1,0 +1,28 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MatchingServiceConsumer = void 0;
+const kafka_topics_js_1 = require("../../../shared/kafka-topics.js");
+class MatchingServiceConsumer {
+    constructor(kafka, messageHandler) {
+        this.topics = [kafka_topics_js_1.TOPICS_MATCHING.MATCHING_SUCCESS];
+        this.consumer = kafka.consumer({ groupId: 'matching-group' });
+        this.messageHandler = messageHandler;
+    }
+    async init() {
+        await this.connectAndSubscribe();
+        await this.run();
+    }
+    async connectAndSubscribe() {
+        await this.consumer.connect();
+        await this.consumer.subscribe({ topics: this.topics, fromBeginning: true });
+        console.log('Matching service consumer connected to Kafka');
+    }
+    async run() {
+        await this.consumer.run({
+            eachMessage: async ({ topic, partition, message }) => {
+                this.messageHandler.handleMessage(message, topic);
+            }
+        });
+    }
+}
+exports.MatchingServiceConsumer = MatchingServiceConsumer;

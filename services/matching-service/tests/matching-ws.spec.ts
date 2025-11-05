@@ -6,8 +6,7 @@ import { WS_EVENTS_MATCHING } from "../../../shared/ws-events.ts";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
 import type { UserId } from "../../../shared/types/matching-types.ts";
-import redis from 'redis';
-import { RedisClient } from "../../../redis/client.ts";
+import { RedisClient } from '@peerprep/redis/client.js';
 
 let io: SocketIOServer;
 let matcher: Matcher;
@@ -15,12 +14,13 @@ let matchingWS: MatchingWS;
 let clientSocket: ReturnType<typeof Client>;
 let httpServer: ReturnType<typeof createServer>;
 const TEST_WEBSOCKET_PORT = 5000;
-let redisClient: redis.RedisClientType;
+let redisClient: RedisClient;
 
 async function init(): Promise<void> {
   httpServer = createServer();
   io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
-  redisClient = await RedisClient.createClient() as redis.RedisClientType;
+  redisClient = new RedisClient();
+  await redisClient.init();
 
   // Resolve once server is listening
   await new Promise<void>((resolve) => {

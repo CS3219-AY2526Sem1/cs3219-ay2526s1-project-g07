@@ -4,7 +4,15 @@ import dotenv from 'dotenv';
 export class RedisClient {
   instance: ReturnType<typeof redis.createClient>;
 
-  static async createClient(database = 0) {
+  constructor () {
+    this.instance = {} as ReturnType<typeof redis.createClient>;
+  }
+  
+  async init(database = 0) {
+    this.instance = await this.createClient(database);
+  }
+
+  private async createClient(database = 0) {
     // Start redis local with `npm run redis-local`
     dotenv.config();
     const host = process.env.REDIS_HOST;
@@ -30,12 +38,9 @@ export class RedisClient {
   }
 
   async quit() {
-    if (this.instance !== undefined) {
-      // Clear all data of the current Redis database as matching service is stateless
-      await this.instance.flushDb();
-      await this.instance.quit();
-      this.instance = undefined;
-      console.log('✅ Redis client disconnected');
-    }
+    // Clear all data of the current Redis database as matching service is stateless
+    await this.instance.flushDb();
+    await this.instance.quit();
+    console.log('✅ Redis client disconnected');
   }
 }

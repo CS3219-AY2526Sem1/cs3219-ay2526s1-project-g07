@@ -5,15 +5,14 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { Kafka } from 'kafkajs';
 import type { Request, Response, NextFunction } from 'express';
-import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints.ts';
-import { MatchingServiceProducer } from './matching-service-producer.ts';
-import { MatchingServiceConsumer } from './matching-service-consumer.ts';
-import { Matcher } from './matcher.ts';
-import { ConsumerMessageHandler } from './consumer-message-handler.ts';
-import { MatchingWS } from './matching-ws.ts';
-import { RedisClient } from '../../../redis/client.ts';
-import { type RedisClientType } from 'redis';
-import type { UserMatchingRequest, UserMatchingCancelRequest } from '../../../shared/types/matching-types.ts';
+import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints';
+import { MatchingServiceProducer } from './matching-service-producer';
+import { MatchingServiceConsumer } from './matching-service-consumer';
+import { Matcher } from './matcher.js';
+import { ConsumerMessageHandler } from './consumer-message-handler';
+import { MatchingWS } from './matching-ws';
+import { RedisClient } from '@peerprep/redis/client';
+import type { UserMatchingRequest, UserMatchingCancelRequest } from '../../../shared/types/matching-types';
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,7 +38,8 @@ async function main() {
   });
 
   // --- Core Components ---
-  const redisClient = await RedisClient.createClient(REDIS_DB_INDEX) as RedisClientType;
+  const redisClient = new RedisClient();
+  await redisClient.init();
 
   const matcher = new Matcher(redisClient);
   const messageHandler = new ConsumerMessageHandler(matcher);
@@ -101,6 +101,17 @@ async function main() {
   });
 
   // --- API Endpoints ---
+  
+  // Health check endpoint for Docker
+  app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'matching-service',
+      uptime: process.uptime()
+    });
+  });
+
   app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
     const matchingRequest = req.body as UserMatchingRequest;
     console.log(`Received matching request for user id: ${matchingRequest.userId.id}`);
