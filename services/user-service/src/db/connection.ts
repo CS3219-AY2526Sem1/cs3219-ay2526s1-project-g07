@@ -15,3 +15,7 @@ export const db = new Pool({
     rejectUnauthorized: false, // Accept self-signed certificates
   },
 });
+
+// export const db = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+// });

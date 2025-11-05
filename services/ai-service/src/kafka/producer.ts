@@ -2,7 +2,7 @@ import { type Producer, type RecordMetadata } from 'kafkajs';
 import type { EventType } from './events.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export class CollabProducer {
+export class AiKafkaProducer {
     private producer: Producer;
 
     constructor(producer: Producer) {
@@ -17,7 +17,7 @@ export class CollabProducer {
         try {
             const fullEvent: T = {
                 ...event,
-                eventId: uuidv4(), // Different from collabSessionId in CollabSessionReadyEvent
+                eventId: uuidv4(),
             } as T;
             
             const messages = [{
