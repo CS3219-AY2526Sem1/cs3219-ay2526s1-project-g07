@@ -7,7 +7,7 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "strict": true,
-    "outDir": "dist",
+    "outDir": "./dist",
     "types": [
       "node",
       "jasmine"
@@ -24,10 +24,11 @@
   },
   
   "include": [
-    "src/**/*",
+    "./src/**/*",
     "../../shared/**/*",
     "../../redis/**/*"
-  ]
+  ],
+  "exclude": ["node_modules", "dist"]
 }
 
 // tsconfig.json is a config file for Typescript project.

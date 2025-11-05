@@ -32,9 +32,13 @@ class Matcher {
         console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
     }
     async dequeue(userId) {
+        // For cases where dequeue is called after redis client is closed
+        if (!this.redisClient?.instance?.isOpen) {
+            return Promise.resolve();
+        }
         if (!userId) {
             console.error('dequeue called with invalid userId');
-            return;
+            return Promise.resolve();
         }
         const lockKey = 'dequeue_lock';
         // Unique value for this lock instance, preventing accidental releases by other processes
@@ -156,6 +160,7 @@ class Matcher {
         return null; // No match found
     }
     async cleanUp() {
+        await Promise;
         await this.redisClient.quit();
         console.log('Matcher cleanup completed.');
     }

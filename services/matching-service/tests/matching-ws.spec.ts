@@ -50,9 +50,11 @@ async function init(): Promise<void> {
 }
 
 async function cleanup(): Promise<void> {
-  matcher.cleanUp();
+  io.removeAllListeners();
+  clientSocket.removeAllListeners();
   clientSocket.close();
   io.close();
+  await matcher.cleanUp();
   await new Promise((resolve) => httpServer.close(resolve));
 }
 

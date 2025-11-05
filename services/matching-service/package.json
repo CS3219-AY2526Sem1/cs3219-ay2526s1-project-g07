@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node .\\spec\\support\\jasmine.mjs",
     "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
-    "start": "node src/index.ts",
+    "start": "node dist/services/matching-service/src/index.js",
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts"
   },

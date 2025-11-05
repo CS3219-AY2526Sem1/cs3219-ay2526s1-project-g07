@@ -9,16 +9,13 @@ RUN apk add --no-cache gcompat
 WORKDIR /app/services/matching-service
 
 # Copy config files first for better caching
-COPY services/matching-service/package*json services/matching-service/tsconfig.json ./
+COPY services/matching-service/package*.json services/matching-service/tsconfig.json ./
 RUN npm ci
-RUN npm install redis@latest
 
-# Copy shared modules (dependencies)
-COPY shared/ /app/shared/
-COPY redis/ /app/redis/
-
-# Copy matching service source code
-COPY services/matching-service/src /app/src/
+# Copy modules
+COPY shared /app/shared
+COPY redis /app/redis
+COPY services/matching-service/src ./src
 
 RUN npm run build
 
@@ -33,12 +30,16 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
+# Copy built shared and redis packages if they have dist folders
+COPY --from=builder --chown=nodejs:nodejs /app/shared /app/shared
+COPY --from=builder --chown=nodejs:nodejs /app/redis /app/redis
+
 # Copy package.json for npm scripts
-COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/package.json
+COPY --from=builder --chown=nodejs:nodejs /app/services/matching-service/package.json ./
 # Copy application dependencies
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules /app/node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/services/matching-service/node_modules ./node_modules
 # Copy the built application
-COPY --from=builder --chown=nodejs:nodejs /app/dist /app/dist
+COPY --from=builder --chown=nodejs:nodejs /app/services/matching-service/dist ./dist
 
 # Expose the port the app runs on
 EXPOSE 4000

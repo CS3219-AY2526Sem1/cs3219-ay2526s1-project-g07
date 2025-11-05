@@ -13,7 +13,7 @@ class MatchingWS {
             socket.join(`user_${userId.id}`);
             console.log(`User ${userId.id} joined with socket ${socket.id}`);
         };
-        this.OnClientDisconnect = (socket, reason) => {
+        this.OnClientDisconnect = async (socket, reason) => {
             console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
             // Clean up event listeners
             socket.off(ws_events_1.WS_EVENTS_MATCHING.JOIN, (data) => this.OnClientJoin(socket, data));
@@ -21,13 +21,13 @@ class MatchingWS {
             socket.off(ws_events_1.WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(socket, error));
             // Clean up user from matching queue if they disconnect
             if (socket.userId) {
-                this.HandleConnectionInterrupt(socket.userId);
+                await this.HandleConnectionInterrupt(socket.userId);
                 console.log(`Removed user ${socket.userId.id} from matching queue due to disconnection`);
             }
         };
-        this.OnError = (socket, error) => {
-            this.HandleConnectionInterrupt(socket.userId);
+        this.OnError = async (socket, error) => {
             console.error('WebSocket error:', error);
+            await this.HandleConnectionInterrupt(socket.userId);
         };
         this.io = io;
         this.matcher = matcher;
@@ -43,7 +43,8 @@ class MatchingWS {
     }
     async HandleConnectionInterrupt(userId) {
         if (!userId)
-            return;
+            return Promise.resolve();
+        console.log(`Handling connection interrupt for user ${userId.id}`);
         await this.matcher.dequeue(userId);
     }
 }

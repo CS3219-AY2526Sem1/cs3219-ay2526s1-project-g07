@@ -23,7 +23,7 @@ export class MatchingWS {
     });
   }
 
-  private async HandleConnectionInterrupt(userId: UserId | undefined) {
+  private async HandleConnectionInterrupt(userId: UserId | undefined): Promise<void> {
     if (!userId) return Promise.resolve();
     console.log(`Handling connection interrupt for user ${userId.id}`);
     await this.matcher.dequeue(userId);
@@ -34,13 +34,13 @@ export class MatchingWS {
       socket.emit(WS_EVENTS_MATCHING.ERROR, 'JOIN event missing userId');
       return;
     }
-    
+
     socket.userId = userId;
     socket.join(`user_${userId.id}`);
     console.log(`User ${userId.id} joined with socket ${socket.id}`);
   }
 
-  private OnClientDisconnect = (socket: CustomSocket, reason: string) => {
+  private OnClientDisconnect = async (socket: CustomSocket, reason: string) => {
     console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
 
     // Clean up event listeners
@@ -50,14 +50,14 @@ export class MatchingWS {
 
     // Clean up user from matching queue if they disconnect
     if (socket.userId) {
-      this.HandleConnectionInterrupt(socket.userId);
+      await this.HandleConnectionInterrupt(socket.userId);
       console.log(`Removed user ${socket.userId.id} from matching queue due to disconnection`);
     }
   }
 
-  private OnError = (socket: CustomSocket, error: any) => {
+  private OnError = async (socket: CustomSocket, error: any) => {
     console.error('WebSocket error:', error);
-    this.HandleConnectionInterrupt(socket.userId);
+    await this.HandleConnectionInterrupt(socket.userId);
   }
 }
 
