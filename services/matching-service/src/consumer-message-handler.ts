@@ -1,6 +1,6 @@
 import type { KafkaMessage } from "kafkajs";
 import { Matcher } from "./matcher.ts";
-import { TOPICS_MATCHING } from "./utils.ts";
+import { TOPICS_MATCHING } from "../../../shared/kafka-topics.ts";
 
 export class ConsumerMessageHandler {
   matcher: Matcher;
@@ -23,8 +23,8 @@ export class ConsumerMessageHandler {
   }
 
   protected processMatchingSuccess(value: string) {
-    console.log(`Processing matching success: ${value}`);
     const { userId, peerId, sessionId } = JSON.parse(value);
+    console.log(`Processing matching success: ${userId}, ${peerId}, ${sessionId}`);
     // TODO: Implement logic to handle successful matching internally if needed
 
   }

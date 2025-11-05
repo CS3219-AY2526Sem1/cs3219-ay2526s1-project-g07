@@ -1,4 +1,4 @@
-import type { UserMatchingRequest, Difficulty, MatchResult } from './types.ts';
+import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types.ts';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria.ts';
 import { type RedisClientType } from 'redis';
@@ -21,7 +21,7 @@ export class Matcher {
     }, this.matchInterval);
   }
 
-  async enqueue(userId: number, preferences: { topic: string; difficulty: Difficulty }) {
+  async enqueue(userId: UserId, preferences: { topic: string; difficulty: Difficulty }) {
     const userRequest: UserMatchingRequest = {
       userId: userId,
       preferences: {
@@ -32,16 +32,21 @@ export class Matcher {
     };
 
     const queue = await this.queue;
-    if (queue.some(request => request.userId === userId)) {
+    if (queue.some(request => request.userId.id === userId.id)) {
       await this.dequeue(userId);
     }
 
     await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
 
-    console.log(`User ${userId} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
+    console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
-  async dequeue(userId: number) {
+  async dequeue(userId: UserId) {
+    if (!userId) {
+      console.error('dequeue called with invalid userId');
+      return;
+    }
+
     const lockKey = 'dequeue_lock';
     // Unique value for this lock instance, preventing accidental releases by other processes
     const lockValue = randomUUID();
@@ -53,20 +58,20 @@ export class Matcher {
 
     if (!acquired) {
       await new Promise(res => setTimeout(res, 50));
-      console.log(`Retrying dequeue for user ${userId}`);
+      console.log(`Retrying dequeue for user ${userId.id}`);
       return this.dequeue(userId);
     }
 
     try {
       const userRequests = await this.queue;
-      const filteredRequests = userRequests.filter(r => r.userId !== userId);
+      const filteredRequests = userRequests.filter(r => r.userId.id !== userId.id);
 
       await this.redisClient.del(Matcher.redisCacheKey);
       for (const r of filteredRequests) {
         await this.redisClient.rPush(Matcher.redisCacheKey, JSON.stringify(r));
       }
 
-      console.log(`✅ User ${userId} removed from the matching queue.`);
+      console.log(`✅ User ${userId.id} removed from the matching queue.`);
     } finally {
       // Release lock safely
       const releaseLockLuaScript = `
@@ -144,8 +149,9 @@ export class Matcher {
     console.log(`Match found between users ${firstUserId} and ${secondUserId} with topic ${topic} and difficulty ${difficulty}`);
   }
 
-  private handleNoMatch() {
+  private async handleNoMatch() {
     console.log('No suitable match found at this time.');
+    console.log(JSON.stringify(await this.queue));
   }
 
   private async findMatch(): Promise<MatchResult | null> {
@@ -161,7 +167,7 @@ export class Matcher {
         // Found a match
         this.dequeue(firstUser.userId);
         this.dequeue(potentialMatch.userId);
-        console.log(`Matched users ${firstUser.userId} and ${potentialMatch.userId}`);
+        console.log(`Matched users ${firstUser.userId.id} and ${potentialMatch.userId.id}`);
         return {
           firstUserId: firstUser.userId,
           secondUserId: potentialMatch.userId,
@@ -173,7 +179,7 @@ export class Matcher {
   }
 
   async cleanUp() {
-    await RedisClient.quit();
+    await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
   }
 

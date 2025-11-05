@@ -1,7 +1,8 @@
 import { Matcher } from '../../src/matcher.ts';
+import redis from 'redis';
 
 export class MockMatcher extends Matcher {
-  constructor() {
-    super();
+  constructor(redisClient: redis.RedisClientType) {
+    super(redisClient);
   }
 }
