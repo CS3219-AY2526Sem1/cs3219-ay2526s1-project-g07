@@ -153,17 +153,21 @@ export const questionRepository = {
   // From Chatgpt
   async findMatchingQuestion(difficulty: string, topics: string[]): Promise<Question | null> {
     try {
-      // Find a question that matches the difficulty and has at least one matching category
+      // Find a question that matches the difficulty and has at least one matching topic (case-insensitive)
       const query = `
         SELECT id, title, question, difficulty, topics
         FROM "question"
-        WHERE difficulty = $1
-          AND topics && $2
+        WHERE LOWER(difficulty) = LOWER($1)
+          AND EXISTS (
+            SELECT 1 FROM unnest(topics) AS topic
+            WHERE LOWER(topic) LIKE LOWER($2) || '%'
+               OR LOWER($2) LIKE LOWER(topic) || '%'
+          )
         ORDER BY RANDOM()
         LIMIT 1
       `;
       
-      const result = await db.query(query, [difficulty, topics]);
+      const result = await db.query(query, [difficulty, topics[0]]);
       
       if (result.rows.length === 0) {
         return null;

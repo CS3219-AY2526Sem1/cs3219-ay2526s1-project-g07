@@ -3,8 +3,12 @@ import { questionProducer } from './producer.js';
 import { questionService } from '../services/questionService.js';
 
 export async function handleMatchingSuccess(message: MatchingSuccessMessage): Promise<void> {
-  const { userId, peerId, preferences } = message;
+  const { userId: userIdRaw, peerId: peerIdRaw, preferences } = message;
   const { topic, difficulty } = preferences;
+
+  // Extract actual ID strings (handle both object and string formats)
+  const userId = typeof userIdRaw === 'string' ? userIdRaw : userIdRaw.id;
+  const peerId = typeof peerIdRaw === 'string' ? peerIdRaw : peerIdRaw.id;
 
   try {
     console.log(`🔍 Processing matching success`);

@@ -100,14 +100,16 @@ export class QuestionConsumer {
             const parsedMessage: MatchingSuccessMessage = JSON.parse(messageValue);
 
             console.log(`📥 Received matching success:`, {
-              userId: parsedMessage.userId,
-              peerId: parsedMessage.peerId,
+              userId: JSON.stringify(parsedMessage.userId),
+              peerId: JSON.stringify(parsedMessage.peerId),
               topic: parsedMessage.preferences.topic,
               difficulty: parsedMessage.preferences.difficulty,
               kafkaTopic: topic,
               partition,
               offset: message.offset
             });
+            
+            console.log('Full message:', JSON.stringify(parsedMessage, null, 2));
 
             if (this.messageHandler) {
               await this.messageHandler(parsedMessage);
