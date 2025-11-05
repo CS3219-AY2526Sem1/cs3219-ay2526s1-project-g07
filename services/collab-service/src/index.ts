@@ -114,7 +114,6 @@ server.on("upgrade", (request, socket, head) => {
 });
 
 
-// TODO: Enable Kafka once integration working
 // Setup Kafka Client
 export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
 try {
@@ -138,12 +137,3 @@ async function shutdown(code: number = 0) {
 // Handles exit signals - Termination, Interrupt
 process.on('SIGTERM', () => shutdown());
 process.on('SIGINT', () => shutdown());
-
-  process.exit(code);
-}
-
-// Handles exit signals - Termination, Interrupt
-process.on('SIGTERM', () => shutdown());
-process.on('SIGINT', () => shutdown());
-
-
