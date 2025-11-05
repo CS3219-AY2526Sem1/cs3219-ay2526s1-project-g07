@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { Kafka } from 'kafkajs';
 import type { Request, Response, NextFunction } from 'express';
-import { API_ENDPOINTS_MATCHING } from './utils.ts';
+import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints.ts';
 import { MatchingServiceProducer } from './matching-service-producer.ts';
 import { MatchingServiceConsumer } from './matching-service-consumer.ts';
 import { Matcher } from './matcher.ts';
@@ -13,6 +13,7 @@ import { ConsumerMessageHandler } from './consumer-message-handler.ts';
 import { MatchingWS } from './matching-ws.ts';
 import { RedisClient } from '../../../redis/client.ts';
 import { type RedisClientType } from 'redis';
+import type { UserMatchingRequest, UserMatchingCancelRequest } from '../../../shared/types/matching-types.ts';
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,7 +21,6 @@ const httpServer = createServer(app);
 dotenv.config();
 const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 4000;
-const WS_PORT = process.env.WS_PORT || 'http://localhost:5000';
 const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
   ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
   : 0;
@@ -28,7 +28,7 @@ const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
 async function main() {
   // --- Middleware ---
   app.use(cors({
-    origin: HOST_URL
+    origin: "*",
   }))
 
   app.use(express.json());
@@ -49,7 +49,7 @@ async function main() {
   // --- Websocket & Kafka Connections ---
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: WS_PORT,
+      origin: "*",
       methods: ["GET", "POST"]
     }
   });
@@ -67,14 +67,6 @@ async function main() {
     res.status(err.status || 500).json(err.message);
   })
 
-  httpServer.listen(PORT, () => {
-    connectToKafka();
-    console.log(`Matching service listening on port ${PORT}`);
-    
-    connectToWebSocket();
-    console.log('WebSocket server is ready for connections');
-  });
-
   const connectToKafka = async () => {
     try {
       await producer.init();
@@ -88,41 +80,43 @@ async function main() {
   httpServer.listen(PORT, () => {
     connectToKafka();
     console.log(`Matching service listening on port ${PORT}`);
+    
+    connectToWebSocket();
     console.log('WebSocket server is ready for connections');
   });
 
   httpServer.on('close', async () => {
-    await RedisClient.quit();
+    await redisClient.quit();
   });
 
   process.on('SIGINT', async () => {
     console.log('\n🛑 Caught SIGINT. Shutting down...');
-    await RedisClient.quit();
+    await redisClient.quit();
     httpServer.close(() => process.exit(0));
   });
 
   process.on('SIGTERM', async () => {
-    await RedisClient.quit();
+    await redisClient.quit();
     httpServer.close(() => process.exit(0));
   });
 
   // --- API Endpoints ---
   app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
-    const { userId, topic, difficulty } = req.body;
-    console.log(`Received matching request for user id: ${userId}`);
+    const matchingRequest = req.body as UserMatchingRequest;
+    console.log(`Received matching request for user id: ${matchingRequest.userId.id}`);
+    
+    matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
 
-    matcher.enqueue(userId, { topic, difficulty });
-
-    return res.status(200).send({ message: `Matching service received session id: ${userId}` });
+    return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId.id}` });
   });
 
   app.post(API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req: Request, res: Response) => {
-    const { userId } = req.body;
-    console.log(`Received matching cancel request for user id: ${userId}`);
+    const { userId } = req.body as UserMatchingCancelRequest;
+    console.log(`Received matching cancel request for user id: ${userId.id}`);
 
     matcher.dequeue(userId);
 
-    return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId}` });
+    return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
   });
 
   // --- Error Handling Middleware ---

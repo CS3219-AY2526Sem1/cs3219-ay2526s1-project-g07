@@ -1,6 +1,6 @@
 import { questionConsumer } from './consumer.js';
 import { questionProducer } from './producer.js';
-import { handleQuestionRequest } from './messageHandler.js';
+import { handleMatchingSuccess } from './messageHandler.js';
 
 export * from './types.js';
 export * from './consumer.js';
@@ -16,8 +16,8 @@ export async function startKafkaServices(): Promise<void> {
     console.log('✅ Producer connected');
 
     // Start consumer with message handler
-    await questionConsumer.start(handleQuestionRequest);
-    console.log('✅ Consumer started and listening for question requests');
+    await questionConsumer.start(handleMatchingSuccess);
+    console.log('✅ Consumer started and listening for matching success messages');
 
     console.log('🎉 All Kafka services started successfully');
   } catch (error) {

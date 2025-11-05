@@ -1,62 +1,64 @@
-import type { QuestionRequestMessage } from './types.js';
+import type { MatchingSuccessMessage } from './types.js';
 import { questionProducer } from './producer.js';
 import { questionService } from '../services/questionService.js';
 
-export async function handleQuestionRequest(message: QuestionRequestMessage): Promise<void> {
-  const { requestId, userId1, userId2, difficulty, categories } = message;
+export async function handleMatchingSuccess(message: MatchingSuccessMessage): Promise<void> {
+  const { userId: userIdRaw, peerId: peerIdRaw, preferences } = message;
+  const { topic, difficulty } = preferences;
+
+  // Extract actual ID strings (handle both object and string formats)
+  const userId = typeof userIdRaw === 'string' ? userIdRaw : userIdRaw.id;
+  const peerId = typeof peerIdRaw === 'string' ? peerIdRaw : peerIdRaw.id;
 
   try {
-    console.log(`🔍 Processing question request: ${requestId}`);
-    console.log(`   Users: ${userId1} & ${userId2}`);
+    console.log(`🔍 Processing matching success`);
+    console.log(`   Users: ${userId} & ${peerId}`);
     console.log(`   Difficulty: ${difficulty}`);
-    console.log(`   Categories: ${categories.join(', ')}`);
+    console.log(`   Topic: ${topic}`);
 
-    // Find a matching question based on difficulty and categories
-    const question = await questionService.findMatchingQuestion(difficulty, categories);
+    // Find a matching question based on difficulty and topic
+    const question = await questionService.findMatchingQuestion(difficulty, [topic]);
 
     if (!question) {
       // No question found - send error
       await questionProducer.sendQuestionError({
-        requestId,
-        userId1,
-        userId2,
+        userId,
+        peerId,
         error: 'No matching question found for the specified criteria',
         timestamp: Date.now()
       });
-      console.log(`⚠️ No question found for request: ${requestId}`);
+      console.log(`⚠️ No question found for users: ${userId} & ${peerId}`);
       return;
     }
 
-    // Question found - send success with flattened structure
+    // Question found - send success
     await questionProducer.sendQuestionSuccess({
-      requestId,
-      userId1,
-      userId2,
+      userId,
+      peerId,
       questionId: question.id,
       title: question.title,
       question: question.question,
       difficulty: question.difficulty,
-      categories: question.categories,
+      topic,
       timestamp: Date.now()
     });
 
-    console.log(`✅ Sent question response for request: ${requestId}`);
+    console.log(`✅ Sent question response`);
     console.log(`   Question: ${question.title} (${question.id})`);
-    console.log(`   For users: ${userId1} & ${userId2}`);
+    console.log(`   For users: ${userId} & ${peerId}`);
   } catch (error) {
-    console.error(`❌ Error handling question request ${requestId}:`, error);
+    console.error(`❌ Error handling matching success for users ${userId} & ${peerId}:`, error);
 
     // Send error message
     try {
       await questionProducer.sendQuestionError({
-        requestId,
-        userId1,
-        userId2,
+        userId,
+        peerId,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         timestamp: Date.now()
       });
     } catch (producerError) {
-      console.error(`❌ Failed to send error message for request ${requestId}:`, producerError);
+      console.error(`❌ Failed to send error message for users ${userId} & ${peerId}:`, producerError);
     }
   }
 }

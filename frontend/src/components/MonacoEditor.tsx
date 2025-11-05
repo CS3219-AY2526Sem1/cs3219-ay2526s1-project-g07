@@ -12,6 +12,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
+import { useSession } from '@/lib/auth-client'
+
 
 /** Monaco Editor options
  * See: https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -38,20 +40,28 @@ const monacoEditorOptions: editor.IStandaloneEditorConstructionOptions = {
 interface PythonMonacoEditorProps {
   code: string;
   onCodeChange: (newCode: string) => void;
+  sessionId: string;
 }
 
-const roomname = `dummy-session-id`; // replace with actual session id
-
-function PythonMonacoEditor({ code, onCodeChange }: PythonMonacoEditorProps) {
+function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [codeEditor, setCodeEditor] =
     useState<editor.IStandaloneCodeEditor | null>(null);
   const [websocketProvider, setWebsocketProvider] =
     useState<WebsocketProvider | null>(null);
 
+  // for testing purposes, use a fixed userId
+  const userId = "user1"; // authorised user
+  // const userid = 'user3'; // unauthorized user
+  
+  // const userId = useSession().data?.user?.id || '';
+  const roomname = sessionId;
+
   // // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
-    const provider = new WebsocketProvider("/api/collab", roomname, ydoc);
+    // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
+    console.log(`Connecting to collab session ${roomname} as user ${userId}`);
+    const provider = new WebsocketProvider('/api/collab', roomname, ydoc, { params: { sessionId: roomname, userId } });
     setWebsocketProvider(provider);
     return () => {
       provider?.destroy();

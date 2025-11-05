@@ -1,7 +1,7 @@
 import type { KafkaMessage } from "kafkajs";
 import { MockMatcher } from "./mock-matcher.ts";
 import { ConsumerMessageHandler } from "../../src/consumer-message-handler.ts";
-import { TOPICS_MATCHING } from "../../src/utils.ts";
+import { TOPICS_MATCHING } from "../../../../shared/kafka-topics.ts";
 
 export class MockConsumerMessageHandler extends ConsumerMessageHandler {
   constructor(matcher: MockMatcher) {

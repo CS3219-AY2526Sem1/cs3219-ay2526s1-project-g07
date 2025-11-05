@@ -30,7 +30,7 @@ export class CollabProducer {
                 messages: messages,
             });
 
-            console.log(`Event published to topic ${topic}:`, fullEvent);
+            console.log(`Event published to topic ${topic || fullEvent.eventType}:`, fullEvent);
             return result;
         } catch (err) {
             console.error('Error publishing event:', err);

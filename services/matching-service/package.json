@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jasmine --require=ts-node/register",
-    "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest" 
+    "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
+    "start": "node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "kafkajs": "^2.2.4",
+    "redis": "^5.9.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   },
