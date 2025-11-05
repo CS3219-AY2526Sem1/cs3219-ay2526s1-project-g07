@@ -59,5 +59,5 @@ create table "question" (
   "title" text not null,
   "question" text not null,
   "difficulty" text not null,
-  "categories" text[] not null
+  "topics" text[] 
 )

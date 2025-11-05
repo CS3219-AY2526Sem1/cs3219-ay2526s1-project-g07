@@ -59,7 +59,7 @@ export class QuestionProducer {
       topic: 'question-success',
       messages: [
         {
-          key: message.requestId,
+          key: message.userId,
           value: JSON.stringify(message),
           timestamp: Date.now().toString(),
         }
@@ -68,7 +68,7 @@ export class QuestionProducer {
 
     try {
       await this.producer.send(record);
-      console.log(`✅ Sent question success for request: ${message.requestId}`);
+      console.log(`✅ Sent question success for users: ${message.userId} & ${message.peerId}`);
     } catch (error) {
       console.error('❌ Failed to send question success message:', error);
       throw error;
@@ -84,7 +84,7 @@ export class QuestionProducer {
       topic: 'question-success', // Using same topic for errors, can be changed if needed
       messages: [
         {
-          key: message.requestId,
+          key: message.userId,
           value: JSON.stringify(message),
           timestamp: Date.now().toString(),
         }
@@ -93,7 +93,7 @@ export class QuestionProducer {
 
     try {
       await this.producer.send(record);
-      console.log(`⚠️ Sent question error for request: ${message.requestId}`);
+      console.log(`⚠️ Sent question error for users: ${message.userId} & ${message.peerId}`);
     } catch (error) {
       console.error('❌ Failed to send question error message:', error);
       throw error;

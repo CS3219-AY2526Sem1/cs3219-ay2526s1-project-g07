@@ -18,7 +18,7 @@ interface Question {
   title: string;
   question: string;
   difficulty: string;
-  categories: string[];
+  topics: string[];
 }
 export const Route = createFileRoute('/admin/questions/')({
   component: RouteComponent,
@@ -44,7 +44,6 @@ function RouteComponent() {
         }
 
         const data = await response.json();
-        console.log(data)
         console.log('Fetched questions:', data);
 
         // The API returns { message, questions, count }
@@ -72,8 +71,8 @@ function RouteComponent() {
       const filtered = questions.filter(question =>
         question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         question.difficulty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.categories.some(category =>
-          category.toLowerCase().includes(searchTerm.toLowerCase())
+        question.topics.some(topic =>
+          topic.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
       setFilteredQuestions(filtered);
@@ -156,7 +155,7 @@ function RouteComponent() {
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium">Title</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Difficulty</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Categories</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Topics</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -186,12 +185,12 @@ function RouteComponent() {
                           </td>
                           <td className="p-4">
                             <div className="flex flex-wrap gap-1">
-                              {question.categories.map((category, index) => (
+                              {question.topics.map((topic, index) => (
                                 <span
                                   key={index}
                                   className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                 >
-                                  {category}
+                                  {topic}
                                 </span>
                               ))}
                             </div>
@@ -220,14 +219,14 @@ function RouteComponent() {
                                       </span>
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold mb-2">Categories</h4>
+                                      <h4 className="font-semibold mb-2">Topics</h4>
                                       <div className="flex flex-wrap gap-1">
-                                        {selectedQuestion?.categories.map((category, index) => (
+                                        {selectedQuestion?.topics.map((topic, index) => (
                                           <span
                                             key={index}
                                             className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                           >
-                                            {category}
+                                            {topic}
                                           </span>
                                         ))}
                                       </div>

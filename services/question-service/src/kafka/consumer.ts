@@ -1,12 +1,12 @@
 import { Kafka } from 'kafkajs';
 import type { Consumer, EachMessagePayload } from 'kafkajs';
-import type { QuestionRequestMessage } from './types.js';
+import type { MatchingSuccessMessage } from './types.js';
 
 export class QuestionConsumer {
   private kafka: Kafka;
   private consumer: Consumer;
   private isConnected: boolean = false;
-  private messageHandler: ((message: QuestionRequestMessage) => Promise<void>) | null = null;
+  private messageHandler: ((message: MatchingSuccessMessage) => Promise<void>) | null = null;
 
   constructor(brokers: string[] = ['localhost:9094']) {
     this.kafka = new Kafka({
@@ -55,7 +55,7 @@ export class QuestionConsumer {
     }
   }
 
-  setMessageHandler(handler: (message: QuestionRequestMessage) => Promise<void>): void {
+  setMessageHandler(handler: (message: MatchingSuccessMessage) => Promise<void>): void {
     this.messageHandler = handler;
   }
 
@@ -66,10 +66,10 @@ export class QuestionConsumer {
 
     try {
       await this.consumer.subscribe({
-        topic: 'question-request',
+        topic: 'matching-success',
         fromBeginning: false
       });
-      console.log('✅ Subscribed to question-request topic');
+      console.log('✅ Subscribed to matching-success topic');
     } catch (error) {
       console.error('❌ Failed to subscribe to question-request topic:', error);
       throw error;
@@ -97,13 +97,14 @@ export class QuestionConsumer {
 
           try {
             const messageValue = message.value.toString();
-            const parsedMessage: QuestionRequestMessage = JSON.parse(messageValue);
+            const parsedMessage: MatchingSuccessMessage = JSON.parse(messageValue);
 
-            console.log(`📥 Received question request:`, {
-              requestId: parsedMessage.requestId,
-              difficulty: parsedMessage.difficulty,
-              categories: parsedMessage.categories,
-              topic,
+            console.log(`📥 Received matching success:`, {
+              userId: parsedMessage.userId,
+              peerId: parsedMessage.peerId,
+              topic: parsedMessage.preferences.topic,
+              difficulty: parsedMessage.preferences.difficulty,
+              kafkaTopic: topic,
               partition,
               offset: message.offset
             });
@@ -125,7 +126,7 @@ export class QuestionConsumer {
     }
   }
 
-  async start(handler: (message: QuestionRequestMessage) => Promise<void>): Promise<void> {
+  async start(handler: (message: MatchingSuccessMessage) => Promise<void>): Promise<void> {
     this.setMessageHandler(handler);
     await this.connect();
     await this.subscribe();
