@@ -28,17 +28,7 @@ const server = http.createServer((_request, response) => {
   response.end("okay");
 });
 
-// In-memory store of rooms and their users (in memory for simplicity for now :D)
-const sessions = new Map();
-sessions.set("session123", new Set(["userA", "userB"]));
-sessions.set("session456", new Set(["userC", "userD"]));
-sessions.set("dummy-session-id", new Set(["user1", "user2"]));
-
-// Keep track of connected clients per session (optional)
-const activeRooms = new Map(); // sessionId → Set of connected userIds
-
 // Handle WebSocket connections
-
 wss.on("connection", (ws, request) => {
   setupWSConnection(ws, request);
 
@@ -65,39 +55,9 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
     return;
   }
-  const session = sessions.get(sessionId);
-  if (!session) {
-    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-    socket.destroy();
-    return;
-  }
 
-  // Check if session exists
-  const allowedUsers = sessions.get(sessionId);
-  if (!allowedUsers) {
-    socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
-    socket.destroy();
-    return;
-  }
-
-  // Check if this user is part of the session
-  if (!allowedUsers.has(userId)) {
-    socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
-    socket.destroy();
-    return;
-  }
-
-  // Enforce max 2 connections (optional safety check)
-  const room = activeRooms.get(sessionId) || new Set();
-  if (room.size >= 2 && !room.has(userId)) {
-    socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
-    socket.destroy();
-    return;
-  }
-
-  // Track the user's connection
-  room.add(userId);
-  activeRooms.set(sessionId, room);
+  // TODO: Session verification logic here
+  
 
   wss.handleUpgrade(
     request,
@@ -124,29 +84,28 @@ server.listen(port, host, () => {
 
 // TODO: Enable Kafka once integration working
 // Setup Kafka Client
-// const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
-// try {
-//   await kafkaClient.connect();
-// } catch (err) {
-//   console.error("Failed to connect to Kafka, exiting...");
-//   await shutdown(1);
-// }
+export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+try {
+  await kafkaClient.connect();
+} catch (err) {
+  console.error("Failed to connect to Kafka, exiting...");
+  await shutdown(1);
+}
 
-// async function shutdown(code: number = 0) {
-//   console.log("Shutting down collab-service...");
-//   try {
-//     await kafkaClient.disconnect();
-//   } catch (err) {
-//     console.error("Error during shutdown of collab-service:", err);
-//     process.exit(1)
-//   }
+async function shutdown(code: number = 0) {
+  console.log("Shutting down collab-service...");
+  try {
+    await kafkaClient.disconnect();
+  } catch (err) {
+    console.error("Error during shutdown of collab-service:", err);
+  }
 
-//   process.exit(code);
-// }
+  process.exit(code);
+}
 
-//Handles exit signals - Termination, Interrupt
-// process.on('SIGTERM', () => shutdown());
-// process.on('SIGINT', () => shutdown());
+// Handles exit signals - Termination, Interrupt
+process.on('SIGTERM', () => shutdown());
+process.on('SIGINT', () => shutdown());
 
 // ------------------- Hono Routes ------------------ //
 
