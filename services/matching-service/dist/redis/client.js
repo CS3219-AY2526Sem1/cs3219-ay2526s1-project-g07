@@ -4,21 +4,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RedisClient = void 0;
-const redis_1 = __importDefault(require("redis"));
+const redis_1 = require("redis");
 const dotenv_1 = __importDefault(require("dotenv"));
 class RedisClient {
     constructor() {
         this.instance = {};
     }
     async init(database = 0) {
-        this.instance = await this.createClient(database);
+        this.instance = await this.createRedisClient(database);
     }
-    async createClient(database = 0) {
+    async createRedisClient(database = 0) {
         // Start redis local with `npm run redis-local`
         dotenv_1.default.config();
         const host = process.env.REDIS_HOST;
         const port = process.env.REDIS_PORT;
-        const client = redis_1.default.createClient({
+        const client = (0, redis_1.createClient)({
             socket: {
                 host: host || '127.0.0.1',
                 port: port ? parseInt(port) : 6379,

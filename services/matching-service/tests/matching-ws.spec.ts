@@ -6,7 +6,7 @@ import { WS_EVENTS_MATCHING } from "../../../shared/ws-events";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
 import type { UserId } from "../../../shared/types/matching-types";
-import { RedisClient } from '@peerprep/redis/client';
+import { RedisClient } from '@peerprep/redis';
 
 let io: SocketIOServer;
 let matcher: Matcher;
@@ -30,6 +30,12 @@ async function init(): Promise<void> {
   const port = (httpServer.address() as AddressInfo).port;
 
   matcher = new Matcher(redisClient);
+
+  function mockSetInterval() {
+    return 1;
+  }
+  // Mock setInterval to prevent actual intervals during tests
+  spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
   matchingWS = new MatchingWS(io, matcher);
   matchingWS.init();
 
@@ -44,6 +50,7 @@ async function init(): Promise<void> {
 }
 
 async function cleanup(): Promise<void> {
+  matcher.cleanUp();
   clientSocket.close();
   io.close();
   await new Promise((resolve) => httpServer.close(resolve));

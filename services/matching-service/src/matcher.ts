@@ -1,7 +1,7 @@
 import type { UserMatchingRequest, Difficulty, MatchResult, UserId } from '../../../shared/types/matching-types';
 import { EventEmitter } from 'events';
 import { MatchCriteria } from './match-criteria';
-import { RedisClient } from '@peerprep/redis/client';
+import { RedisClient } from '@peerprep/redis/src/client';
 import { randomUUID } from 'crypto';
 
 export class Matcher {
@@ -41,9 +41,14 @@ export class Matcher {
   }
 
   async dequeue(userId: UserId): Promise<void> {
+    // For cases where dequeue is called after redis client is closed
+    if (!this.redisClient?.instance?.isOpen) {
+      return Promise.resolve();
+    }
+
     if (!userId) {
       console.error('dequeue called with invalid userId');
-      return;
+      return Promise.resolve();
     }
 
     const lockKey = 'dequeue_lock';
@@ -114,7 +119,7 @@ export class Matcher {
     const now = Date.now();
     const timeout = this.timeOutDuration;
     // @ts-ignore: redisClient.eval typing may vary
-    const timedOutRaw: string[] = await this.redisClient.eval(getTimedOutLuaScript, {
+    const timedOutRaw: string[] = await this.redisClient.instance.eval(getTimedOutLuaScript, {
       keys: [Matcher.redisCacheKey],
       arguments: [now.toString(), timeout.toString()]
     });
@@ -178,6 +183,7 @@ export class Matcher {
   }
 
   async cleanUp() {
+    await Promise
     await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
   }

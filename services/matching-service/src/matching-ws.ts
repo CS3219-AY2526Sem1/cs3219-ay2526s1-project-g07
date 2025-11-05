@@ -24,7 +24,8 @@ export class MatchingWS {
   }
 
   private async HandleConnectionInterrupt(userId: UserId | undefined) {
-    if (!userId) return;
+    if (!userId) return Promise.resolve();
+    console.log(`Handling connection interrupt for user ${userId.id}`);
     await this.matcher.dequeue(userId);
   }
 
@@ -33,6 +34,7 @@ export class MatchingWS {
       socket.emit(WS_EVENTS_MATCHING.ERROR, 'JOIN event missing userId');
       return;
     }
+    
     socket.userId = userId;
     socket.join(`user_${userId.id}`);
     console.log(`User ${userId.id} joined with socket ${socket.id}`);
@@ -54,8 +56,8 @@ export class MatchingWS {
   }
 
   private OnError = (socket: CustomSocket, error: any) => {
-    this.HandleConnectionInterrupt(socket.userId);
     console.error('WebSocket error:', error);
+    this.HandleConnectionInterrupt(socket.userId);
   }
 }
 

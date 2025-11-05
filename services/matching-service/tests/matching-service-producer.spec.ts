@@ -3,7 +3,7 @@ import { Kafka, type Producer } from 'kafkajs';
 import { MockMatcher } from "./mocks/mock-matcher";
 import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
 import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types';
-import { RedisClient } from "redis/client";
+import { RedisClient } from "@peerprep/redis";
 
 describe('MatchingServiceProducer', () => {
   let msProducer: MatchingServiceProducer;
@@ -23,10 +23,12 @@ describe('MatchingServiceProducer', () => {
   beforeAll(async () => {
     redisClient = new RedisClient();
     await redisClient.init();
+    return Promise.resolve();
   });
 
   afterAll(async () => {
     await redisClient.quit();
+    return Promise.resolve();
   });
 
   beforeEach(() => {

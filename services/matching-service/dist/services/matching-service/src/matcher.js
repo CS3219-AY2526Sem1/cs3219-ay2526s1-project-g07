@@ -99,7 +99,7 @@ class Matcher {
         const now = Date.now();
         const timeout = this.timeOutDuration;
         // @ts-ignore: redisClient.eval typing may vary
-        const timedOutRaw = await this.redisClient.eval(getTimedOutLuaScript, {
+        const timedOutRaw = await this.redisClient.instance.eval(getTimedOutLuaScript, {
             keys: [Matcher.redisCacheKey],
             arguments: [now.toString(), timeout.toString()]
         });

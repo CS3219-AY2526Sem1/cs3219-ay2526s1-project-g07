@@ -35,7 +35,7 @@ class RedisClient {
     }
     async quit() {
         // Clear all data of the current Redis database as matching service is stateless
-        await this.instance.flushDb();
+        await this.instance.flushdb();
         await this.instance.quit();
         console.log('✅ Redis client disconnected');
     }

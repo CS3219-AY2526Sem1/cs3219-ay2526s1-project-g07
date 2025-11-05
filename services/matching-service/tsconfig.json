@@ -11,7 +11,12 @@
     "types": [
       "node",
       "jasmine"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@peerprep/redis": ["../../redis/src/client.ts"],
+      "@peerprep/redis/*": ["../../redis/*"]
+    },
   },
   "ts-node": {
     "esm": true,

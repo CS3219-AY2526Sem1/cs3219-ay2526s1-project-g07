@@ -2,7 +2,7 @@ import type { KafkaMessage } from "kafkajs";
 import { ConsumerMessageHandler } from "../src/consumer-message-handler";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 import { MockMatcher } from "./mocks/mock-matcher";
-import { RedisClient } from "redis/client";
+import { RedisClient } from "@peerprep/redis";
 
 describe('ConsumerMessageHandler', () => {
   let mockMatcher: MockMatcher;

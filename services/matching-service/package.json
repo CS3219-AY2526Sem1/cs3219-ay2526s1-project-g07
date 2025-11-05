@@ -4,24 +4,24 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:spec": "tsc -p tsconfig.spec.json && node src/rename-cjs.js",
-    "test": "node --loader esbuild-register/dist/node spec/support/jasmine.mjs",
+    "test": "node .\\spec\\support\\jasmine.mjs",
     "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
-    "start": "node src/index",
-    "build": "tsc -p tsconfig.json"
+    "start": "node src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts"
   },
   "keywords": [],
   "type": "commonjs",
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@peerprep/redis": "file:../../redis/dist",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "kafkajs": "^2.2.4",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tsx": "^4.20.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -1,23 +1,26 @@
-import redis from 'redis';
+import { createClient } from 'redis';
 import dotenv from 'dotenv';
+import path from 'path';
 
 export class RedisClient {
-  instance: ReturnType<typeof redis.createClient>;
+  instance: ReturnType<typeof createClient>;
 
   constructor () {
-    this.instance = {} as ReturnType<typeof redis.createClient>;
-  }
-  
-  async init(database = 0) {
-    this.instance = await this.createClient(database);
+    this.instance = {} as ReturnType<typeof createClient>;
   }
 
-  private async createClient(database = 0) {
+  async init(database = 0) {
+    this.instance = await this.createRedisClient(database);
+  }
+
+  private async createRedisClient(database = 0) {
     // Start redis local with `npm run redis-local`
-    dotenv.config();
+    dotenv.config({
+      path: path.resolve(__dirname, '../.env'),
+    });
     const host = process.env.REDIS_HOST;
     const port = process.env.REDIS_PORT;
-    const client = redis.createClient({
+    const client = createClient({
       socket: {
         host: host || '127.0.0.1',
         port: port ? parseInt(port) : 6379,
@@ -38,6 +41,10 @@ export class RedisClient {
   }
 
   async quit() {
+    if (!this.instance.isOpen) {
+      console.log('Redis client already disconnected');
+      return;
+    }
     // Clear all data of the current Redis database as matching service is stateless
     await this.instance.flushDb();
     await this.instance.quit();

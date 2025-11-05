@@ -2,7 +2,8 @@
   "name": "@peerprep/redis",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/client.ts",
+  "types": "src/client.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist"
@@ -11,6 +12,12 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./src/client.ts",
+      "require": "./src/client.ts"
+    }
+  },
   "dependencies": {
     "redis": "^5.8.3"
   }
