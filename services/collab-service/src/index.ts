@@ -11,7 +11,7 @@ import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
-import { addActiveRoom, getActiveRoom, removeActiveRoom } from "./rooms.js";
+import { addActiveRoom, removeActiveRoom } from "./rooms.js";
 
 declare module "ws" {
   interface WebSocket {
@@ -109,7 +109,7 @@ server.on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
       ws.userId = userId;
       ws.sessionId = collabSessionId;
-    wss.emit('connection', ws, request)
+    wss.emit('connection', ws, request);
   })
 });
 
