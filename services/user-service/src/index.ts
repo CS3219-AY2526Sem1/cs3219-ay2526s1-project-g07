@@ -42,6 +42,8 @@ app.route("/api/user/", route);
 
 // Initialize database and start server
 const startServer = async () => {
+  let kafkaClient: KafkaClient | null = null;
+
   try {
     // Initialize database first    
     // Start the server
@@ -52,14 +54,23 @@ const startServer = async () => {
       console.log(`🚀 Server running at http://localhost:${info.port}`)
     });
 
-    const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
+    //Set up Kafka client
+    kafkaClient = new KafkaClient(kafkaConfig);
     await kafkaClient.connect();
-    console.log("Kafka client connected");
 
     // Disconnect Kafka client on server close
     process.on("SIGINT", async () => {
       console.log("SIGINT received: closing HTTP server");
-      await kafkaClient.disconnect();
+      try {
+        if (kafkaClient) {
+          console.log("Disconnecting Kafka client...");
+          await kafkaClient.disconnect();
+        }
+      } catch (err) {
+        console.error("Error during Kafka client disconnection:", err);
+        process.exit(1);
+      }
+      
       process.exit(0);
     });
 
