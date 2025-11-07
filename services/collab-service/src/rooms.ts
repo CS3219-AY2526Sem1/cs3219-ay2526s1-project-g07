@@ -26,9 +26,8 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
 export const removeActiveRoom = (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (room) {
-    // not needed as removeActiveRoom is called on 'close' event
-    // const socket = room.get(userId);
-    // socket?.close();
+    const socket = room.get(userId);
+    socket?.close();
     room.delete(userId);
     if (room.size === 0) {
       activeRooms.delete(sessionId);
