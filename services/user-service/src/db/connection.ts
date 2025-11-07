@@ -10,12 +10,8 @@ import { Pool } from "pg";
 
 // console.log("DB_USER:", process.env.DATABASE);
 export const db = new Pool({
-  connectionString: process.env.DATABASE,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false, // Accept self-signed certificates
   },
 });
-
-// export const db = new Pool({
-//   connectionString: process.env.DATABASE_URL,
-// });
