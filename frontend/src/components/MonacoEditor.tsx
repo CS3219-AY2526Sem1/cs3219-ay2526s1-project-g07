@@ -59,9 +59,35 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
 
   // // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
-    // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
     console.log(`Connecting to collab session ${roomname} as user ${userId}`);
-    const provider = new WebsocketProvider('/api/collab', roomname, ydoc, { params: { sessionId: roomname, userId } });
+    // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
+    const provider = new WebsocketProvider('/api/collab', roomname, ydoc, {
+      params: { sessionId: roomname, userId },
+    });
+
+    provider.on('status', event => {
+      console.log(event.status) // logs "connected" or "disconnected"
+    });
+
+    provider.on('connection-close', event => {
+      // code 4001 indicates disconnection due to duplicate user session
+      const code = event?.code;
+      if (code === 4001) { 
+        console.log(`Disconnected by server (Code ${code}): ${event?.reason ?? ''}`);
+        alert("Disconnected: Another session logged in with the same user.");
+        
+        // Stop the reconnection loop for this provider instance
+        provider.shouldConnect = false; 
+      }
+    });
+  
+    // const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
+    // const userColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; // assign a random color
+
+    // provider.awareness.setLocalStateField('user', {
+    //     name: userName,
+    //     color: userColor,
+    // });
     setWebsocketProvider(provider);
     return () => {
       provider?.destroy();
