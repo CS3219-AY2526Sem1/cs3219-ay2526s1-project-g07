@@ -50,15 +50,16 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
   const [websocketProvider, setWebsocketProvider] =
     useState<WebsocketProvider | null>(null);
 
-  // for testing purposes, use a fixed userId
-  const userId = "user1"; // authorised user
-  // const userid = 'user3'; // unauthorized user
-  
-  // const userId = useSession().data?.user?.id || '';
+  const userId = useSession().data?.user?.id;
   const roomname = sessionId;
 
   // // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
+    
+    if (!userId || !roomname) {
+      console.warn("Missing userId or roomname, cannot connect to collab session.");
+      return;
+    }
     console.log(`Connecting to collab session ${roomname} as user ${userId}`);
     // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
     const provider = new WebsocketProvider('/api/collab', roomname, ydoc, {
@@ -93,7 +94,7 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
       provider?.destroy();
       ydoc.destroy();
     };
-  }, [ydoc]);
+  }, [ydoc, userId, roomname]);
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
