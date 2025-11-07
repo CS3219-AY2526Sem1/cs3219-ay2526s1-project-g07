@@ -42,7 +42,6 @@ export class KafkaClient {
                 heartbeatInterval: 10000,
             })
         );
-        this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
 
         // this.admin = this.kafka.admin();
     }
@@ -60,6 +59,7 @@ export class KafkaClient {
             await this.producer.getProducer().connect();
             await this.consumer.getConsumer().connect();
             // await this.admin.connect();
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
             await this.consumer.startConsuming();
             console.log('Kafka Client connected successfully');
         } catch (err) {

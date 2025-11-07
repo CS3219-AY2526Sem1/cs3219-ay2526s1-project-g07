@@ -1,7 +1,17 @@
 export interface UserMatchingRequest {
-  userId: number;
+  userId: UserId;
   preferences: MatchPreference;
   timestamp: number;
+}
+
+export interface UserMatchingCancelRequest {
+  userId: UserId;
+}
+
+export interface MatchFoundData {
+  firstUserId: UserId;
+  secondUserId: UserId;
+  collabSessionId: string;
 }
 
 export interface MatchPreference {
@@ -10,9 +20,13 @@ export interface MatchPreference {
 }
 
 export interface MatchResult {
-  firstUserId: number;
-  secondUserId: number;
+  firstUserId: UserId;
+  secondUserId: UserId;
   preferences: MatchPreference;
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface UserId {
+  id: string;
+}

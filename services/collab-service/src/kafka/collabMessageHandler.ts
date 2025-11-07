@@ -1,8 +1,8 @@
 import type { EachMessagePayload } from 'kafkajs';
 import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
-import { addSession, getSessionDetails } from '../sessions.js';
+import { addSession, generateRandomSessionId, getSessionDetails } from '../sessions.js';
 import type { AIQuestionResponseEvent, CollabSessionReadyEvent } from './events.js';
-import { kafkaClient } from '../index.js'; //TODO uncomment once index.ts uncomments kafkaClient
+import { kafkaClient } from '../index.js';
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {
@@ -13,7 +13,13 @@ export class CollabMessageHandler {
         }
 
         const value = message.value.toString();
-        const event = JSON.parse(value);
+        let event;
+        try {
+            event = JSON.parse(value);
+        } catch (err) {
+            console.error(`Failed to parse message value as JSON on topic ${topic}, partition ${partition}:`, value, err);
+            return;
+        }
         switch (topic) {
             case TOPICS_SUBSCRIBED.QUESTION_SUCCESS:
                 await this.processMatchingSessionWithQuestion(event);
@@ -45,9 +51,9 @@ export class CollabMessageHandler {
             return;
         }
 
-        const questionDetails = sessionDetails.get("title") +
+        const questionDetails = (sessionDetails.get("title") ?? "") +
             '\n' + 
-            sessionDetails.get("question");
+            (sessionDetails.get("question") ?? "");
 
         const aiQuestionResponseEvent: Omit<AIQuestionResponseEvent, 'eventId'> = {
             eventType: TOPICS_COLLAB.AI_QUESTION_RESPONSE,
@@ -69,14 +75,17 @@ export class CollabMessageHandler {
         const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = event.data;
 
         // Do not proceed if there are any missing values
-        const isThereMissingValue = !requestId || !userIdOne || !userIdTwo || !questionId || !title || !question || !difficulty || !categories || !timestamp;
-        if (isThereMissingValue) {
-            console.error(`Invalid message format for matching session with question`);
+        const requiredFields = { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp };
+        const missingFields = Object.entries(requiredFields)
+            .filter(([key, value]) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))
+            .map(([key]) => key);
+        if (missingFields.length > 0) {
+            console.error(`Invalid message format for matching session with question. Missing fields: ${missingFields.join(', ')}`);
             return;
         }
         
         // Setup collab session from the information received
-        const collabSessionId = "dummy-session-id"; //TODO placeholder; generate collabSessionId?
+        const collabSessionId: string = generateRandomSessionId();
         const sessionDetails = new Map<string, string>(
             [
                 ["user1", userIdOne], 
@@ -85,13 +94,13 @@ export class CollabMessageHandler {
                 ["title", title],
                 ["question", question],
                 ["difficulty", difficulty],
-                ["categories", categories.join(",")],
+                ["categories", Array.isArray(categories) ? categories.join(",") : String(categories)],
             ]
         );
         addSession(collabSessionId, sessionDetails);
 
         console.log(
-            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp} \n
+            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp}, collabSessionId: ${collabSessionId} \n
             Publishing to topic ${TOPICS_COLLAB.COLLAB_SESSION_READY}`
         );
 
@@ -104,7 +113,7 @@ export class CollabMessageHandler {
                 userIdTwo: userIdTwo
             }
         };
-        //TODO uncomment once kafkaClient is setup in index.ts
-        // await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
+
+        await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
     }
 }

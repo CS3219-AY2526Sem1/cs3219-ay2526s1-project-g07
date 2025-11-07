@@ -1,6 +1,8 @@
+import { v4 as uuidv4 } from 'uuid';
+
 // In-memory store of authorised rooms and their matched users (FROM KAFKA)
 const sessions: Map<string, Map<string, string>> = new Map();
-sessions.set("dummyId", 
+sessions.set("dummy-session-id", 
   new Map([
     ["user1", "user1"], 
     ["user2", "user2"],
@@ -28,6 +30,10 @@ export const checkSessionAndUsers = (sessionId: string, userId: string) => {
   }
   return session?.get("user1") === userId || session.get("user2") === userId;
 };
+
+export const generateRandomSessionId = (): string => {
+  return uuidv4();
+}
 
 export const getSessionDetails = (sessionId: string) => {
   return sessions.get(sessionId);

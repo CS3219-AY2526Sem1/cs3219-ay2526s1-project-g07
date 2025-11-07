@@ -10,7 +10,13 @@ export class MessageHandler {
         }
 
         const value = message.value.toString();
-        const event = JSON.parse(value);
+        let event;
+        try {
+            event = JSON.parse(value);
+        } catch (err) {
+            console.error(`Failed to parse message value as JSON on topic ${topic}, partition ${partition}:`, value, err);
+            return;
+        }
         switch (topic) {
             case TOPICS_SUBSCRIBED.USER_STATUS_UPDATE:
                 await this.processUserStatusUpdate(event);

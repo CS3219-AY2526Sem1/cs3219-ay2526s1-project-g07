@@ -40,8 +40,6 @@ export class KafkaClient {
                 allowAutoTopicCreation: true,
             })
         );
-
-        this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
     }
 
     getProducer(): AiKafkaProducer {
@@ -61,6 +59,10 @@ export class KafkaClient {
             await this.producer.getProducer().connect();
             await this.consumer.getConsumer().connect();
 
+<<<<<<< HEAD
+=======
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+>>>>>>> master
             await this.consumer.startConsuming();
             console.log('Kafka Client connected successfully');
         } catch (err) {

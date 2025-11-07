@@ -11,7 +11,11 @@ import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
+<<<<<<< HEAD
 import { addActiveRoom, getActiveRoom, removeActiveRoom } from "./rooms.js";
+=======
+import { addActiveRoom, removeActiveRoom } from "./rooms.js";
+>>>>>>> master
 
 declare module "ws" {
   interface WebSocket {
@@ -109,12 +113,11 @@ server.on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
       ws.userId = userId;
       ws.sessionId = collabSessionId;
-    wss.emit('connection', ws, request)
+    wss.emit('connection', ws, request);
   })
 });
 
 
-// TODO: Enable Kafka once integration working
 // Setup Kafka Client
 export const kafkaClient: KafkaClient = new KafkaClient(kafkaConfig);
 try {
@@ -130,7 +133,6 @@ async function shutdown(code: number = 0) {
     await kafkaClient.disconnect();
   } catch (err) {
     console.error("Error during shutdown of collab-service:", err);
-    process.exit(1)
   }
 
   process.exit(code);
@@ -139,5 +141,3 @@ async function shutdown(code: number = 0) {
 // Handles exit signals - Termination, Interrupt
 process.on('SIGTERM', () => shutdown());
 process.on('SIGINT', () => shutdown());
-
-
