@@ -61,7 +61,6 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
       return;
     }
     console.log(`Connecting to collab session ${roomname} as user ${userId}`);
-    // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
     const provider = new WebsocketProvider('/api/collab', roomname, ydoc, {
       params: { sessionId: roomname, userId },
     });
@@ -82,13 +81,14 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
       }
     });
   
-    // const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
-    // const userColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; // assign a random color
+    const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
+    const userColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; // assign a random color
 
-    // provider.awareness.setLocalStateField('user', {
-    //     name: userName,
-    //     color: userColor,
-    // });
+    provider.awareness.setLocalStateField('user', {
+        name: userName,
+        color: userColor,
+    });
+    
     setWebsocketProvider(provider);
     return () => {
       provider?.destroy();
