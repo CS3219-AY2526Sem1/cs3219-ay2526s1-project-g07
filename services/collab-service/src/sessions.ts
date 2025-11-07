@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // In-memory store of authorised rooms and their matched users (FROM KAFKA)
 const sessions: Map<string, Map<string, string>> = new Map();
-sessions.set("dummy-session-id", 
+sessions.set("dummyId", 
   new Map([
     ["user1", "user1"], 
     ["user2", "user2"],

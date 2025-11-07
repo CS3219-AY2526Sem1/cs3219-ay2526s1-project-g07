@@ -10,18 +10,25 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
   }
 
   if (room.has(userId)) {
-    room.get(userId)?.close(); // Disconnect existing connection for the same user
+    const oldSocket = room.get(userId);
+    console.log(`User ${userId} already in room ${sessionId}, replacing existing connection`);
+    if (oldSocket) {
+      oldSocket.close(4001, "Duplicate user session"); // Disconnect existing connection for the same user
+    }
   }
 
   console.log(`Adding user ${userId} to room ${sessionId}`);
   room.set(userId, ws);
-  
-  // console.log('Current active rooms:', activeRooms);
+
+  console.log('Current active rooms:', Array.from(activeRooms.keys()));
 };
 
 export const removeActiveRoom = (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (room) {
+    // not needed as removeActiveRoom is called on 'close' event
+    // const socket = room.get(userId);
+    // socket?.close();
     room.delete(userId);
     if (room.size === 0) {
       activeRooms.delete(sessionId);
@@ -32,6 +39,10 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
     console.log(`Removed user ${userId} from room ${sessionId}`);
   }
 };
+
+export const getActiveRooms = () => {
+  return activeRooms;
+}
 
 // Active Room management logic (max 2 users per room) --> might not be needed
 export const getActiveRoom = (sessionId: string) => {
