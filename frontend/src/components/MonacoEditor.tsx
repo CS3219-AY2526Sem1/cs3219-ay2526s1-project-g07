@@ -79,7 +79,7 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
     });
 
     provider.on('status', event => {
-      console.log(event.status) // logs "connected" or "disconnected"
+      console.log(event.status); // logs "connected" or "disconnected"
     });
 
     provider.on('connection-close', event => {
