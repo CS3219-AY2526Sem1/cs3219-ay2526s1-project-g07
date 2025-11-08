@@ -44,6 +44,8 @@ interface PythonMonacoEditorProps {
 }
 
 const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+// 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
+const MAX_COLOR_VALUE = 0xFFFFFF;
 
 function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
@@ -96,10 +98,7 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
       }
     });
   
-    // 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
-    const MAX_COLOR_VALUE = 0xFFFFFF;
-
-    const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
+    const userName = `User-${userId.substring(0, 5)}`; // userId from betterAuth session
     const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE).toString(16).padStart(6, '0')}`; // assign a random color
 
     provider.awareness.setLocalStateField('user', {
