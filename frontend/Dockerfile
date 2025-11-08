@@ -11,12 +11,12 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable
 
-# Copy shared folder from root (build context must be root directory)
-COPY shared ./shared
-
 # Copy config files first for better caching
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
+
+# Copy shared folder from root (build context must be root directory)
+COPY shared ../shared
 
 # Copy application files
 COPY frontend/biome.json frontend/components.json frontend/postcss.config.mjs frontend/rsbuild.config.ts frontend/tsconfig.json ./

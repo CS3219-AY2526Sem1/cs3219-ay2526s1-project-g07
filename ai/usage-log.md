@@ -9267,12 +9267,181 @@ The CI build should now succeed! 🎉
 
 ### Action Taken
 
+- [ ] Accepted as-is
+- [x] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Tried to build container locally, but didnt work yet
+- Tested the updates in CI
+
+---
+
+## request_983d0504-9970-47c3-bc32-6d6f556e35fd
+
+**Participant:** jiakai-17
+**Assistant:** GitHub Copilot
+
+### Participant
+
+I think you did it wrong. The copied folder structure should be like:
+
+- shared
+- frontend
+==> package.json
+
+the error still persists. Because shared is in the same level as package.json and the stuff in the frontend folder.
+
+### Assistant
+
+<details>
+  <summary>Used 2 references</summary>
+  <p>☰ tools.instructions.md<br>☰ instructionsList</p>
+</details>
+
+
+
+You're absolutely right! I misunderstood the directory structure. The
+ folder should be copied at the same level as the frontend files, not at the app root. Let me fix this:
+
+Now I see the issue! The structure inside `/app` should be:
+
+```
+/app/
+  shared/
+  package.json
+  src/
+  ...
+```
+
+So the imports `../../../shared/ws-events` work correctly (going up from `src/hooks/` to the app root where
+ is). Let me fix this:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 11-25:</strong></p>
+
+```
+# Install pnpm
+RUN corepack enable
+
+# Copy config files first for better caching
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm i --frozen-lockfile
+
+# Copy shared folder from root (build context must be root directory)
+# This creates /app/shared/ so imports like ../../../shared/ws-events work
+COPY shared ../shared
+
+# Copy application files
+COPY frontend/biome.json frontend/components.json frontend/postcss.config.mjs frontend/rsbuild.config.ts frontend/tsconfig.json ./
+COPY frontend/components ./components/
+COPY frontend/lib ./lib/
+COPY frontend/src ./src/
+```
+
+</details>
+
+Now let me fix the matching-service Dockerfile similarly:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 9-24:</strong></p>
+
+```
+FROM base AS builder
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY services/matching-service/package*.json ./
+
+# Install all dependencies (including dev dependencies for ts-node)
+RUN npm ci
+
+# Copy shared folder from root (build context must be root directory)
+# This creates /shared/ (parent of /app) so imports like ../../../shared/ws-events work
+COPY shared ../shared/
+
+# Copy source code
+COPY services/matching-service/src ./src/
+COPY services/matching-service/tsconfig.json ./
+```
+
+</details>
+
+Now I need to also copy the shared folder in the runner stage for matching-service:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 38-48:</strong></p>
+
+```
+# Copy package.json for npm scripts
+COPY --from=builder --chown=matchinguser:nodejs /app/package*.json ./
+
+# Install only production dependencies and ts-node (needed for runtime)
+RUN npm ci --only=production && npm install ts-node typescript
+
+# Copy shared folder from builder
+COPY --from=builder --chown=matchinguser:nodejs /shared ../shared/
+
+# Copy source code
+COPY --from=builder --chown=matchinguser:nodejs /app/src ./src/
+COPY --from=builder --chown=matchinguser:nodejs /app/tsconfig.json ./
+
+USER matchinguser
+```
+
+</details>
+
+Perfect! Now the structure will be correct:
+
+**Frontend structure in Docker:**
+
+```
+/app/
+  package.json
+  src/
+    hooks/
+      matching-ws-hooks.ts  <-- imports from '../../../shared/ws-events'
+  ...
+/shared/  <-- accessible via ../../../shared from /app/src/hooks/
+  ws-events.ts
+  types/
+    matching-types.ts
+```
+
+**Matching-service structure in Docker:**
+
+```
+/app/
+  package.json
+  src/
+    matching-ws.ts  <-- imports from '../../../shared/ws-events'
+  ...
+/shared/  <-- accessible via ../../../shared from /app/src/
+  ws-events.ts
+  kafka-topics.ts
+  types/
+    matching-types.ts
+```
+
+The changes ensure that when the code does `import ... from '../../../shared/...'`, it correctly resolves to the shared folder that's been copied to the parent directory of the app folder.
+
+> *Response time: 48.08 seconds*
+> <br>*Model: claude-sonnet-4.5*
+> <br>*Timestamp: 2025-11-08 20:25:54 (GMT+8)*
+
+### Action Taken
+
 - [x] Accepted as-is
 - [ ] Modified
 - [ ] Rejected
 
 ### Author Notes
 
-- Tested the updates in CI
+- Tried the docker build locally, works as expected
 
 ---
