@@ -1,6 +1,8 @@
 // Keep track of connected clients per session
 const activeRooms = new Map<string, Map<string, WebSocket>>(); // sessionId → Map of userIds to their WebSocket connections (max 2 users in one room)
 
+const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+
 export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) => {
   let room = activeRooms.get(sessionId);
   if (!room) {
@@ -13,7 +15,7 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
     const oldSocket = room.get(userId);
     console.log(`User ${userId} already in room ${sessionId}, replacing existing connection`);
     if (oldSocket) {
-      oldSocket.close(4001, "Duplicate user session"); // Disconnect existing connection for the same user
+      oldSocket.close(DUPLICATE_SESSION_CLOSE_CODE, "Duplicate user session"); // Disconnect existing connection for the same user
     }
   }
 
