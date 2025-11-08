@@ -10,7 +10,7 @@ import { WebSocketServer } from "ws";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
-import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom, getActiveRooms, removeActiveRoom } from "./rooms.js";
+import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
 import rooms from "./routes/room.js";
 
 declare module "ws" {
@@ -102,7 +102,7 @@ server.on("upgrade", (request, socket, head) => {
     addActiveRoom(ws.sessionId, ws.userId, ws as any);
 
     wss.emit('connection', ws, request);
-  })
+  });
 });
 
 

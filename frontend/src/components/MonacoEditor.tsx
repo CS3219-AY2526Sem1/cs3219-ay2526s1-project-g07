@@ -43,6 +43,8 @@ interface PythonMonacoEditorProps {
   sessionId: string;
 }
 
+const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+
 function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [codeEditor, setCodeEditor] =
@@ -81,7 +83,7 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
     provider.on('connection-close', event => {
       // code 4001 indicates disconnection due to duplicate user session
       const code = event?.code;
-      if (code === 4001) { 
+      if (code === DUPLICATE_SESSION_CLOSE_CODE) {
         console.log(`Disconnected by server (Code ${code}): ${event?.reason ?? ''}`);
         alert("Disconnected: Another session logged in with the same user.");
         
@@ -94,8 +96,11 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
       }
     });
   
+    // 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
+    const MAX_COLOR_VALUE = 0xFFFFFF;
+
     const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
-    const userColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; // assign a random color
+    const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE).toString(16).padStart(6, '0')}`; // assign a random color
 
     provider.awareness.setLocalStateField('user', {
         name: userName,
