@@ -39,4 +39,4 @@ COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
 USER hono
 EXPOSE 5005
 
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "start"]
