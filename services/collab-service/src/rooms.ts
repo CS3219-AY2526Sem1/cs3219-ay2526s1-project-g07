@@ -61,7 +61,7 @@ export const disconnectSocketFromRoom = (sessionId: string, userId: string, ws: 
 
 export const getActiveRooms = () => {
   return activeRooms;
-}
+};
 
 // Active Room management logic (max 2 users per room) --> might not be needed
 export const getActiveRoom = (sessionId: string) => {

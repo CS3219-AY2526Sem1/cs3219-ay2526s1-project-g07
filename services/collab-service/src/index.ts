@@ -76,7 +76,7 @@ wss.on("connection", (ws, request) => {
 
 server.on("upgrade", (request, socket, head) => {
   console.log("Upgrade request received, Host:", request.headers.host, "URL:", request.url);
-  const url= new URL(request.url || "", `http://${request.headers.host}`);
+  const url = new URL(request.url || "", `http://${request.headers.host}`);
   const collabSessionId = url.searchParams.get("sessionId");
   const userId = url.searchParams.get("userId");
 
