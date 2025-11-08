@@ -23,6 +23,7 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
   console.log('Current active rooms:', Array.from(activeRooms.keys()));
 };
 
+// Removes a specific user from a room
 export const removeActiveRoom = (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (room) {
@@ -36,6 +37,25 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
       // removeSession(sessionId);
     }
     console.log(`Removed user ${userId} from room ${sessionId}`);
+  }
+};
+
+// Removes a specific user from a room only if the current WebSocket is disconnected
+export const disconnectSocketFromRoom = (sessionId: string, userId: string, ws: WebSocket) => {
+  const room = activeRooms.get(sessionId);
+  if (room) {
+    const socket = room.get(userId);
+    if (socket === ws) {
+      socket.close();
+      room.delete(userId);
+      if (room.size === 0) {
+        activeRooms.delete(sessionId);
+
+        // Clean up empty session (Optional for now)
+        // removeSession(sessionId);
+      }
+      console.log(`Removed user socket of ${userId} from room ${sessionId}`);
+    }
   }
 };
 

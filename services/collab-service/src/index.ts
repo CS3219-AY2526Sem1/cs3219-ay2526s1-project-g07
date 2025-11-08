@@ -10,7 +10,7 @@ import { WebSocketServer } from "ws";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
-import { addActiveRoom, getActiveRoom, getActiveRooms, removeActiveRoom } from "./rooms.js";
+import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom, getActiveRooms, removeActiveRoom } from "./rooms.js";
 import rooms from "./routes/room.js";
 
 declare module "ws" {
@@ -69,7 +69,8 @@ wss.on("connection", (ws, request) => {
   ws.on("close", () => {
     // Clean up when user disconnects
     console.log(`User ${ ws.userId } disconnected from session ${ ws.sessionId }`);
-    // removeActiveRoom( ws.sessionId, ws.userId );
+    disconnectSocketFromRoom(ws.sessionId, ws.userId, ws as any); // Clean up user from active rooms after disconnect
+    console.log('Current active users after disconnect:', Array.from(getActiveRoom(ws.sessionId)?.keys() || []));
   });
 });
 
