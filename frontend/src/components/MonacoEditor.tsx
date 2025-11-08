@@ -13,6 +13,7 @@ import { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { useSession } from "@/lib/auth-client";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 /** Monaco Editor options
  * See: https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -42,6 +43,12 @@ interface PythonMonacoEditorProps {
   sessionId: string;
 }
 
+interface ActiveUser {
+  clientId?: number;
+  name: string;
+  color: string;
+}
+
 const DUPLICATE_SESSION_CLOSE_CODE = 4001;
 // 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
 const MAX_COLOR_VALUE = 0xffffff;
@@ -56,9 +63,14 @@ function PythonMonacoEditor({
     useState<editor.IStandaloneCodeEditor | null>(null);
   const [websocketProvider, setWebsocketProvider] =
     useState<WebsocketProvider | null>(null);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
 
   const userId = useSession().data?.user?.id || "user1";
+  const userName = useSession().data?.user?.name || "User";
   const roomname = sessionId;
+  const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
+  .toString(16)
+  .padStart(6, "0")}`; // assign a random color
 
   // Clean up Yjs document on unmount
   useEffect(() => {
@@ -107,12 +119,8 @@ function PythonMonacoEditor({
       }
     });
 
-    const userName = `User-${userId.substring(0, 5)}`; // userId from betterAuth session
-    const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
-      .toString(16)
-      .padStart(6, "0")}`; // assign a random color
-
     provider.awareness.setLocalStateField("user", {
+      userId: userId,
       name: userName,
       color: userColor,
     });
@@ -151,13 +159,26 @@ function PythonMonacoEditor({
     const awareness = websocketProvider.awareness;
     const STYLE_ID = "yjs-awareness-styles";
 
-    const updateStyles = (currentAwareness: any) => {
+    const updateUIElements = () => {
+      const usersForBar: ActiveUser[] = [];
+      const userIdSet = new Set<number>();
       let styles = "";
 
       // Loop through all connected users' awareness states
-      for (const [clientId, state] of currentAwareness.getStates()) {
-        const user = state?.user as { name: string; color: string } | undefined;
-
+      for (const [clientId, state] of awareness.getStates()) {
+        const user = state?.user as { userId: number; name: string; color: string } | undefined;
+        if (user) {
+          // Logic for the User Bar (updates React state)
+          if (userIdSet.has(user.userId)) {
+            continue; // skip duplicate userId
+          }
+          userIdSet.add(user.userId);
+          usersForBar.push({
+            clientId,
+            name: user.name,
+            color: user.color,
+          });
+        }
         if (user?.color) {
           // y-monaco automatically generates classes with the clientID
           styles += `
@@ -184,6 +205,9 @@ function PythonMonacoEditor({
         `;
         }
       }
+      console.log("Active users updated:", usersForBar);  
+      console.log('user set'  , userIdSet);
+      setActiveUsers(usersForBar);
 
       // Inject the CSS into the document
       let styleTag = document.getElementById(
@@ -198,11 +222,11 @@ function PythonMonacoEditor({
     };
 
     // Listen for any changes in remote awareness (user joins, leaves, or updates state)
-    awareness.on("change", () => updateStyles(awareness));
-    updateStyles(awareness); // Run once to set initial styles
+    awareness.on("change", updateUIElements);
+    updateUIElements(); // Run once to set initial styles
 
     return () => {
-      awareness.off("change", () => updateStyles(awareness));
+      awareness.off("change", updateUIElements);
       // Clean up the style tag on component unmount
       document.getElementById(STYLE_ID)?.remove();
     };
@@ -229,18 +253,31 @@ function PythonMonacoEditor({
   }, []);
 
   return (
-    <div className="h-[calc(100%-44px)]">
-      <Editor
-        width="100%"
-        height="100%"
-        language="python"
-        theme="vs-dark"
-        value={code}
-        onChange={handleCodeChange}
-        onMount={handleEditorMount}
-        options={monacoEditorOptions}
-      />
-    </div>
+    <>
+      <div className="user-bar" style={{ display: "flex", gap: "2px", margin: "4px", justifyContent: "flex-end" }}>
+        {activeUsers.map((user) => (
+          <Avatar key={user.clientId} title={user.name}>
+              <AvatarFallback 
+                  style={{ backgroundColor: user.color, color: 'white' }}
+              >
+                  {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+          </Avatar>
+        ))}
+      </div>
+      <div className="h-[calc(100%-88px)]">
+        <Editor
+          width="100%"
+          height="100%"
+          language="python"
+          theme="vs-dark"
+          value={code}
+          onChange={handleCodeChange}
+          onMount={handleEditorMount}
+          options={monacoEditorOptions}
+        />
+      </div>
+    </>
   );
 }
 
