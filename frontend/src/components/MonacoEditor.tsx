@@ -88,6 +88,10 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
         // Stop the reconnection loop for this provider instance
         provider.shouldConnect = false; 
       }
+      else if (provider.ws?.readyState === WebSocket.CLOSED) {
+        console.log(`Disconnected by server (Code ${code}): ${event?.reason ?? ''}`);
+        alert("Connection failed: You may be unauthorized to join this collaboration session.");
+      }
     });
   
     const userName = `User-${userId.substring(0, 5)}`; // e.g., a real user's name
