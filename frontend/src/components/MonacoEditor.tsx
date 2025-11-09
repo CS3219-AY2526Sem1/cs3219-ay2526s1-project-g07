@@ -43,6 +43,10 @@ interface PythonMonacoEditorProps {
   sessionId: string;
 }
 
+const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+// 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
+const MAX_COLOR_VALUE = 0xFFFFFF;
+
 function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEditorProps) {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [codeEditor, setCodeEditor] =
@@ -50,24 +54,63 @@ function PythonMonacoEditor({ code, onCodeChange, sessionId }: PythonMonacoEdito
   const [websocketProvider, setWebsocketProvider] =
     useState<WebsocketProvider | null>(null);
 
-  // for testing purposes, use a fixed userId
-  const userId = "user1"; // authorised user
-  // const userid = 'user3'; // unauthorized user
-  
-  // const userId = useSession().data?.user?.id || '';
+  const userId = useSession().data?.user?.id || "user1";
   const roomname = sessionId;
 
-  // // this effect manages the lifetime of the Yjs document and the provider
+  // Clean up Yjs document on unmount
   useEffect(() => {
-    // const provider = new WebsocketProvider(`/api/collab?sessionId=${roomname}&userId=${userId}`, roomname, ydoc);
+    return () => {
+      console.log("Cleaning up ydoc on unmount");
+      ydoc.destroy();
+    };
+  }, []);
+
+  // this effect manages the lifetime of the provider
+  useEffect(() => {
+    
+    if (!userId || !roomname) {
+      console.warn("Missing userId or roomname, cannot connect to collab session.");
+      return;
+    }
+
     console.log(`Connecting to collab session ${roomname} as user ${userId}`);
-    const provider = new WebsocketProvider('/api/collab', roomname, ydoc, { params: { sessionId: roomname, userId } });
+    const provider = new WebsocketProvider('/api/collab', roomname, ydoc, {
+      params: { sessionId: roomname, userId },
+    });
+
+    provider.on('status', event => {
+      console.log(event.status); // logs "connected" or "disconnected"
+    });
+
+    provider.on('connection-close', event => {
+      // code 4001 indicates disconnection due to duplicate user session
+      const code = event?.code;
+      if (code === DUPLICATE_SESSION_CLOSE_CODE) {
+        console.log(`Disconnected by server (Code ${code}): ${event?.reason ?? ''}`);
+        alert("Disconnected: Another session logged in with the same user.");
+        
+        // Stop the reconnection loop for this provider instance
+        provider.shouldConnect = false; 
+      }
+      else if (provider.ws?.readyState === WebSocket.CLOSED) {
+        console.log(`Disconnected by server (Code ${code}): ${event?.reason ?? ''}`);
+        alert("Connection failed: You may be unauthorized to join this collaboration session.");
+      }
+    });
+  
+    const userName = `User-${userId.substring(0, 5)}`; // userId from betterAuth session
+    const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE).toString(16).padStart(6, '0')}`; // assign a random color
+
+    provider.awareness.setLocalStateField('user', {
+        name: userName,
+        color: userColor,
+    });
+    
     setWebsocketProvider(provider);
     return () => {
       provider?.destroy();
-      ydoc.destroy();
     };
-  }, [ydoc]);
+  }, [ydoc, userId, roomname]);
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
