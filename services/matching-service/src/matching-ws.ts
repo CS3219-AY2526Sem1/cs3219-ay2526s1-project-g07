@@ -1,7 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { Matcher } from './matcher.ts';
-import { WS_EVENTS_MATCHING } from '../../../shared/ws-events.ts'
-import type { UserMatchingRequest, UserId } from '../../../shared/types/matching-types.ts';
+import { Matcher } from './matcher';
+import { WS_EVENTS_MATCHING } from '../../../shared/ws-events'
+import type { UserId } from '../../../shared/types/matching-types';
 
 export class MatchingWS {
   private io: SocketIOServer;
@@ -23,7 +23,9 @@ export class MatchingWS {
     });
   }
 
-  private async HandleConnectionInterrupt(userId: UserId) {
+  private async HandleConnectionInterrupt(userId: UserId | undefined): Promise<void> {
+    if (!userId) return Promise.resolve();
+    console.log(`Handling connection interrupt for user ${userId.id}`);
     await this.matcher.dequeue(userId);
   }
 
@@ -32,12 +34,13 @@ export class MatchingWS {
       socket.emit(WS_EVENTS_MATCHING.ERROR, 'JOIN event missing userId');
       return;
     }
+
     socket.userId = userId;
     socket.join(`user_${userId.id}`);
     console.log(`User ${userId.id} joined with socket ${socket.id}`);
   }
 
-  private OnClientDisconnect = (socket: CustomSocket, reason: string) => {
+  private OnClientDisconnect = async (socket: CustomSocket, reason: string) => {
     console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
 
     // Clean up event listeners
@@ -47,14 +50,14 @@ export class MatchingWS {
 
     // Clean up user from matching queue if they disconnect
     if (socket.userId) {
-      this.HandleConnectionInterrupt(socket.userId);
+      await this.HandleConnectionInterrupt(socket.userId);
       console.log(`Removed user ${socket.userId.id} from matching queue due to disconnection`);
     }
   }
 
-  private OnError = (socket: CustomSocket, error: any) => {
-    this.HandleConnectionInterrupt(socket.userId);
+  private OnError = async (socket: CustomSocket, error: any) => {
     console.error('WebSocket error:', error);
+    await this.HandleConnectionInterrupt(socket.userId);
   }
 }
 

@@ -7,7 +7,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "npx jasmine --require=ts-node/register"
+    "test": "npx jasmine --require=ts-node/register",
+    "docker:build:matching-service": "docker build -t peerprep-matching -f services/matching-service/Dockerfile .",
+    "docker:build:redis": "docker build -t peerprep-redis -f redis/Dockerfile ."
   },
   "repository": {
     "type": "git",
@@ -25,7 +27,6 @@
     "@types/jasmine": "^5.1.9",
     "dotenv": "^17.2.3",
     "jasmine": "^5.12.0",
-    "redis": "^5.9.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

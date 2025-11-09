@@ -1,4 +1,4 @@
-import type { UserMatchingRequest } from "../../../shared/types/matching-types.ts";
+import type { UserMatchingRequest } from "../../../shared/types/matching-types";
 
 export class MatchCriteria {
   static isMatch(firstUser: UserMatchingRequest, potentialMatch: UserMatchingRequest): boolean {

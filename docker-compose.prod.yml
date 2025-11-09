@@ -23,6 +23,21 @@ services:
     networks:
       - app-network
 
+  matching-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-matching-service:latest
+    container_name: matching-service
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4000
+      - HOST_URL=http://localhost:3000
+      - WS_PORT=http://localhost:5000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "5006:5006"
+    networks:
+      - app-network
+
   frontend:
     image: ghcr.io/cs3219-ay2526sem1/g07-frontend:latest
     container_name: frontend
@@ -31,6 +46,14 @@ services:
     depends_on:
       - collab-service
       - ai-service
+    networks:
+      - app-network
+
+  redis:
+    image: ghcr.io/cs3219-ay2526sem1/g07-redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
     networks:
       - app-network
 

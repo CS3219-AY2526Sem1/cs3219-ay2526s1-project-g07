@@ -1,13 +1,12 @@
 import { Server as SocketIOServer } from "socket.io";
-import { MatchingWS } from "../src/matching-ws.ts";
-import { Matcher } from "../src/matcher.ts";
+import { MatchingWS } from "../src/matching-ws";
+import { Matcher } from "../src/matcher";
 import { io as Client } from "socket.io-client";
-import { WS_EVENTS_MATCHING } from "../../../shared/ws-events.ts";
+import { WS_EVENTS_MATCHING } from "../../../shared/ws-events";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
-import type { UserId } from "../../../shared/types/matching-types.ts";
-import redis from 'redis';
-import { RedisClient } from "../../../redis/client.ts";
+import type { UserId } from "../../../shared/types/matching-types";
+import { RedisClient } from '../../../redis/src/client';
 
 let io: SocketIOServer;
 let matcher: Matcher;
@@ -15,12 +14,13 @@ let matchingWS: MatchingWS;
 let clientSocket: ReturnType<typeof Client>;
 let httpServer: ReturnType<typeof createServer>;
 const TEST_WEBSOCKET_PORT = 5000;
-let redisClient: redis.RedisClientType;
+let redisClient: RedisClient;
 
 async function init(): Promise<void> {
   httpServer = createServer();
   io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
-  redisClient = await RedisClient.createClient() as redis.RedisClientType;
+  redisClient = new RedisClient();
+  await redisClient.init();
 
   // Resolve once server is listening
   await new Promise<void>((resolve) => {
@@ -30,6 +30,12 @@ async function init(): Promise<void> {
   const port = (httpServer.address() as AddressInfo).port;
 
   matcher = new Matcher(redisClient);
+
+  function mockSetInterval() {
+    return 1;
+  }
+  // Mock setInterval to prevent actual intervals during tests
+  spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
   matchingWS = new MatchingWS(io, matcher);
   matchingWS.init();
 
@@ -44,8 +50,11 @@ async function init(): Promise<void> {
 }
 
 async function cleanup(): Promise<void> {
+  io.removeAllListeners();
+  clientSocket.removeAllListeners();
   clientSocket.close();
   io.close();
+  await matcher.cleanUp();
   await new Promise((resolve) => httpServer.close(resolve));
 }
 

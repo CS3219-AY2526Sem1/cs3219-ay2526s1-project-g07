@@ -1,6 +1,6 @@
 import type { KafkaMessage } from "kafkajs";
-import { Matcher } from "./matcher.ts";
-import { TOPICS_MATCHING } from "../../../shared/kafka-topics.ts";
+import { Matcher } from "./matcher";
+import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 
 export class ConsumerMessageHandler {
   matcher: Matcher;

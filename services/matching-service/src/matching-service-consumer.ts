@@ -1,6 +1,6 @@
 import { Kafka, type Consumer } from 'kafkajs';
-import { TOPICS_MATCHING } from '../../../shared/kafka-topics.ts';
-import { ConsumerMessageHandler } from './consumer-message-handler.ts';
+import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
+import { ConsumerMessageHandler } from './consumer-message-handler';
 
 export class MatchingServiceConsumer {
   consumer: Consumer;
