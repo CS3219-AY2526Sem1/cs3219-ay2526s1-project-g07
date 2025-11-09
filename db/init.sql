@@ -7,7 +7,8 @@ CREATE TABLE "user" (
   "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   "description" TEXT,
-  "role" TEXT
+  "role" TEXT,
+  "profileImage" TEXT
 );
 
 CREATE TABLE "session" (
@@ -61,3 +62,5 @@ create table "question" (
   "difficulty" text not null,
   "topics" text[] 
 )
+
+

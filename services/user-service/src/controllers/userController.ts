@@ -31,6 +31,7 @@ userController.get("/getUserData/:userId", async (c: Context) => {
       userId: userData.id,
       name: userData.name,
       description: userData.description,
+      profileImage: userData.profileImage,
     })
   } catch (error) {
     console.error('Error in getUserData:', error)
@@ -48,7 +49,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
 
   try {
     const body = await c.req.json()
-    const { name, description } = body
+    const { name, description, profileImage } = body
     console.log(body)
 
     // Validate required fields
@@ -57,8 +58,8 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
     }
 
     // Update user data
-    await userService.updateUserData(userId, { name, description })
-
+    await userService.updateUserData(userId, { name, description, profileImage })
+    
     // Return updated data
     const updatedUserData = await userService.getUserData(userId)
 
@@ -67,6 +68,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
       userId: updatedUserData?.id,
       name: updatedUserData?.name,
       description: updatedUserData?.description,
+      profileImage: updatedUserData?.profileImage,
     })
   } catch (error) {
     console.error('Error in updateUserData:', error)
@@ -122,6 +124,33 @@ userController.patch("/:userId/role", async (c: Context) => {
     })
   } catch (error) {
     console.error('Error in updateUserRole:', error)
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
+userController.get("/checkAdmin/:userId", async (c: Context) => {
+  console.log("Checking admin status for user ID:", c.req.param('userId'))
+  const userId = c.req.param('userId')
+  
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400)
+  }
+
+  try {
+    const userData = await userService.getUserData(userId)
+    
+    if (!userData) {
+      return c.json({ error: "User not found" }, 404)
+    }
+
+    const isAdmin = userData.role === 'admin'
+    
+    return c.json({
+      isAdmin,
+      role: userData.role || 'user',
+    })
+  } catch (error) {
+    console.error('Error in checkAdmin:', error)
     return c.json({ error: "Internal server error" }, 500)
   }
 })

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestRouteImport } from './routes/test'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedRouteImport } from './routes/protected'
 import { Route as LoginRouteImport } from './routes/login'
@@ -23,6 +24,11 @@ import { Route as AdminQuestionsIndexRouteImport } from './routes/admin/question
 import { Route as AdminQuestionsAddRouteImport } from './routes/admin/questions/add'
 import { Route as AdminQuestionsQuestionIdRouteImport } from './routes/admin/questions/$questionId'
 
+const TestRoute = TestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
+  '/test': typeof TestRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile': typeof ProfileIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
+  '/test': typeof TestRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile': typeof ProfileIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/protected': typeof ProtectedRoute
   '/signup': typeof SignupRoute
+  '/test': typeof TestRoute
   '/admin/users': typeof AdminUsersRoute
   '/collab/$sessionId': typeof CollabSessionIdRoute
   '/profile/': typeof ProfileIndexRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
+    | '/test'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
+    | '/test'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/protected'
     | '/signup'
+    | '/test'
     | '/admin/users'
     | '/collab/$sessionId'
     | '/profile/'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProtectedRoute: typeof ProtectedRoute
   SignupRoute: typeof SignupRoute
+  TestRoute: typeof TestRoute
   AdminUsersRoute: typeof AdminUsersRoute
   CollabSessionIdRoute: typeof CollabSessionIdRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
@@ -202,6 +215,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test': {
+      id: '/test'
+      path: '/test'
+      fullPath: '/test'
+      preLoaderRoute: typeof TestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProtectedRoute: ProtectedRoute,
   SignupRoute: SignupRoute,
+  TestRoute: TestRoute,
   AdminUsersRoute: AdminUsersRoute,
   CollabSessionIdRoute: CollabSessionIdRoute,
   ProfileIndexRoute: ProfileIndexRoute,
