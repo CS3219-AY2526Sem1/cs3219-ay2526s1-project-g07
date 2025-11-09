@@ -30,7 +30,7 @@ export class MatchingServiceProducer {
 
   private async handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId, preferences } = match;
-    await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), preferences);
+    await this.produceMatchingSuccess(firstUserId.id, secondUserId.id, preferences);
   }
 
   private async produceMatchingSuccess(userId: string, peerId: string, preferences: MatchPreference) {
