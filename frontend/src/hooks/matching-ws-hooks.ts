@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { WS_EVENTS_MATCHING } from '../../../shared/ws-events';
 import type { UserId } from '../../../shared/types/matching-types';
-import type { UserMatchingRequest, MatchFoundData } from '../../../shared/types/matching-types';
+import type { MatchFoundData } from '../../../shared/types/matching-types';
 
 export const useMatchingWebSocket = (
   serverUrl: string = 'http://localhost:4000'

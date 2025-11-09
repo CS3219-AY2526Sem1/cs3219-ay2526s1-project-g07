@@ -45,6 +45,7 @@ function RouteComponent() {
   const [matchingSuccess, setMatchingSuccess] = useState<string | null>(null);
   redirectIfNotAuthenticated();
   const { user, isPending } = useCurrentUser();
+  const MATCHING_SERVICE_WS_URL = import.meta.env.VITE_MATCHING_SERVICE_WS_URL || 'http://localhost:4000';
 
   // WebSocket integration
   const {
@@ -54,7 +55,7 @@ function RouteComponent() {
     matchData,
     error: wsError,
     joinUser,
-  } = useMatchingWebSocket();
+  } = useMatchingWebSocket(MATCHING_SERVICE_WS_URL);
 
   // Join WebSocket when user is connected
   useEffect(() => {
