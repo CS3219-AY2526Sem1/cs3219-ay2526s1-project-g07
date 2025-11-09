@@ -37,7 +37,7 @@ const app = new Hono();
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80"], 
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80"],
   allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
   exposeHeaders: ["Content-Length", "Set-Cookie"],
@@ -75,7 +75,7 @@ wss.on("connection", (ws, request) => {
   setupWSConnection(ws, request, {docName: ws.sessionId});
 
   ws.on('error', console.error);
-  
+
   ws.on('message', () => {
     const room = getActiveRoom(ws.sessionId);
     console.log('users', Array.from(room?.keys() || []));
