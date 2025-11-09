@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑10‑24
+Scope: Generated implementation of the Rooms.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
+
 // Keep track of connected clients per session
 const activeRooms = new Map<string, Map<string, WebSocket>>(); // sessionId → Map of userIds to their WebSocket connections (max 2 users in one room)
 

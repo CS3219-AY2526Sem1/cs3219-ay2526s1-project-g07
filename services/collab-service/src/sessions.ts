@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑10‑24
+Scope: Generated implementation of the Sessions.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
+
 import { v4 as uuidv4 } from 'uuid';
 
 // In-memory store of authorised rooms and their matched users (FROM KAFKA)
