@@ -41,7 +41,7 @@ function RouteComponent() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:5002/user/getAllUsers", {
+      const response = await fetch("/api/user/getAllUsers", {
         credentials: "include",
       });
 
@@ -74,7 +74,7 @@ function RouteComponent() {
     try {
       setUpdatingUserId(userId);
       const response = await fetch(
-        `http://localhost:5002/user/${userId}/role`,
+        `/api/user/${userId}/role`,
         {
           method: "PATCH",
           headers: {
