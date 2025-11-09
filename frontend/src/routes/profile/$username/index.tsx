@@ -50,6 +50,7 @@ function RouteComponent() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = async () => {
+    console.log("hello")
     setIsLoading(true)
 
     try {

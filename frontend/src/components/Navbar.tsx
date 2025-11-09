@@ -16,7 +16,7 @@ const navbarLinks = [
   { name: "Profile", to: "/profile" },
   { name: "Questions", to: "/admin/questions" },
   { name: "Users", to: "/admin/users" },
-  { name: "Protected Route", to: "/protected" },
+  // { name: "Protected Route", to: "/protected" },
 ];
 
 function Navbar() {
