@@ -10,6 +10,6 @@ const route = new Hono();
 route.route("/normal", normalRoute);
 route.route("/protected", protectedRoute);
 route.route("/test", testRoute)
-route.route("/user/", userController) // just for testing purpose
+route.route("/", userController) // Mount at root since already under /api/user/
 
 export default route;
