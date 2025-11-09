@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import Navbar from "../../../components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
+import { redirectIfNotAuthenticated, useIsAdmin } from "@/src/hooks/user-hooks";
 
 interface Question {
   id: string;
@@ -25,12 +25,14 @@ export const Route = createFileRoute('/admin/questions/')({
 })
 
 function RouteComponent() {
+  redirectIfNotAuthenticated();
+  
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-  redirectIfNotAuthenticated();
 
   // Fetch questions from API
   useEffect(() => {
@@ -111,7 +113,22 @@ function RouteComponent() {
     }
   };
 
+  if (isAdminLoading) {
+    return (
+      <div>
+        <Navbar />
+        <div className="container mx-auto p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Checking permissions...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  if (!isAdmin) {
+    return <Navigate to="/home" />
+  }
 
   if (loading) {
     return (
