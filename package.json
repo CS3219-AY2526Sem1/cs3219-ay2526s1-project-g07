@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "npx jasmine --require=ts-node/register",
-    "docker:build:matching-service": "docker build -t peerprep-matching -f services/matching-service/Dockerfile ."
+    "docker:build:matching-service": "docker build -t peerprep-matching -f services/matching-service/Dockerfile .",
+    "docker:build:redis": "docker build -t peerprep-redis -f redis/Dockerfile ."
   },
   "repository": {
     "type": "git",
