@@ -10,3 +10,11 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
