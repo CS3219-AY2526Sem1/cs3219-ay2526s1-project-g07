@@ -1,7 +1,7 @@
 import { Kafka, type KafkaMessage, type Consumer } from 'kafkajs';
-import { TOPICS_MATCHING } from '../../../shared/kafka-topics.ts';
-import { MatchingServiceConsumer } from '../src/matching-service-consumer.ts';
-import { MockConsumerMessageHandler } from './mocks/mock-consumer-message-handler.ts';
+import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
+import { MatchingServiceConsumer } from '../src/matching-service-consumer';
+import { MockConsumerMessageHandler } from './mocks/mock-consumer-message-handler';
 
 describe('MatchingServiceConsumer', () => {
   let msConsumer: MatchingServiceConsumer;

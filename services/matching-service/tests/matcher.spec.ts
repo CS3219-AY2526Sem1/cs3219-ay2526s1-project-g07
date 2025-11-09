@@ -1,15 +1,15 @@
-import { Matcher } from '../src/matcher.ts';
-import { RedisClient } from '../../../redis/client.ts';
-import { type UserMatchingRequest } from '../../../shared/types/matching-types.ts';
-import redis from 'redis';
+import { Matcher } from '../src/matcher';
+import { type UserMatchingRequest } from '../../../shared/types/matching-types';
+import { RedisClient } from '../../../redis/src/client';
 
 describe('Matcher', () => {
   let matcher: Matcher;
-  let redisClient: redis.RedisClientType;
+  let redisClient: RedisClient;
   const cacheKey = Matcher.redisCacheKey;
 
   beforeAll(async () => {
-    redisClient = await RedisClient.createClient() as redis.RedisClientType;
+    redisClient = new RedisClient();
+    await redisClient.init();
   });
 
   beforeEach(async () => {
@@ -19,10 +19,9 @@ describe('Matcher', () => {
     // Mock setInterval to prevent actual intervals during tests
     spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
 
-    await redisClient.del(cacheKey);
+    await redisClient.instance.del(cacheKey);
 
     matcher = new Matcher(redisClient);
-
   });
 
   afterAll(async () => {
@@ -174,8 +173,8 @@ describe('Matcher', () => {
           timestamp: currentTimestamp,
         };
 
-        await redisClient.rPush(cacheKey, JSON.stringify(timedOutRequest));
-        await redisClient.rPush(cacheKey, JSON.stringify(validRequest));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(timedOutRequest));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest));
         await matcher['tryTimeOut']();
 
         expect(tryTimedOutSpy).toHaveBeenCalled();
@@ -198,8 +197,8 @@ describe('Matcher', () => {
           timestamp: currentTimestamp,
         };
 
-        await redisClient.rPush(cacheKey, JSON.stringify(validRequest1));
-        await redisClient.rPush(cacheKey, JSON.stringify(validRequest2));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest1));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest2));
         await matcher['tryTimeOut']();
         expect(tryTimedOutSpy).toHaveBeenCalled();
 

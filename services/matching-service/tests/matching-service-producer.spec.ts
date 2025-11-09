@@ -1,17 +1,16 @@
-import { MatchingServiceProducer } from "../src/matching-service-producer.ts";
+import { MatchingServiceProducer } from "../src/matching-service-producer";
 import { Kafka, type Producer } from 'kafkajs';
-import { MockMatcher } from "./mocks/mock-matcher.ts";
-import { TOPICS_MATCHING } from '../../../shared/kafka-topics.ts';
-import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types.ts';
-import redis from 'redis';
-import { RedisClient } from "../../../redis/client.ts";
+import { MockMatcher } from "./mocks/mock-matcher";
+import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
+import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types';
+import { RedisClient } from '../../../redis/src/client';
 
 describe('MatchingServiceProducer', () => {
   let msProducer: MatchingServiceProducer;
   let kafkaProducer: Producer;
   let mockMatcher: MockMatcher;
   const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
-  let redisClient: redis.RedisClientType;
+  let redisClient: RedisClient;
 
   // Mock Kafka instance
   const mockKafka = {
@@ -22,15 +21,18 @@ describe('MatchingServiceProducer', () => {
   } as unknown as Kafka;
 
   beforeAll(async () => {
-    redisClient = await RedisClient.createClient() as redis.RedisClientType;
+    redisClient = new RedisClient();
+    await redisClient.init();
+    return Promise.resolve();
   });
 
   afterAll(async () => {
     await redisClient.quit();
+    return Promise.resolve();
   });
 
   beforeEach(() => {
-    mockMatcher = new MockMatcher(redisClient);
+    mockMatcher = new MockMatcher();
     msProducer = new MatchingServiceProducer(mockKafka, mockMatcher);
     kafkaProducer = (msProducer as any).producer;
   });
