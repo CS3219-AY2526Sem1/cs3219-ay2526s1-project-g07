@@ -9,18 +9,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
 import { useSession } from "@/lib/auth-client";
+import { useIsAdmin, useProfileImage } from "@/src/hooks/user-hooks";
 
-const navbarLinks = [
+const baseNavbarLinks = [
   { name: "Home", to: "/home" },
   { name: "History", to: "/history" },
   { name: "Profile", to: "/profile" },
+];
+
+const adminNavbarLinks = [
   { name: "Questions", to: "/admin/questions" },
   { name: "Users", to: "/admin/users" },
-  { name: "Protected Route", to: "/protected" },
 ];
 
 function Navbar() {
-  const session = useSession()
+  const session = useSession();
+  const { isAdmin, isLoading } = useIsAdmin();
+  const { profileImage } = useProfileImage(session.data?.user?.id);
 
   const handleClick = async () => {
     await signOut({
@@ -49,6 +54,11 @@ function Navbar() {
     return 'U'
   }
 
+  // Combine base links with admin links if user is admin
+  const navbarLinks = isAdmin && !isLoading 
+    ? [...baseNavbarLinks, ...adminNavbarLinks]
+    : baseNavbarLinks;
+
   return (
     <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200 shrink-0">
       <div className="text-xl font-semibold ">PeerPrep</div>
@@ -70,7 +80,7 @@ function Navbar() {
           <DropdownMenuTrigger className="cursor-pointer">
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarImage src={session.data.user.image || "https://github.com/shadcn.png"} />
+                <AvatarImage src={profileImage || session.data.user.image || undefined} />
                 <AvatarFallback>
                   {getUserInitials(session.data.user.email, session.data.user.name)}
                 </AvatarFallback>
