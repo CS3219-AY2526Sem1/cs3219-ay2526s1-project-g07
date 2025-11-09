@@ -32,6 +32,7 @@ userController.get("/getUserData/:userId", async (c: Context) => {
       userId: userData.id,
       name: userData.name,
       description: userData.description,
+      profileImage: userData.profileImage,
     })
   } catch (error) {
     console.error('Error in getUserData:', error)
@@ -49,7 +50,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
 
   try {
     const body = await c.req.json()
-    const { name, description } = body
+    const { name, description, profileImage } = body
     console.log(body)
     
     // Validate required fields
@@ -58,7 +59,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
     }
 
     // Update user data
-    await userService.updateUserData(userId, { name, description })
+    await userService.updateUserData(userId, { name, description, profileImage })
     
     // Return updated data
     const updatedUserData = await userService.getUserData(userId)
@@ -68,6 +69,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
       userId: updatedUserData?.id,
       name: updatedUserData?.name,
       description: updatedUserData?.description,
+      profileImage: updatedUserData?.profileImage,
     })
   } catch (error) {
     console.error('Error in updateUserData:', error)
