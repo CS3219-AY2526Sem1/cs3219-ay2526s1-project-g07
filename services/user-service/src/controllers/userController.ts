@@ -127,5 +127,32 @@ userController.patch("/:userId/role", async (c: Context) => {
   }
 })
 
+userController.get("/checkAdmin/:userId", async (c: Context) => {
+  console.log("Checking admin status for user ID:", c.req.param('userId'))
+  const userId = c.req.param('userId')
+  
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400)
+  }
+
+  try {
+    const userData = await userService.getUserData(userId)
+    
+    if (!userData) {
+      return c.json({ error: "User not found" }, 404)
+    }
+
+    const isAdmin = userData.role === 'admin'
+    
+    return c.json({
+      isAdmin,
+      role: userData.role || 'user',
+    })
+  } catch (error) {
+    console.error('Error in checkAdmin:', error)
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
 
 export default userController;

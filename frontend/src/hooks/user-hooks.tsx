@@ -1,6 +1,6 @@
 import { useSession } from '@/lib/auth-client'
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function useCurrentUser() {
   const { data, isPending, error, refetch } = useSession()
@@ -38,4 +38,45 @@ export function redirectIfAuthenticated() {
       navigate({ to: '/home' })
     } 
   }, [user])
+}
+
+export async function checkIsAdmin(userId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/user/checkAdmin/${userId}`)
+    
+    if (!response.ok) {
+      console.error('Failed to check admin status')
+      return false
+    }
+
+    const data = await response.json()
+    return data.isAdmin === true
+  } catch (error) {
+    console.error('Error checking admin status:', error)
+    return false
+  }
+}
+
+export function useIsAdmin() {
+  const { user } = useCurrentUser()
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!user?.id) {
+        setIsAdmin(false)
+        setIsLoading(false)
+        return
+      }
+
+      const adminStatus = await checkIsAdmin(user.id)
+      setIsAdmin(adminStatus)
+      setIsLoading(false)
+    }
+
+    checkAdmin()
+  }, [user?.id])
+
+  return { isAdmin, isLoading }
 }
