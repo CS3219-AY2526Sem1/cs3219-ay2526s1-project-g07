@@ -1,10 +1,12 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { logger } from "hono/logger";
 import questionController from './controllers/questionController.js'
 import { startKafkaServices } from './kafka/index.js'
 
 const app = new Hono()
+app.use(logger());
 
 // Enable CORS for all routes
 app.use('*', cors({
