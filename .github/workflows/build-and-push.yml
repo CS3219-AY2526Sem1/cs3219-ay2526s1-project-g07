@@ -1,7 +1,7 @@
 # AI Assistance Disclosure:
 # Tool: GitHub Copilot (model: claude-sonnet-4.5), date: 2025-11-04
 # Scope: Generated GitHub Actions workflow for automatically building the container images.
-# Author review: I verified that the generated workflow meets the project requirements and adjusted as necessary.
+# Author review: I verified that the generated workflow meets the project requirements and adjusted as necessary. I also updated the workflow to ensure proper handling of shared folder imports.
 
 name: Build and Push Docker Images
 
@@ -55,7 +55,8 @@ jobs:
       - name: Build and push Frontend image
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          # Needed to import `shared` folder
+          context: .
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -223,7 +224,8 @@ jobs:
       - name: Build and push Matching Service image
         uses: docker/build-push-action@v6
         with:
-          context: ./services/matching-service
+          # Needed to import `shared` folder
+          context: .
           file: ./services/matching-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}

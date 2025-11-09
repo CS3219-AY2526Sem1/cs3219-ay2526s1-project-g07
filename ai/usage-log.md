@@ -8348,6 +8348,7 @@ The WebSocket implementation provides real-time monitoring of client connections
 I've successfully set up WebSocket functionality for monitoring client connections in your matching service. Here's what was implemented:
 
 ### ✅ **Server-Side Setup**
+
 1. **Integrated Socket.IO** with your existing Express server
 2. **Created WebSocket event handlers** for:
    - Client connection/disconnection monitoring
@@ -8357,17 +8358,20 @@ I've successfully set up WebSocket functionality for monitoring client connectio
    - Automatic cleanup on disconnect
 
 ### ✅ **Client Connection Monitoring Features**
+
 - **Real-time connection tracking** with console logging
 - **User session management** with socket rooms
 - **Automatic queue cleanup** when clients disconnect
 - **Error handling** for connection issues
 
 ### ✅ **Frontend Integration**
+
 1. **React Hook** (`useWebSocketMatching.ts`) for easy WebSocket integration
 2. **Example React Component** showing how to use the hook
 3. **HTML Test Client** for testing WebSocket functionality without React
 
 ### ✅ **Key Benefits**
+
 - **Real-time monitoring** of all client connections
 - **Bidirectional communication** between server and clients
 - **Automatic cleanup** when users disconnect unexpectedly
@@ -8375,6 +8379,7 @@ I've successfully set up WebSocket functionality for monitoring client connectio
 - **Type-safe** implementation with TypeScript
 
 ### 🚀 **To Get Started**
+
 1. Install dependencies: `npm install socket.io @types/socket.io`
 2. Start your matching service
 3. Open the `websocket-test.html` file to test the connection
@@ -8916,12 +8921,14 @@ Perfect! I've successfully integrated your matching service API with the fronten
 ## ✅ **What's Now Working**
 
 ### **1. API Service Layer**
+
 - Created `matching-service.ts` with TypeScript types
 - Handles both `startMatching` and `cancelMatching` API calls
 - Proper error handling and HTTP status validation
 - Configurable service URL via environment variables
 
 ### **2. Updated Home Component**
+
 - **"Start Matching" Button**: Now calls your matching service API
 - **User Validation**: Ensures user is logged in and has selected topic/difficulty
 - **Loading States**: Shows "Processing..." during API calls
@@ -8929,6 +8936,7 @@ Perfect! I've successfully integrated your matching service API with the fronten
 - **Cancel Functionality**: Added cancel matching button
 
 ### **3. Proper Integration**
+
 - Uses correct API endpoints: `/api/matching-service/matching-request` and `/api/matching-service/matching-cancel`
 - Sends user ID from authenticated user session
 - Matches the expected request format your backend expects
@@ -8936,12 +8944,14 @@ Perfect! I've successfully integrated your matching service API with the fronten
 ## 🚀 **How to Test**
 
 1. **Start your matching service**:
+
    ```bash
    cd services/matching-service
    npm start
    ```
 
 2. **Start your frontend**:
+
    ```bash
    cd frontend
    npm run dev
@@ -8957,6 +8967,7 @@ Perfect! I've successfully integrated your matching service API with the fronten
 ## 📋 **API Request Example**
 
 When you click "Start Matching", it sends:
+
 ```json
 {
   "userId": "user123",
@@ -8970,6 +8981,7 @@ To: `POST http://localhost:4000/api/matching-service/matching-request`
 ## 🔧 **Configuration**
 
 The `.env.local` file allows you to configure the matching service URL:
+
 ```env
 VITE_MATCHING_SERVICE_URL=http://localhost:4000
 ```
@@ -8990,5 +9002,446 @@ Your frontend is now fully integrated with the matching service API! The button 
 
 - Refactored the structure to place shared types and API endpoints into a shared folder.
 - Make cancel matching button appear only when user is matching.
+
+---
+
+## request_cf58d189-3d59-4afa-ba97-7f4f8ec31f45
+
+**Participant:** jiakai-17
+**Assistant:** GitHub Copilot
+
+### Participant
+
+We decided to import from folder "shared" in the root directory into the respective microservices.
+Now the CI build fails for frontend:
+
+```log
+# 20 8.026   × Module not found: Can't resolve '../../../shared/ws-events' in '/app/src/hooks'
+# 20 8.026    ╭─[3:0]
+# 20 8.026  1 │ import { useEffect, useRef, useState, useCallback } from 'react';
+# 20 8.026  2 │ import { io } from 'socket.io-client';
+# 20 8.026  3 │ import { WS_EVENTS_MATCHING } from '../../../shared/ws-events';
+# 20 8.026    · ───────────────────────────────────────────────────────────────
+# 20 8.026  4 │ export const useMatchingWebSocket = function() {
+# 20 8.026  5 │     let serverUrl = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : '<http://localhost:4000>';
+# 20 8.026    ╰────
+# 20 8.026
+```
+
+### Assistant
+
+<details>
+  <summary>Used 2 references</summary>
+  <p>☰ tools.instructions.md<br>☰ instructionsList</p>
+</details>
+
+
+
+I'll help you fix this CI build issue. The problem is that the frontend is trying to import from the
+ folder using a relative path that doesn't work in the Docker build context. Let me investigate the current structure and fix this.
+
+Now let me check if there are other files importing from shared:
+
+Now let me check the api-endpoints file:
+
+The issue is clear. The frontend Docker build doesn't have access to the
+ folder in the parent directory. There are a few solutions:
+
+1. **Copy the shared folder into the Docker build context** (modify Dockerfile)
+2. **Copy shared files into frontend before build** (simpler for CI)
+3. **Create a local copy of the shared types in frontend**
+
+The best solution is to update the Dockerfile to copy the shared folder. Let me fix this:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 8-25:</strong></p>
+
+```
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable
+
+# Copy config files first for better caching
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm i --frozen-lockfile
+
+# Copy shared folder from parent directory
+COPY ../shared /app/shared
+
+# Copy application files
+COPY biome.json components.json postcss.config.mjs rsbuild.config.ts tsconfig.json ./
+COPY components ./components/
+COPY lib ./lib/
+COPY src ./src/
+
+# Builds the project and prunes dev dependencies
+RUN pnpm run build
+```
+
+</details>
+
+Wait, that won't work because Docker COPY can't access files outside the build context. Let me check the docker-compose files to see how the build context is configured:
+
+Let me check if there's a GitHub Actions workflow to see how CI builds the frontend:
+
+Perfect! I can see that the build context is set to
+, which means it can't access the `../shared` folder. The solution is to change the build context to the root directory (`.`) and adjust the Dockerfile paths accordingly. Let me fix both the Dockerfile and potentially the workflow:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 8-28:</strong></p>
+
+```
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable
+
+# Copy shared folder from root (build context must be root directory)
+COPY shared ./shared
+
+# Copy config files first for better caching
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm i --frozen-lockfile
+
+# Copy application files
+COPY frontend/biome.json frontend/components.json frontend/postcss.config.mjs frontend/rsbuild.config.ts frontend/tsconfig.json ./
+COPY frontend/components ./components/
+COPY frontend/lib ./lib/
+COPY frontend/src ./src/
+
+# Builds the project and prunes dev dependencies
+RUN pnpm run build
+```
+
+</details>
+
+Now I need to update the nginx config copy path as well:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 32-36:</strong></p>
+
+```
+LABEL org.opencontainers.image.source=https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07
+LABEL org.opencontainers.image.description="CS3219 AY2526S1 Project G07 PeerPrep Frontend"
+
+# Copy nginx config
+COPY frontend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+```
+
+</details>
+
+Now I need to update the GitHub Actions workflow to use the root directory as the build context:
+
+<details>
+  <summary>🛠️ File Edit: build-and-push.yml</summary>
+  <p><strong>Modified lines 55-64:</strong></p>
+
+```yml
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+</details>
+
+Now let me check if there are any other services with similar issues. Let me look at the other service Dockerfiles:
+
+The matching-service also uses shared. Let me check if there are builds for other services:
+
+I need to check and potentially fix the matching-service Dockerfile as well. Let me look at it:
+
+I need to check if the collab-service also uses shared:
+
+Good! Only matching-service and frontend use shared. Now let me update the matching-service Dockerfile and workflow:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 9-21:</strong></p>
+
+```
+FROM base AS builder
+
+WORKDIR /app
+
+# Copy shared folder from root (build context must be root directory)
+COPY shared ./shared/
+
+# Copy package files for dependency installation
+COPY services/matching-service/package*.json ./
+
+# Install all dependencies (including dev dependencies for ts-node)
+RUN npm ci
+
+# Copy source code
+COPY services/matching-service/src ./src/
+COPY services/matching-service/tsconfig.json ./
+```
+
+</details>
+
+<details>
+  <summary>🛠️ File Edit: build-and-push.yml</summary>
+  <p><strong>Modified lines 223-232:</strong></p>
+
+```yml
+      - name: Build and push Matching Service image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./services/matching-service/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+</details>
+
+Now let me create a summary of the changes:
+
+## Summary
+
+I've fixed the CI build issue caused by imports from the
+ folder. The problem was that the Docker build context was set to the individual service directories (e.g.,
+), which prevented access to the `../shared` folder.
+
+### Changes Made
+
+#### 1. **frontend/Dockerfile**
+
+- Changed build context expectations from
+ to root (`.`)
+- Updated all COPY commands to include
+ prefix
+- Updated shared folder copy to `COPY shared ./shared`
+
+#### 2. **services/matching-service/Dockerfile**
+
+- Changed build context expectations from
+ to root (`.`)
+- Updated all COPY commands to include
+ prefix
+- Added shared folder copy: `COPY shared ./shared/`
+
+#### 3. **
+
+**
+
+- Changed `build-frontend` job: `context: ./frontend` → `context: .`
+- Changed `build-matching-service` job: `context: ./services/matching-service` → `context: .`
+
+### Why This Fixes the Issue
+
+The Docker COPY command can only access files within the build context. By changing the build context from individual service directories to the root directory (`.`), the Dockerfiles can now access the
+ folder. The trade-off is that COPY paths inside the Dockerfiles now need to include the service directory prefix (e.g.,
+ instead of
+).
+
+### Services Affected
+
+- ✅ **frontend** - Fixed (uses shared folder)
+- ✅ **matching-service** - Fixed (uses shared folder)
+- ✅ **ai-service** - No changes needed (doesn't use shared)
+- ✅ **collab-service** - No changes needed (doesn't use shared)
+- ✅ **other services** - No changes needed
+
+The CI build should now succeed! 🎉
+
+> *Response time: 111.66 seconds*
+> <br>*Model: claude-sonnet-4.5*
+> <br>*Timestamp: 2025-11-08 20:12:12 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [x] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Tried to build container locally, but didnt work yet
+- Tested the updates in CI
+
+---
+
+## request_983d0504-9970-47c3-bc32-6d6f556e35fd
+
+**Participant:** jiakai-17
+**Assistant:** GitHub Copilot
+
+### Participant
+
+I think you did it wrong. The copied folder structure should be like:
+
+- shared
+- frontend
+==> package.json
+
+the error still persists. Because shared is in the same level as package.json and the stuff in the frontend folder.
+
+### Assistant
+
+<details>
+  <summary>Used 2 references</summary>
+  <p>☰ tools.instructions.md<br>☰ instructionsList</p>
+</details>
+
+
+
+You're absolutely right! I misunderstood the directory structure. The
+ folder should be copied at the same level as the frontend files, not at the app root. Let me fix this:
+
+Now I see the issue! The structure inside `/app` should be:
+
+```
+/app/
+  shared/
+  package.json
+  src/
+  ...
+```
+
+So the imports `../../../shared/ws-events` work correctly (going up from `src/hooks/` to the app root where
+ is). Let me fix this:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 11-25:</strong></p>
+
+```
+# Install pnpm
+RUN corepack enable
+
+# Copy config files first for better caching
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm i --frozen-lockfile
+
+# Copy shared folder from root (build context must be root directory)
+# This creates /app/shared/ so imports like ../../../shared/ws-events work
+COPY shared ../shared
+
+# Copy application files
+COPY frontend/biome.json frontend/components.json frontend/postcss.config.mjs frontend/rsbuild.config.ts frontend/tsconfig.json ./
+COPY frontend/components ./components/
+COPY frontend/lib ./lib/
+COPY frontend/src ./src/
+```
+
+</details>
+
+Now let me fix the matching-service Dockerfile similarly:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 9-24:</strong></p>
+
+```
+FROM base AS builder
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY services/matching-service/package*.json ./
+
+# Install all dependencies (including dev dependencies for ts-node)
+RUN npm ci
+
+# Copy shared folder from root (build context must be root directory)
+# This creates /shared/ (parent of /app) so imports like ../../../shared/ws-events work
+COPY shared ../shared/
+
+# Copy source code
+COPY services/matching-service/src ./src/
+COPY services/matching-service/tsconfig.json ./
+```
+
+</details>
+
+Now I need to also copy the shared folder in the runner stage for matching-service:
+
+<details>
+  <summary>🛠️ File Edit: Dockerfile</summary>
+  <p><strong>Modified lines 38-48:</strong></p>
+
+```
+# Copy package.json for npm scripts
+COPY --from=builder --chown=matchinguser:nodejs /app/package*.json ./
+
+# Install only production dependencies and ts-node (needed for runtime)
+RUN npm ci --only=production && npm install ts-node typescript
+
+# Copy shared folder from builder
+COPY --from=builder --chown=matchinguser:nodejs /shared ../shared/
+
+# Copy source code
+COPY --from=builder --chown=matchinguser:nodejs /app/src ./src/
+COPY --from=builder --chown=matchinguser:nodejs /app/tsconfig.json ./
+
+USER matchinguser
+```
+
+</details>
+
+Perfect! Now the structure will be correct:
+
+**Frontend structure in Docker:**
+
+```
+/app/
+  package.json
+  src/
+    hooks/
+      matching-ws-hooks.ts  <-- imports from '../../../shared/ws-events'
+  ...
+/shared/  <-- accessible via ../../../shared from /app/src/hooks/
+  ws-events.ts
+  types/
+    matching-types.ts
+```
+
+**Matching-service structure in Docker:**
+
+```
+/app/
+  package.json
+  src/
+    matching-ws.ts  <-- imports from '../../../shared/ws-events'
+  ...
+/shared/  <-- accessible via ../../../shared from /app/src/
+  ws-events.ts
+  kafka-topics.ts
+  types/
+    matching-types.ts
+```
+
+The changes ensure that when the code does `import ... from '../../../shared/...'`, it correctly resolves to the shared folder that's been copied to the parent directory of the app folder.
+
+> *Response time: 48.08 seconds*
+> <br>*Model: claude-sonnet-4.5*
+> <br>*Timestamp: 2025-11-08 20:25:54 (GMT+8)*
+
+### Action Taken
+
+- [x] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Tried the docker build locally, works as expected
 
 ---

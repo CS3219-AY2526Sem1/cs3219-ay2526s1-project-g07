@@ -3,7 +3,7 @@ import { removeActiveRoom } from "../rooms.js";
 
 const app = new Hono();
 
-app.get("/rooms/:sessionId/:userId", (c) => {
+app.get("/:sessionId/:userId", (c) => {
   const sessionId = c.req.param("sessionId");
   const userId = c.req.param("userId");
   

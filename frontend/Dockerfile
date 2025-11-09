@@ -12,14 +12,17 @@ WORKDIR /app
 RUN corepack enable
 
 # Copy config files first for better caching
-COPY package.json pnpm-lock.yaml ./
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
 
+# Copy shared folder from root (build context must be root directory)
+COPY shared ../shared
+
 # Copy application files
-COPY biome.json components.json postcss.config.mjs rsbuild.config.ts tsconfig.json ./
-COPY components ./components/
-COPY lib ./lib/
-COPY src ./src/
+COPY frontend/biome.json frontend/components.json frontend/postcss.config.mjs frontend/rsbuild.config.ts frontend/tsconfig.json ./
+COPY frontend/components ./components/
+COPY frontend/lib ./lib/
+COPY frontend/src ./src/
 
 # Builds the project and prunes dev dependencies
 RUN pnpm run build
@@ -30,7 +33,7 @@ LABEL org.opencontainers.image.source=https://github.com/CS3219-AY2526Sem1/cs321
 LABEL org.opencontainers.image.description="CS3219 AY2526S1 Project G07 PeerPrep Frontend"
 
 # Copy nginx config
-COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the built application
 COPY --from=builder /app/dist /usr/share/nginx/html

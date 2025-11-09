@@ -7,11 +7,11 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
 import { WebSocketServer } from "ws";
-import http from "http";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
-import { addActiveRoom, removeActiveRoom } from "./rooms.js";
+import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
+import rooms from "./routes/room.js";
 
 declare module "ws" {
   interface WebSocket {
@@ -33,7 +33,6 @@ console.log("Collab-service starting...");
 const app = new Hono();
 
 // ------------------- Hono Routes ------------------ //
-
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
@@ -42,14 +41,9 @@ app.get("/health", (c) => {
   return c.json({ status: "ok" });
 });
 
-// ------------------- End of Hono Routes ------------------ //
+app.route("/rooms", rooms);
 
 // ------------------- WebSocket & HTTP Server Setup ------------------ //
-// const server = http.createServer((_request, response) => {
-//   response.writeHead(200, { "Content-Type": "text/plain" });
-//   response.end("okay");
-// });
-
 const server = serve(
   {
     fetch: app.fetch,
@@ -59,35 +53,30 @@ const server = serve(
     console.log(`Server is running on http://${info.address}:${info.port}`);
   }
 );
-// ------------------- End of WebSocket & HTTP Server Setup ------------------ //
 
-// Handle WebSocket connections
+// ------------------- WebSocket Connections ------------------ //
 wss.on("connection", (ws, request) => {
-  console.log("New WebSocket connection");
-  setupWSConnection(ws, request);
 
-  console.log(`User ${ ws.userId } connected to session ${ ws.sessionId }`);
-  addActiveRoom(ws.sessionId, ws.userId, ws as any);
+  setupWSConnection(ws, request, {docName: ws.sessionId});
 
   ws.on('error', console.error);
   
-  ws.on('message', function message(data) {
-    console.log(`Received message ${data} from user`);
+  ws.on('message', () => {
+    const room = getActiveRoom(ws.sessionId);
+    console.log('users', Array.from(room?.keys() || []));
   });
 
   ws.on("close", () => {
     // Clean up when user disconnects
     console.log(`User ${ ws.userId } disconnected from session ${ ws.sessionId }`);
-    removeActiveRoom(ws.sessionId, ws.userId);
+    disconnectSocketFromRoom(ws.sessionId, ws.userId, ws as any); // Clean up user from active rooms after disconnect
+    console.log('Current active users after disconnect:', Array.from(getActiveRoom(ws.sessionId)?.keys() || []));
   });
 });
-server.on("upgrade", (request, socket, head) => {
-  // Call `wss.HandleUpgrade` *after* you checked whether the client has access
-  // (e.g. by checking cookies, or url parameters).
-  // See https://github.com/websockets/ws#client-authentication
 
+server.on("upgrade", (request, socket, head) => {
   console.log("Upgrade request received, Host:", request.headers.host, "URL:", request.url);
-  const url= new URL(request.url || "", `http://${request.headers.host}`);
+  const url = new URL(request.url || "", `http://${request.headers.host}`);
   const collabSessionId = url.searchParams.get("sessionId");
   const userId = url.searchParams.get("userId");
 
@@ -105,12 +94,15 @@ server.on("upgrade", (request, socket, head) => {
     return;
   }
   console.log("Authentication successful");
+
   console.log(`Upgrading connection for user ${userId} in session ${collabSessionId}`);
-  wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
-      ws.userId = userId;
-      ws.sessionId = collabSessionId;
+  wss.handleUpgrade(request, socket, head, ws => {
+    ws.userId = userId;
+    ws.sessionId = collabSessionId;
+    addActiveRoom(ws.sessionId, ws.userId, ws as any);
+
     wss.emit('connection', ws, request);
-  })
+  });
 });
 
 
