@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "../components/Navbar";
 import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import {
   Card,
   CardContent,
@@ -31,6 +39,8 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchUsers();
@@ -99,6 +109,19 @@ function RouteComponent() {
     }
   };
 
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesRole =
+        roleFilter === "all" || user.role === roleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchTerm, roleFilter]);
+
   if (loading) {
     return (
       <div>
@@ -145,6 +168,39 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="flex gap-4 mb-6">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-48">
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(searchTerm || roleFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setRoleFilter("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
             <div className="rounded-md border">
               <table className="w-full">
                 <thead>
@@ -164,17 +220,17 @@ function RouteComponent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.length === 0 ? (
+                  {filteredUsers.length === 0 ? (
                     <tr>
                       <td
                         colSpan={4}
                         className="px-4 py-8 text-center text-gray-500"
                       >
-                        No users found
+                        {users.length === 0 ? "No users found" : "No users match your filters"}
                       </td>
                     </tr>
                   ) : (
-                    users.map((user) => (
+                    filteredUsers.map((user) => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm">{user.name}</td>
                         <td className="px-4 py-3 text-sm">{user.email}</td>
