@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import questionController from './controllers/questionController.js'
 import { KafkaClient } from './kafka/client.js'
 import { handleMatchingSuccess } from './kafka/messageHandler.js'
+import 'dotenv/config'
 
 const app = new Hono()
 
