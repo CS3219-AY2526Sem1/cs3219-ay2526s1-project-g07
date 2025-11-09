@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { WS_EVENTS_MATCHING } from '../../../shared/ws-events';
 import type { UserId } from '../../../shared/types/matching-types';
 import type { MatchFoundData } from '../../../shared/types/matching-types';
+import { useNavigate } from '@tanstack/react-router';
 
 export const useMatchingWebSocket = (
   serverUrl: string = 'http://localhost:4000'
@@ -14,6 +15,7 @@ export const useMatchingWebSocket = (
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   const clearError = useCallback(() => {
     setError(null);
@@ -24,6 +26,10 @@ export const useMatchingWebSocket = (
     console.log('WebSocket:', message);
   }, []);
 
+  const handleCollabSessionReady = (sessionId: string) => {
+    navigate({ to: `/collab/${sessionId}`, params: { sessionId } });
+  };
+  
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
       console.log('Socket already connected');
@@ -84,6 +90,13 @@ export const useMatchingWebSocket = (
       updateMessage(`Matching failed: ${data.message || 'Unknown error'}`);
     });
 
+    socketRef.current.on(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, (data: any) => {
+      console.log('Collaboration session is ready');
+      setMatchingStatus('collab_session_ready');
+      updateMessage('Collaboration session is ready');
+      handleCollabSessionReady(data.sessionId);
+    });
+
     // Error handler
     socketRef.current.on(WS_EVENTS_MATCHING.ERROR, (error) => {
       console.error('WebSocket error:', error);
@@ -142,7 +155,7 @@ export const useMatchingWebSocket = (
   };
 };
 
-type MatchingStatus = 'disconnected' | 'connecting' | 'connected' | 'queued' | 'matched' | 'cancelled' | 'failed';
+type MatchingStatus = 'disconnected' | 'connecting' | 'connected' | 'queued' | 'matched' | 'cancelled' | 'failed' | 'collab_session_ready';
 
 interface UseMatchingWebSocketReturn {
   // Connection status
