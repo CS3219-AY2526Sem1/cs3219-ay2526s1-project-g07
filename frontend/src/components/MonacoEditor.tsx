@@ -50,6 +50,7 @@ interface ActiveUser {
 }
 
 const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+const USER_REMOVED_CLOSE_CODE = 4000;
 // 0xFFFFFF is the maximum value for a 24-bit RGB color (white)
 const MAX_COLOR_VALUE = 0xffffff;
 
@@ -99,8 +100,15 @@ function PythonMonacoEditor({
     });
 
     provider.on("connection-close", (event) => {
-      // code 4001 indicates disconnection due to duplicate user session
       const code = event?.code;
+
+      // code 4000 indicates normal closure after user removal via API
+      if (code === USER_REMOVED_CLOSE_CODE) {
+        console.log(`Connection closed normally after user removal (Code ${code})`);
+        return;
+      }
+
+      // code 4001 indicates disconnection due to duplicate user session
       if (code === DUPLICATE_SESSION_CLOSE_CODE) {
         console.log(
           `Disconnected by server (Code ${code}): ${event?.reason ?? ""}`
@@ -109,13 +117,18 @@ function PythonMonacoEditor({
 
         // Stop the reconnection loop for this provider instance
         provider.shouldConnect = false;
-      } else if (provider.ws?.readyState === WebSocket.CLOSED) {
+        return;
+      }
+
+      // Handle other closures
+      if (provider.ws?.readyState === WebSocket.CLOSED) {
         console.log(
           `Disconnected by server (Code ${code}): ${event?.reason ?? ""}`
         );
         alert(
           "Connection failed: You may be unauthorized to join this collaboration session."
         );
+        return;
       }
     });
 

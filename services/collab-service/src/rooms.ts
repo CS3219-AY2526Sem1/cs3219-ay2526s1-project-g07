@@ -2,6 +2,7 @@
 const activeRooms = new Map<string, Map<string, WebSocket>>(); // sessionId → Map of userIds to their WebSocket connections (max 2 users in one room)
 
 const DUPLICATE_SESSION_CLOSE_CODE = 4001;
+const USER_REMOVED_CLOSE_CODE = 4000;
 
 export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) => {
   let room = activeRooms.get(sessionId);
@@ -31,7 +32,7 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
   if (room) {
     const socket = room.get(userId);
     if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-      socket.close();
+      socket.close(USER_REMOVED_CLOSE_CODE, "User removed from room");
     }
     room.delete(userId);
     if (room.size === 0) {
