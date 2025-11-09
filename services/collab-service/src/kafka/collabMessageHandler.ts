@@ -37,10 +37,21 @@ export class CollabMessageHandler {
 
         console.log('Received kafka event on Ai-question-hint-request:', event);
         //Extract details from message
-        const { userId, collabSessionId } = event.data;
+        const {data, _meta} = event;
+        console.log('Event:', event);
+        console.log('Data:', data);
+        console.log('_meta:', _meta);
+
+        const { userId, collabSessionId } = data;
+        const correlationId = _meta.correlationId;
 
         if (!userId || !collabSessionId) {
             console.error(`Missing userId or collabSessionId in AI hint request message`);
+            return;
+        }
+
+        if (!correlationId) {
+            console.error('Missing correlationId in AI hint request message');
             return;
         }
 
@@ -61,10 +72,13 @@ export class CollabMessageHandler {
                 collabSessionId: collabSessionId,
                 userId: userId,
                 question: questionDetails
+            },
+            _meta: {
+                correlationId: correlationId
             }
         };
 
-        await kafkaClient.getProducer().publishEvent(aiQuestionResponseEvent);
+        await kafkaClient.getProducer().publishEvent<AIQuestionResponseEvent>(aiQuestionResponseEvent);
 
     }
 

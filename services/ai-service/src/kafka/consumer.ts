@@ -17,6 +17,10 @@ export class AiKafkaConsumer {
         return this.consumer;
     }
 
+    getHandler(): MessageHandler {
+        return this.handler;
+    }
+
     async subscribe(topics: string[]): Promise<void> {
         try {
             await this.consumer.subscribe({ topics: topics, fromBeginning: true });
@@ -38,5 +42,9 @@ export class AiKafkaConsumer {
             console.error('Error starting consumer:', err);
             throw err;
         }
+    }
+
+    async addPendingReply(correlationId: string): Promise<any> {
+        return this.handler.createPendingRequest(correlationId);
     }
 }

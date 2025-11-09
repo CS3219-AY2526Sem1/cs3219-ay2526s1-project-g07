@@ -19,10 +19,13 @@ export class AiKafkaProducer {
                 ...event,
                 eventId: uuidv4(),
             } as T;
+
+            const correlationId = (fullEvent as any)._meta?.correlationId;
             
             const messages = [{
                 key: key || fullEvent.eventId,
                 value: JSON.stringify(fullEvent),
+                headers: correlationId ? { correlationId: Buffer.from(correlationId) } : undefined,
             }] //timestamp defaults to Date.now()
 
             const result = await this.producer.send({
