@@ -21,12 +21,19 @@ services:
       - "9094:9094"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   kafka-init: # Topic initialization service
     image: apache/kafka:4.0.0
     container_name: kafka-init
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     command: >
       bash -c '
       echo "Waiting for Kafka to start..." &&
@@ -48,7 +55,8 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
-      - kafka
+      kafka-init:
+        condition: service_completed_successfully
     ports:
       - '8080:8080'
     environment:
@@ -71,10 +79,11 @@ services:
     image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
     container_name: collab-service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       - HOST=0.0.0.0
-      - KAFKA_BROKERS=0.0.0.0:9094
+      - KAFKA_BROKERS=kafka:9092
     ports:
       - "5004:5004"
     networks:
@@ -84,11 +93,12 @@ services:
     image: ghcr.io/cs3219-ay2526sem1/g07-ai-service:latest
     container_name: ai-service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       - HOST=0.0.0.0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - KAFKA_BROKERS=0.0.0.0:9094
+      - KAFKA_BROKERS=kafka:9092
     ports:
       - "5005:5005"
     networks:
@@ -98,8 +108,10 @@ services:
     image: ghcr.io/cs3219-ay2526sem1/g07-matching-service:latest
     container_name: matching-service
     depends_on:
-      - kafka
-      - redis
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - HOST=0.0.0.0
       - PORT=4000
@@ -116,7 +128,8 @@ services:
     image: ghcr.io/cs3219-ay2526sem1/g07-question-service:latest
     container_name: question-service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       - HOST=0.0.0.0
       - JWT_SECRET=${JWT_SECRET}
@@ -132,10 +145,11 @@ services:
     image: ghcr.io/cs3219-ay2526sem1/g07-user-service:latest
     container_name: user-service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       - HOST=0.0.0.0
-      - KAFKA_BROKERS=0.0.0.0:9094
+      - KAFKA_BROKERS=kafka:9092
       - JWT_SECRET=${JWT_SECRET}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       # TODO: standardize env vars across services
