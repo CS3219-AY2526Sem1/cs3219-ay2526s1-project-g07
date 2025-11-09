@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
 import { useSession } from "@/lib/auth-client";
-import { useIsAdmin } from "@/src/hooks/user-hooks";
+import { useIsAdmin, useProfileImage } from "@/src/hooks/user-hooks";
 
 const baseNavbarLinks = [
   { name: "Home", to: "/home" },
@@ -25,6 +25,7 @@ const adminNavbarLinks = [
 function Navbar() {
   const session = useSession();
   const { isAdmin, isLoading } = useIsAdmin();
+  const { profileImage } = useProfileImage(session.data?.user?.id);
 
   const handleClick = async () => {
     await signOut({
@@ -79,7 +80,7 @@ function Navbar() {
           <DropdownMenuTrigger className="cursor-pointer">
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarImage src={session.data.user.image || "https://github.com/shadcn.png"} />
+                <AvatarImage src={profileImage || session.data.user.image || undefined} />
                 <AvatarFallback>
                   {getUserInitials(session.data.user.email, session.data.user.name)}
                 </AvatarFallback>

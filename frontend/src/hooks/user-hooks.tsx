@@ -86,3 +86,56 @@ export function useIsAdmin() {
 
   return { isAdmin, isLoading }
 }
+
+export function useProfileImage(userId: string | undefined) {
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchProfileImage() {
+      if (!userId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/user/getUserData/${userId}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+
+        const data = await response.json()
+        setProfileImage(data.profileImage || null)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching profile image:', err)
+        setError('Failed to load profile image')
+        setProfileImage(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfileImage()
+  }, [userId])
+
+  return { profileImage, isLoading, error, refetch: () => {
+    if (userId) {
+      setIsLoading(true)
+      fetch(`/api/user/getUserData/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          setProfileImage(data.profileImage || null)
+          setIsLoading(false)
+        })
+        .catch(err => {
+          console.error(err)
+          setError('Failed to load profile image')
+          setIsLoading(false)
+        })
+    }
+  }}
+}
