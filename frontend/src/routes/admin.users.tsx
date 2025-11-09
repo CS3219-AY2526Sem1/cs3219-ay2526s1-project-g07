@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
+import { redirectIfNotAuthenticated, useIsAdmin } from "../hooks/user-hooks";
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -35,16 +35,13 @@ interface User {
 function RouteComponent() {
   redirectIfNotAuthenticated();
 
+  const {isAdmin, isLoading} = useIsAdmin();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   const fetchUsers = async () => {
     
@@ -121,6 +118,18 @@ function RouteComponent() {
       return matchesSearch && matchesRole;
     });
   }, [users, searchTerm, roleFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [isAdmin, isLoading]);
+
+  if (isLoading) {
+    return <div></div>
+  }
+
+  // if (!isAdmin) {
+  //   return <Navigate to="/home" />
+  // }
 
   if (loading) {
     return (
