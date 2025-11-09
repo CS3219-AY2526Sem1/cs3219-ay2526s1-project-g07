@@ -12,6 +12,9 @@ import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
 import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
 import rooms from "./routes/room.js";
+import { cors } from 'hono/cors'
+import { logger } from "hono/logger";
+
 
 declare module "ws" {
   interface WebSocket {
@@ -32,6 +35,17 @@ const kafkaConfig: KafkaConfig = {
 console.log("Collab-service starting...");
 const app = new Hono();
 
+// Enable CORS for all routes
+app.use(cors({
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80"], 
+  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
+  allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+  exposeHeaders: ["Content-Length", "Set-Cookie"],
+  maxAge: 600,
+  credentials: true
+}))
+app.use(logger());
+
 // ------------------- Hono Routes ------------------ //
 app.get("/", (c) => {
   return c.text("Hello Hono!");
@@ -47,7 +61,8 @@ app.route("/rooms", rooms);
 const server = serve(
   {
     fetch: app.fetch,
-    port: 5004,
+    hostname: host,
+    port: port,
   },
   (info) => {
     console.log(`Server is running on http://${info.address}:${info.port}`);
