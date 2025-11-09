@@ -183,7 +183,6 @@ export class Matcher {
   }
 
   async cleanUp() {
-    await Promise
     await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
   }
