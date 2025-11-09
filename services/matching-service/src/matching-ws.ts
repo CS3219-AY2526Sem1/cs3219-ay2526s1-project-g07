@@ -59,6 +59,13 @@ export class MatchingWS {
     console.error('WebSocket error:', error);
     await this.HandleConnectionInterrupt(socket.userId);
   }
+
+  emitCollabSessionReady(userId: string, peerId: string, sessionId: string) {
+    const payload = { userId, peerId, sessionId };
+    console.log(`Emitting collab session ready to user ${userId} and peer ${peerId} for session ${sessionId}`);
+    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+    this.io.to(`user_${peerId}`).emit(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+  }
 }
 
 // Extend Socket interface to include userId

@@ -1,19 +1,22 @@
 import type { KafkaMessage } from "kafkajs";
 import { Matcher } from "./matcher";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
+import { MatchingWS } from "./matching-ws";
 
 export class ConsumerMessageHandler {
   matcher: Matcher;
+  webSocket: MatchingWS;
 
-  constructor(matcher: Matcher) {
+  constructor(matcher: Matcher, webSocket: MatchingWS) {
     this.matcher = matcher;
+    this.webSocket = webSocket;
   }
 
   handleMessage(message: KafkaMessage, topic: string) {
     const value = message.value?.toString() || '';
     switch (topic) {
-      case TOPICS_MATCHING.MATCHING_SUCCESS:
-        this.processMatchingSuccess(value);
+      case TOPICS_MATCHING.COLLAB_SESSION_READY:
+        this.processCollabSessionReady(value);
         break;
 
       default:
@@ -22,11 +25,10 @@ export class ConsumerMessageHandler {
     }
   }
 
-  protected processMatchingSuccess(value: string) {
-    const { userId, peerId, sessionId } = JSON.parse(value);
-    console.log(`Processing matching success: ${userId}, ${peerId}, ${sessionId}`);
-    // TODO: Implement logic to handle successful matching internally if needed
-
+  protected processCollabSessionReady(value: string) {
+    const { sessionId, userId, peerId } = JSON.parse(value);
+    console.log(`Processing collaboration session ready: ${userId}, ${peerId}, ${sessionId}`);
+    this.webSocket.emitCollabSessionReady(userId, peerId, sessionId);
   }
 
   protected processUnknownTopic(value: string) {

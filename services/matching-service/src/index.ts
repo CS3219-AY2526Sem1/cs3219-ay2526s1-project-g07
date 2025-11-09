@@ -42,9 +42,6 @@ async function main() {
   await redisClient.init();
 
   const matcher = new Matcher(redisClient);
-  const messageHandler = new ConsumerMessageHandler(matcher);
-  const producer = new MatchingServiceProducer(kafka, matcher);
-  const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
   // --- Websocket & Kafka Connections ---
   const io = new SocketIOServer(httpServer, {
@@ -62,6 +59,11 @@ async function main() {
       console.error('Error initializing WebSocket:', error);
     }
   }
+
+  // Kafka Producer & Consumer
+  const messageHandler = new ConsumerMessageHandler(matcher, ws);
+  const producer = new MatchingServiceProducer(kafka, matcher);
+  const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     res.status(err.status || 500).json(err.message);

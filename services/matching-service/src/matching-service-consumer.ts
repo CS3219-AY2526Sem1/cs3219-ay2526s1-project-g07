@@ -5,7 +5,7 @@ import { ConsumerMessageHandler } from './consumer-message-handler';
 export class MatchingServiceConsumer {
   consumer: Consumer;
   messageHandler: ConsumerMessageHandler;
-  topics: string[] = [TOPICS_MATCHING.MATCHING_SUCCESS];
+  topics: string[] = [TOPICS_MATCHING.COLLAB_SESSION_READY];
 
   constructor(kafka: Kafka, messageHandler: ConsumerMessageHandler) {
     this.consumer = kafka.consumer({ groupId: 'matching-group' });
