@@ -160,7 +160,6 @@ class Matcher {
         return null; // No match found
     }
     async cleanUp() {
-        await Promise;
         await this.redisClient.quit();
         console.log('Matcher cleanup completed.');
     }

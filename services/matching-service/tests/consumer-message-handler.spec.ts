@@ -3,6 +3,7 @@ import { ConsumerMessageHandler } from "../src/consumer-message-handler";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 import { MockMatcher } from "./mocks/mock-matcher";
 import { RedisClient } from '../../../redis/src/client';
+import { MatchingWS } from "../src/matching-ws";
 
 describe('ConsumerMessageHandler', () => {
   let mockMatcher: MockMatcher;
@@ -20,11 +21,11 @@ describe('ConsumerMessageHandler', () => {
 
   beforeEach(async () => {
     mockMatcher = new MockMatcher();
-    messageHandler = new ConsumerMessageHandler(mockMatcher);
+    messageHandler = new ConsumerMessageHandler(mockMatcher, undefined);
   });
 
-  it('should handle matching success topic messages', async () => {
-    const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
+  it('should handle collab session ready topic messages', async () => {
+    const collabSessionReadyTopic = TOPICS_MATCHING.COLLAB_SESSION_READY;
     const mockMessage = { 
       value: Buffer.from(JSON.stringify({ 
         userId: '1', 
@@ -33,10 +34,10 @@ describe('ConsumerMessageHandler', () => {
         preferences: { topic: 'Math', difficulty: 'easy' } 
       })) 
     } as KafkaMessage;
-    const processMatchingSuccessSpy = spyOn(messageHandler as any, 'processMatchingSuccess').and.callThrough();
+    const processCollabSessionReadySpy = spyOn(messageHandler as any, 'processCollabSessionReady').and.callThrough();
 
-    messageHandler.handleMessage(mockMessage, matchingSuccessTopic);
-    expect(processMatchingSuccessSpy).toHaveBeenCalledWith(mockMessage.value?.toString() || '');
+    messageHandler.handleMessage(mockMessage, collabSessionReadyTopic);
+    expect(processCollabSessionReadySpy).toHaveBeenCalledWith(mockMessage.value?.toString() || '');
   });
 
   it('should handle unknown topic messages', async () => {

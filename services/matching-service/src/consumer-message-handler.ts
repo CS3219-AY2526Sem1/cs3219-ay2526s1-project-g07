@@ -26,9 +26,9 @@ export class ConsumerMessageHandler {
   }
 
   protected processCollabSessionReady(value: string) {
-    const { sessionId, userId, peerId } = JSON.parse(value);
-    console.log(`Processing collaboration session ready: ${userId}, ${peerId}, ${sessionId}`);
-    this.webSocket.emitCollabSessionReady(userId, peerId, sessionId);
+    const { eventType, data, eventId } = JSON.parse(value);
+    console.log(`Processing collaboration session ready: ${data.userIdOne}, ${data.userIdTwo}, ${data.collabSessionId}`);
+    this.webSocket?.emitCollabSessionReady(data.userIdOne, data.userIdTwo, data.collabSessionId);
   }
 
   protected processUnknownTopic(value: string) {

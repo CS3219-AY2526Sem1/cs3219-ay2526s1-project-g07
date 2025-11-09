@@ -55,17 +55,11 @@ EXPOSE 4000
 
 # Environment variables with defaults
 ENV NODE_ENV=production
-ENV PORT=4000
-ENV HOST_URL=http://localhost:3000
-ENV WS_PORT=http://localhost:5000
-ENV REDIS_HOST=redis
-ENV REDIS_PORT=6379
-ENV REDIS_DATABASE_INDEX_MATCHING_SERVICE=0
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "const http = require('http'); \
-    const options = { host: 'localhost', port: process.env.PORT || 4000, path: '/health', timeout: 2000 }; \
+    const options = { host: 'localhost', port: process.env.PORT || 5006, path: '/health', timeout: 2000 }; \
     const req = http.request(options, (res) => { \
       if (res.statusCode === 200) process.exit(0); else process.exit(1); \
     }); \

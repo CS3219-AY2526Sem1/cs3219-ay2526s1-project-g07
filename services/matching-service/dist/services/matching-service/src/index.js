@@ -19,11 +19,8 @@ const client_1 = require("../../../redis/src/client");
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 dotenv_1.default.config();
-const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
-const PORT = process.env.PORT || 4000;
-const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
-    ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
-    : 0;
+const PORT = process.env.PORT || 3000;
+const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || "localhost:9092").split(",");
 async function main() {
     // --- Middleware ---
     app.use((0, cors_1.default)({
@@ -32,15 +29,12 @@ async function main() {
     app.use(express_1.default.json());
     const kafka = new kafkajs_1.Kafka({
         clientId: 'matching-service',
-        brokers: ['localhost:9094']
+        brokers: KAFKA_BROKERS,
     });
     // --- Core Components ---
     const redisClient = new client_1.RedisClient();
     await redisClient.init();
     const matcher = new matcher_js_1.Matcher(redisClient);
-    const messageHandler = new consumer_message_handler_1.ConsumerMessageHandler(matcher);
-    const producer = new matching_service_producer_1.MatchingServiceProducer(kafka, matcher);
-    const consumer = new matching_service_consumer_1.MatchingServiceConsumer(kafka, messageHandler);
     // --- Websocket & Kafka Connections ---
     const io = new socket_io_1.Server(httpServer, {
         cors: {
@@ -57,6 +51,10 @@ async function main() {
             console.error('Error initializing WebSocket:', error);
         }
     };
+    // Kafka Producer & Consumer
+    const messageHandler = new consumer_message_handler_1.ConsumerMessageHandler(matcher, ws);
+    const producer = new matching_service_producer_1.MatchingServiceProducer(kafka, matcher);
+    const consumer = new matching_service_consumer_1.MatchingServiceConsumer(kafka, messageHandler);
     app.use((err, req, res, next) => {
         res.status(err.status || 500).json(err.message);
     });

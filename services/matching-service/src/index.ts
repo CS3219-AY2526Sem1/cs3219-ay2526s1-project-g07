@@ -18,11 +18,7 @@ const app = express();
 const httpServer = createServer(app);
 
 dotenv.config();
-const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
-const PORT = process.env.PORT || 4000;
-const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
-  ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
-  : 0;
+const PORT = process.env.PORT || 3000;
 
 async function main() {
   // --- Middleware ---
@@ -34,7 +30,7 @@ async function main() {
 
   const kafka = new Kafka({
     clientId: 'matching-service',
-    brokers: ['localhost:9094']
+    brokers: (process.env.KAFKA_BROKERS || "localhost:9092").split(","),
   });
 
   // --- Core Components ---

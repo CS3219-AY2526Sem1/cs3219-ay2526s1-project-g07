@@ -21,7 +21,7 @@ class MatchingServiceProducer {
     }
     async handleMatchFound(match) {
         const { firstUserId, secondUserId, preferences } = match;
-        await this.produceMatchingSuccess(firstUserId.toString(), secondUserId.toString(), preferences);
+        await this.produceMatchingSuccess(firstUserId.id, secondUserId.id, preferences);
     }
     async produceMatchingSuccess(userId, peerId, preferences) {
         await this.send({

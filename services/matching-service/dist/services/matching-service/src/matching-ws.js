@@ -47,5 +47,11 @@ class MatchingWS {
         console.log(`Handling connection interrupt for user ${userId.id}`);
         await this.matcher.dequeue(userId);
     }
+    emitCollabSessionReady(userId, peerId, sessionId) {
+        const payload = { userId, peerId, sessionId };
+        console.log(`Emitting collab session ready to user ${userId} and peer ${peerId} for session ${sessionId}`);
+        this.io.to(`user_${userId}`).emit(ws_events_1.WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+        this.io.to(`user_${peerId}`).emit(ws_events_1.WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+    }
 }
 exports.MatchingWS = MatchingWS;
