@@ -4,7 +4,6 @@ import { userService } from "../services/userService";
 
 const userController = new Hono();
 
-
 userController.get("/", (c: Context) => {
   return c.json({ message: "This is the user route" });
 });
@@ -13,14 +12,14 @@ userController.get("/getUserData/:userId", async (c: Context) => {
   console.log("Getting user data for user ID:", c.req.param('userId'))
   const userId = c.req.param('userId')
   console.log(userId)
-  
+
   if (!userId) {
     return c.json({ error: "User ID is required" }, 400)
   }
 
   try {
     const userData = await userService.getUserData(userId)
-    
+
     if (!userData) {
       return c.json({ error: "User not found" }, 404)
     }
@@ -42,7 +41,7 @@ userController.get("/getUserData/:userId", async (c: Context) => {
 userController.put("/updateUserData/:userId", async (c: Context) => {
   console.log("Updating user data for user ID:", c.req.param('userId'))
   const userId = c.req.param('userId')
-  
+
   if (!userId) {
     return c.json({ error: "User ID is required" }, 400)
   }
@@ -51,7 +50,7 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
     const body = await c.req.json()
     const { name, description } = body
     console.log(body)
-    
+
     // Validate required fields
     if (!name || name.trim() === '') {
       return c.json({ error: "Name is required" }, 400)
@@ -59,10 +58,10 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
 
     // Update user data
     await userService.updateUserData(userId, { name, description })
-    
+
     // Return updated data
     const updatedUserData = await userService.getUserData(userId)
-    
+
     return c.json({
       message: "User data updated successfully",
       userId: updatedUserData?.id,
@@ -77,10 +76,10 @@ userController.put("/updateUserData/:userId", async (c: Context) => {
 
 userController.get("/getAllUsers", async (c: Context) => {
   console.log("Getting all users")
-  
+
   try {
     const users = await userService.getAllUsers()
-    
+
     return c.json({
       message: "Users retrieved successfully",
       users: users.map(user => ({
@@ -101,7 +100,7 @@ userController.get("/getAllUsers", async (c: Context) => {
 userController.patch("/:userId/role", async (c: Context) => {
   console.log("Updating user role for user ID:", c.req.param('userId'))
   const userId = c.req.param('userId')
-  
+
   if (!userId) {
     return c.json({ error: "User ID is required" }, 400)
   }
@@ -109,13 +108,13 @@ userController.patch("/:userId/role", async (c: Context) => {
   try {
     const body = await c.req.json()
     const { role } = body
-    
+
     if (!role || (role !== 'admin' && role !== 'user')) {
       return c.json({ error: "Valid role is required (admin or user)" }, 400)
     }
 
     await userService.updateUserRole(userId, role)
-    
+
     return c.json({
       message: "User role updated successfully",
       userId,

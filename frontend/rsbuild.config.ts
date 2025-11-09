@@ -17,7 +17,7 @@ export default defineConfig({
       "/api/user": { target: "http://localhost:5002" },
       // TODO: add matching-service
       "/api/match": { target: "http://localhost:5003" },
-      "/api/collab": { target: "http://localhost:5004", ws: true },
+      "/api/collab": { target: "http://127.0.0.1:5004", ws: true, pathRewrite: { '^/api/collab': '' }, },
       "/api/ai": { target: "http://localhost:5005" },
     },
   },

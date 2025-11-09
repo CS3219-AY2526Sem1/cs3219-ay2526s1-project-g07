@@ -12,6 +12,7 @@ import CodeOutput from "../components/CodeOutput";
 import PythonMonacoEditor from "../components/MonacoEditor";
 import Navbar from "../components/Navbar";
 import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
+import { useSession } from "@/lib/auth-client";
 
 const q = `
 Write a function that reverses a string. The input string is given as an array of characters \`s\`.
@@ -55,6 +56,9 @@ export const Route = createFileRoute("/collab/$sessionId")({
   component: RouteComponent,
 });
 
+
+
+
 // collaborative coding session
 function RouteComponent() {
   const { sessionId } = Route.useParams();
@@ -71,6 +75,8 @@ function RouteComponent() {
     content: "",
     error: "",
   });
+  const navigate = Route.useNavigate();
+  const userId = useSession().data?.user?.id;
 
   const resetCode = useCallback(() => {
     setCode(defaultCode);
@@ -127,6 +133,32 @@ function RouteComponent() {
       });
     }
   }, [code, output]);
+
+  const endCollabSession = useCallback(async () => {
+    // Logic to end the collaboration session
+      try {
+        const response = await fetch(`/api/collab/rooms/${sessionId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+        // const response = await fetch('/api/collab/health', {
+        //   method: "GET"
+        // });
+        if (response.ok) {
+          // redirect to home
+          navigate({ to: '/home' });
+        } else {
+          const data = await response.text();
+          alert(`Failed to end session: ${data || response.statusText}`);
+        }
+      } catch (e: unknown) {
+        console.error("Error ending collaboration session:", e);
+        alert(`Failed to end session: ${e instanceof Error ? e.message : String(e)}`);
+      }
+  }, [navigate, sessionId]);
 
   const toggleAiDebugPanel = useCallback(() => {
     setShowDebugPanel((prev) => !prev);
@@ -271,6 +303,7 @@ function RouteComponent() {
             </>
           )}
         </ResizablePanelGroup>
+        <Button variant="destructive" className="m-1" onClick={endCollabSession}>End Session</Button>
       </div>
     </div>
   );
