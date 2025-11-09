@@ -119,9 +119,6 @@ export default function LogInCard() {
             </Button> */}
           </div>
         </form>
-        <CardFooter className="flex-row bg-red-50 justify-center">
-          Social Media Login Options
-        </CardFooter>  
       </CardContent>
     </Card>
   )
