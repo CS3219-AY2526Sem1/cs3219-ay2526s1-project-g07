@@ -58,12 +58,18 @@ export async function checkIsAdmin(userId: string): Promise<boolean> {
 }
 
 export function useIsAdmin() {
-  const { user } = useCurrentUser()
+  const { user, isPending } = useCurrentUser()
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   useEffect(() => {
     async function checkAdmin() {
+      // Still loading if auth is pending
+      if (isPending) {
+        setIsLoading(true)
+        return
+      }
+
       if (!user?.id) {
         setIsAdmin(false)
         setIsLoading(false)
@@ -76,7 +82,7 @@ export function useIsAdmin() {
     }
 
     checkAdmin()
-  }, [user?.id])
+  }, [user?.id, isPending])
 
   return { isAdmin, isLoading }
 }

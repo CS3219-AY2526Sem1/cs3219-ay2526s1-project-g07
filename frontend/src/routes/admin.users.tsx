@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated, useIsAdmin } from "../hooks/user-hooks";
+import { redirectIfNotAuthenticated, useIsAdmin, useCurrentUser } from "../hooks/user-hooks";
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -36,6 +36,7 @@ function RouteComponent() {
   redirectIfNotAuthenticated();
 
   const {isAdmin, isLoading} = useIsAdmin();
+  const { user: currentUser } = useCurrentUser();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +128,9 @@ function RouteComponent() {
     return <div></div>
   }
 
-  // if (!isAdmin) {
-  //   return <Navigate to="/home" />
-  // }
+  if (!isAdmin) {
+    return <Navigate to="/home" />
+  }
 
   if (loading) {
     return (
@@ -255,20 +256,24 @@ function RouteComponent() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          <Button
-                            onClick={() => promoteToAdmin(user.id, user.role)}
-                            disabled={updatingUserId === user.id}
-                            variant={
-                              user.role === "admin" ? "outline" : "default"
-                            }
-                            size="sm"
-                          >
-                            {updatingUserId === user.id
-                              ? "Updating..."
-                              : user.role === "admin"
-                                ? "Demote to User"
-                                : "Promote to Admin"}
-                          </Button>
+                          {currentUser?.id === user.id ? (
+                            <span className="text-sm text-gray-400 italic">You (current admin)</span>
+                          ) : (
+                            <Button
+                              onClick={() => promoteToAdmin(user.id, user.role)}
+                              disabled={updatingUserId === user.id}
+                              variant={
+                                user.role === "admin" ? "outline" : "default"
+                              }
+                              size="sm"
+                            >
+                              {updatingUserId === user.id
+                                ? "Updating..."
+                                : user.role === "admin"
+                                  ? "Demote to User"
+                                  : "Promote to Admin"}
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))
