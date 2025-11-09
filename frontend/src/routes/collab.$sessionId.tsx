@@ -210,7 +210,7 @@ function RouteComponent() {
                       )}
                     </div>
                   </div>
-                  <PythonMonacoEditor code={code} onCodeChange={setCode} />
+                  <PythonMonacoEditor code={code} onCodeChange={setCode} sessionId={sessionId} />
                 </div>
               </ResizablePanel>
               <ResizableHandle />

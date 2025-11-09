@@ -62,7 +62,7 @@ function RouteComponent() {
   const [formData, setFormData] = useState({
     title: "",
     difficulty: "",
-    categories: [] as string[],
+    topics: [] as string[],
     question: ""
   });
 
@@ -88,7 +88,7 @@ function RouteComponent() {
         setFormData({
           title: question.title || "",
           difficulty: question.difficulty || "",
-          categories: question.categories || [],
+          topics: question.topics || [],
           question: question.question || ""
         });
       } catch (error) {
@@ -108,7 +108,7 @@ function RouteComponent() {
   const handleRemoveCategory = (categoryToRemove: string) => {
     setFormData({
       ...formData,
-      categories: formData.categories.filter(cat => cat !== categoryToRemove)
+      topics: formData.topics.filter(cat => cat !== categoryToRemove)
     });
   };
 
@@ -126,7 +126,7 @@ function RouteComponent() {
       return;
     }
 
-    if (formData.categories.length === 0) {
+    if (formData.topics.length === 0) {
       alert("At least one category is required");
       return;
     }
@@ -149,7 +149,7 @@ function RouteComponent() {
         body: JSON.stringify({
           title: formData.title,
           difficulty: formData.difficulty,
-          categories: formData.categories,
+          topics: formData.topics,
           question: formData.question
         })
       });
@@ -228,9 +228,9 @@ function RouteComponent() {
                 </Select>
               </div>
 
-              {/* Categories */}
+              {/* Topics */}
               <div className="space-y-2">
-                <Label>Categories *</Label>
+                <Label>Topics *</Label>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
                     <Input
@@ -245,7 +245,7 @@ function RouteComponent() {
                       <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                         {CATEGORY_OPTIONS
                           .filter(cat =>
-                            !formData.categories.includes(cat) &&
+                            !formData.topics.includes(cat) &&
                             (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
                           )
                           .map(category => (
@@ -255,7 +255,7 @@ function RouteComponent() {
                               onClick={() => {
                                 setFormData({
                                   ...formData,
-                                  categories: [...formData.categories, category]
+                                  topics: [...formData.topics, category]
                                 });
                                 setCategoryInput("");
                                 setShowCategoryDropdown(false);
@@ -268,11 +268,11 @@ function RouteComponent() {
                         }
                         {CATEGORY_OPTIONS
                           .filter(cat =>
-                            !formData.categories.includes(cat) &&
+                            !formData.topics.includes(cat) &&
                             (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
                           ).length === 0 && (
                           <div className="px-3 py-2 text-gray-500 text-sm">
-                            No categories found
+                            No topics found
                           </div>
                         )}
                       </div>
@@ -280,10 +280,10 @@ function RouteComponent() {
                   </div>
                 </div>
 
-                {/* Selected Categories */}
-                {formData.categories.length > 0 && (
+                {/* Selected Topics */}
+                {formData.topics.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.categories.map(category => (
+                    {formData.topics.map(category => (
                       <span
                         key={category}
                         className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"

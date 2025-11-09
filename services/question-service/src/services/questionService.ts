@@ -4,7 +4,7 @@ interface CreateQuestionData {
   title: string;
   question: string;
   difficulty: string;
-  categories: string[];
+  topics: string[];
 }
 
 export const questionService = {
@@ -22,8 +22,8 @@ export const questionService = {
       throw new Error('Difficulty is required');
     }
     
-    if (!data.categories || data.categories.length === 0) {
-      throw new Error('At least one category is required');
+    if (!data.topics || data.topics.length === 0) {
+      throw new Error('At least one topic is required');
     }
     
     // Validate difficulty
@@ -72,15 +72,15 @@ export const questionService = {
   },
 
   // From ChatGPT
-  async findMatchingQuestion(difficulty: string, categories: string[]) {
+  async findMatchingQuestion(difficulty: string, topics: string[]) {
     if (!difficulty?.trim()) {
       throw new Error('Difficulty is required');
     }
     
-    if (!categories || categories.length === 0) {
-      throw new Error('At least one category is required');
+    if (!topics || topics.length === 0) {
+      throw new Error('At least one topic is required');
     }
     
-    return await questionRepository.findMatchingQuestion(difficulty, categories);
+    return await questionRepository.findMatchingQuestion(difficulty, topics);
   }
 };

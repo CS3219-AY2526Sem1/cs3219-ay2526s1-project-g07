@@ -24,13 +24,13 @@ questionController.get("/", async (c: Context) => {
 questionController.post("/", async (c: Context) => {
   try {
     const body = await c.req.json();
-    const { title, question, difficulty, categories } = body;
+    const { title, question, difficulty, topics } = body;
     
     const newQuestion = await questionService.createQuestion({
       title,
       question, 
       difficulty,
-      categories
+      topics
     });
     
     return c.json({
@@ -80,13 +80,13 @@ questionController.put("/:id", async (c: Context) => {
   try {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const { title, question, difficulty, categories } = body;
+    const { title, question, difficulty, topics } = body;
     
     const updatedQuestion = await questionService.updateQuestion(id, {
       title,
       question,
       difficulty,
-      categories
+      topics
     });
     
     if (!updatedQuestion) {
