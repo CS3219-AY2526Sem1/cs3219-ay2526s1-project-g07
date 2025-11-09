@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
+
 const normalRouter = new Hono();
 
 normalRouter.get("/", (c: Context) => {
