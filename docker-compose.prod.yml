@@ -34,10 +34,21 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    # one-time initialization
+    restart: "no"
     command: >
       bash -c '
       echo "Waiting for Kafka to start..." &&
-      sleep 10 &&
+      sleep 15 &&
+      echo "Verifying Kafka connectivity..." &&
+      for i in {1..30}; do
+        if /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 > /dev/null 2>&1; then
+          echo "Kafka is ready. Creating topics..." &&
+          break
+        fi
+        echo "Attempt $$i: Kafka not ready yet, retrying in 2 seconds..." &&
+        sleep 2
+      done &&
       /opt/kafka/bin/kafka-topics.sh --create --topic matching-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic matching-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic question-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
@@ -46,7 +57,8 @@ services:
       /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-hint-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-response --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       /opt/kafka/bin/kafka-topics.sh --create --topic collab-session-ready --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
-      /opt/kafka/bin/kafka-topics.sh --create --topic user-status-update --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092
+      /opt/kafka/bin/kafka-topics.sh --create --topic user-status-update --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      echo "All topics created successfully!"
       '
     networks:
       - app-network
@@ -81,6 +93,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
       - KAFKA_BROKERS=kafka:9092
@@ -95,6 +109,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
@@ -110,6 +126,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     environment:
@@ -130,6 +148,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
       - JWT_SECRET=${JWT_SECRET}
@@ -147,6 +167,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
       - KAFKA_BROKERS=kafka:9092
