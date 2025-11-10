@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+
 # Ensure only one test workflow runs at a time for the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
