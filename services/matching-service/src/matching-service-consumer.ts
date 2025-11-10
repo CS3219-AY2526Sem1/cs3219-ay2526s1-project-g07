@@ -5,7 +5,7 @@ import { ConsumerMessageHandler } from './consumer-message-handler';
 export class MatchingServiceConsumer {
   consumer: Consumer;
   messageHandler: ConsumerMessageHandler;
-  topics: string[] = [TOPICS_MATCHING.MATCHING_SUCCESS];
+  topics: string[] = [TOPICS_MATCHING.COLLAB_SESSION_READY];
 
   constructor(kafka: Kafka, messageHandler: ConsumerMessageHandler) {
     this.consumer = kafka.consumer({ groupId: 'matching-group' });
@@ -26,7 +26,7 @@ export class MatchingServiceConsumer {
   private async run() {
     await this.consumer.run({
           eachMessage: async ({ topic, partition, message }) => {
-            this.messageHandler.handleMessage(message, topic);
+            await this.messageHandler.handleMessage(message, topic);
           }
         });
   }
