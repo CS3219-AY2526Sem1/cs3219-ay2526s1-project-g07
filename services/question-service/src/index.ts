@@ -26,7 +26,7 @@ const port = parseInt(process.env.PORT || '5001')
 
 const kafkaConfig = {
   clientId: "question-service",
-  brokers: (process.env.KAFKA_BROKERS || "localhost:9094").split(","),
+  brokers: (process.env.KAFKA_BROKERS || "localhost:9094"),
   retry: { initialRetryTime: 300, retries: 10 },
 };
 
