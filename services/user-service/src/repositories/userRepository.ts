@@ -12,13 +12,14 @@ interface UserData {
   description?: string | null;
   role?: string | null;
   profileImage?: string | null;
+  collab_id?: string | null;
 }
 
 export const userRepository = {
   async getUserData(userId: string): Promise<UserData | null> {
     try {
       const query = `
-        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role", "profileImage"
+        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role", "profileImage", collab_id
         FROM "user" 
         WHERE id = $1
       `;
@@ -101,6 +102,19 @@ export const userRepository = {
     } catch (error) {
       console.error('Error updating user role:', error);
       throw new Error('Failed to update user role');
+    }
+  },
+  async updateUserCollabId(userId: string, collabSessionId: string | null): Promise<void> {
+    try {
+      const query = `
+        UPDATE "user"
+        SET collab_id = $1, "updatedAt" = NOW()
+        WHERE id = $2
+      `;
+      await db.query(query, [collabSessionId, userId]);
+    } catch (error) {
+      console.error('Error updating user collab_id:', error);
+      throw new Error('Failed to update user collab_id');
     }
   }
 };

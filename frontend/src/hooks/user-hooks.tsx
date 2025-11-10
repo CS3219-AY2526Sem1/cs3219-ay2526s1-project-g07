@@ -40,6 +40,51 @@ export function redirectIfAuthenticated() {
   }, [user])
 }
 
+export function useCheckAndRedirectToCollab() {
+  const { user, isPending } = useCurrentUser()
+  const navigate = useNavigate()
+  const [isChecking, setIsChecking] = useState(true)
+
+  useEffect(() => {
+    async function checkCollabStatus() {
+      if (isPending) return // Wait until we know the auth status
+      
+      if (!user?.id) {
+        setIsChecking(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/user/getUserData/${user.id}`)
+        
+        if (!response.ok) {
+          console.error('Failed to fetch user data')
+          setIsChecking(false)
+          return
+        }
+
+        const data = await response.json()
+        
+        // If user has an active collab session, redirect to it
+        if (data.collabId) {
+          console.log(`User is in active collab session: ${data.collabId}`)
+          navigate({ to: `/collab/${data.collabId}` })
+          return
+        }
+        
+        setIsChecking(false)
+      } catch (error) {
+        console.error('Error checking collab status:', error)
+        setIsChecking(false)
+      }
+    }
+
+    checkCollabStatus()
+  }, [user?.id, isPending, navigate])
+
+  return { isChecking }
+}
+
 export async function checkIsAdmin(userId: string): Promise<boolean> {
   try {
     const response = await fetch(`/api/user/checkAdmin/${userId}`)

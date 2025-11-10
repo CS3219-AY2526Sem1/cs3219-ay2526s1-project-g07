@@ -156,6 +156,7 @@ services:
       # TODO: standardize env vars across services
       - DATABASE_URL=${DATABASE_URL}
       - DATABASE=${DATABASE_URL}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
     ports:
       - "5001:5001"
     networks:
