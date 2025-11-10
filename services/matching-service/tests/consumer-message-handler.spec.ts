@@ -21,7 +21,9 @@ describe('ConsumerMessageHandler', () => {
 
   beforeEach(async () => {
     mockMatcher = new MockMatcher();
-    messageHandler = new ConsumerMessageHandler(mockMatcher, undefined);
+    const webSocket = new MatchingWS(undefined as any, mockMatcher);
+    spyOn(webSocket, 'init').and.callFake(() => Promise.resolve());
+    messageHandler = new ConsumerMessageHandler(mockMatcher, webSocket);
   });
 
   it('should handle collab session ready topic messages', async () => {
