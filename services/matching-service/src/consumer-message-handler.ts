@@ -1,4 +1,4 @@
-import type { Kafka, KafkaMessage } from "kafkajs";
+import type { KafkaMessage } from "kafkajs";
 import { Matcher } from "./matcher";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 import { MatchingWS } from "./matching-ws";
