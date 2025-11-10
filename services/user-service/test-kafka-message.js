@@ -46,16 +46,16 @@ async function sendTestMessage() {
     }
   };
 
-  // await producer.send({
-  //   topic: 'user-status-update',
-  //   messages: [
-  //     {
-  //       value: JSON.stringify(messageWithoutSession)
-  //     }
-  //   ]
-  // });
+  await producer.send({
+    topic: 'user-status-update',
+    messages: [
+      {
+        value: JSON.stringify(messageWithoutSession)
+      }
+    ]
+  });
 
-  // console.log('📤 Sent message:', messageWithoutSession);
+  console.log('📤 Sent message:', messageWithoutSession);
 
   await producer.disconnect();
   console.log('✅ Producer disconnected');

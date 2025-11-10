@@ -19,7 +19,7 @@ export const userRepository = {
   async getUserData(userId: string): Promise<UserData | null> {
     try {
       const query = `
-        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role", "profileImage"
+        SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt", "description", "role", "profileImage", collab_id
         FROM "user" 
         WHERE id = $1
       `;
