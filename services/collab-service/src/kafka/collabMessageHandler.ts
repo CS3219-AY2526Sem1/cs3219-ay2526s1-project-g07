@@ -38,9 +38,6 @@ export class CollabMessageHandler {
         console.log('Received kafka event on Ai-question-hint-request:', event);
         //Extract details from message
         const {data, _meta} = event;
-        console.log('Event:', event);
-        console.log('Data:', data);
-        console.log('_meta:', _meta);
 
         const { userId, collabSessionId } = data;
         const correlationId = _meta.correlationId;

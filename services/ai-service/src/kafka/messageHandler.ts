@@ -15,7 +15,7 @@ export class MessageHandler {
     }
 
     createPendingRequest(correlationId: string): Promise<any> {
-        const timeoutMs = 3000
+        const timeoutMs = 3000;
         return new Promise<any>((resolve, reject) => {
             const timer = setTimeout(() => {
                 this.pendingReplies.delete(correlationId);
