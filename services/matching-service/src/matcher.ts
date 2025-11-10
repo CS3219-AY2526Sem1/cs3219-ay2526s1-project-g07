@@ -190,8 +190,8 @@ export class Matcher {
 
         // Do not emit events when dequeuing matched users
         // This is so that users see that they are still queuing if they get matched
-        this.dequeue(firstUser.userId, false);
-        this.dequeue(potentialMatch.userId, false);
+        await this.dequeue(firstUser.userId, false);
+        await this.dequeue(potentialMatch.userId, false);
 
         console.log(`Matched users ${firstUser.userId.id} and ${potentialMatch.userId.id}`);
         return {
