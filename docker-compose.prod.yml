@@ -132,9 +132,8 @@ services:
         condition: service_started
     environment:
       - HOST=0.0.0.0
-      - PORT=4000
-      - HOST_URL=${HOST_URL}
-      - WS_PORT=${WS_PORT}
+      - PORT=5006
+      - WS_PORT=5006
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - KAFKA_BROKERS=kafka:9092
