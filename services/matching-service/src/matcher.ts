@@ -70,7 +70,7 @@ export class Matcher {
     if (!acquired) {
       await new Promise(res => setTimeout(res, 50));
       console.log(`Retrying dequeue for user ${id}`);
-      return this.dequeue(userId);
+      return this.dequeue(userId, activateEvent, cacheKey);
     }
 
     try {
