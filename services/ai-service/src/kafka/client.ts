@@ -88,7 +88,7 @@ export class KafkaClient {
         }
     }
 
-    async retrieveQuestionDetails(collabSessionId: string, userId: string): Promise<Map<string, string> | null> {
+    async retrieveQuestionDetails(collabSessionId: string, userId: string): Promise<{ collabSessionId: string, userId: string, question: string } | null> {
         const correlationId = uuidv4();
 
         //Add pending replies to message handler for retrieval
