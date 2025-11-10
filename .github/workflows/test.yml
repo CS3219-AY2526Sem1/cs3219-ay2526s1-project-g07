@@ -3,8 +3,7 @@ name: Run Tests
 on:
   push:
     branches:
-      - finalize/user
-
+      - master
 
 # Ensure only one test workflow runs at a time for the same branch
 concurrency:
@@ -46,7 +45,7 @@ jobs:
       - name: Run integration tests
         run: pnpm test tests/integration/
         working-directory: ./services/user-service
-        
+
   test_question:
     runs-on: ubuntu-22.04
     strategy:
