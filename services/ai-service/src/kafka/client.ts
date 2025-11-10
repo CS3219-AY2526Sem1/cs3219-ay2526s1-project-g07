@@ -1,7 +1,14 @@
+// AI Assistance Disclosure:
+// Tool: GitHub Copilot (model: GPT-5), date: 2025-11-09
+// Scope: Requested for assistance to retrieve kafka response for API
+// Author review: I have ran the kafka component on this service and verified that it is working as intended.
+
 import {Kafka } from 'kafkajs';
 import { AiKafkaProducer } from './producer.js';
 import { AiKafkaConsumer } from './consumer.js';
-import { TOPICS_SUBSCRIBED } from './utils.js';
+import { TOPICS_AI, TOPICS_SUBSCRIBED } from './utils.js';
+import { v4 as uuidv4 } from 'uuid';
+import type { AIQuestionHintRequestEvent } from './events.js';
 
 export interface KafkaConfig {
     clientId: string;
@@ -72,10 +79,32 @@ export class KafkaClient {
         try {
             await this.producer.getProducer().disconnect();
             await this.consumer.getConsumer().disconnect();
+            this.consumer.getHandler().clearAllPending();
+
             console.log('Kafka Client disconnected successfully');
         } catch (err) {
             console.error('Error disconnecting from Kafka:', err);
             throw err;
         }
+    }
+
+    async retrieveQuestionDetails(collabSessionId: string, userId: string): Promise<{ collabSessionId: string, userId: string, question: string } | null> {
+        const correlationId = uuidv4();
+
+        //Add pending replies to message handler for retrieval
+        const pendingReply = this.consumer.addPendingReply(correlationId);
+
+        await this.producer.publishEvent<AIQuestionHintRequestEvent>({
+            eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+            data: {
+                collabSessionId,
+                userId
+            },
+            _meta: {
+                correlationId
+            }
+        });
+
+        return pendingReply;
     }
 }
