@@ -11,7 +11,7 @@ import {
 import CodeOutput from "../components/CodeOutput";
 import PythonMonacoEditor from "../components/MonacoEditor";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
+import { redirectIfNotAuthenticated, useCurrentUser } from "../hooks/user-hooks";
 import { useSession } from "@/lib/auth-client";
 
 const q = `
@@ -77,6 +77,11 @@ function RouteComponent() {
   });
   const navigate = Route.useNavigate();
   const userId = useSession().data?.user?.id;
+  const {isPending, user} = useCurrentUser();
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
 
   const resetCode = useCallback(() => {
     setCode(defaultCode);
@@ -92,7 +97,7 @@ function RouteComponent() {
         },
         // body: JSON.stringify({ question: q }),
         // TODO change to collabSessionId, userId
-        body: JSON.stringify({ collabSessionId: sessionId, userId: isPending ? "" : user?.id}),
+        body: JSON.stringify({ collabSessionId: sessionId, userId: user?.id  }),
       });
       const data = await response.text();
       if (response.ok) {

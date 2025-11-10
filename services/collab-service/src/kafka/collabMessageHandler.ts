@@ -85,11 +85,23 @@ export class CollabMessageHandler {
     private async processMatchingSessionWithQuestion(event: any) {
         console.log(`Preparing collab session for matching session found...`);
 
+        // Check if event.data exists, if not, use event directly (for backwards compatibility)
+        const messageData = event.data || event;
+
         //Extract details from message
-        const { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp } = event.data;
+        const { 
+            userId, 
+            peerId,
+            questionId, 
+            title, 
+            question, 
+            difficulty, 
+            topic,
+            timestamp 
+        } = messageData;
 
         // Do not proceed if there are any missing values
-        const requiredFields = { requestId, userIdOne, userIdTwo, questionId, title, question, difficulty, categories, timestamp };
+        const requiredFields = { userId, peerId, questionId, title, question, difficulty, topic, timestamp };
         const missingFields = Object.entries(requiredFields)
             .filter(([key, value]) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))
             .map(([key]) => key);
@@ -102,19 +114,19 @@ export class CollabMessageHandler {
         const collabSessionId: string = generateRandomSessionId();
         const sessionDetails = new Map<string, string>(
             [
-                ["user1", userIdOne], 
-                ["user2", userIdTwo],
+                ["user1", userId], 
+                ["user2", peerId],
                 ["questionId", questionId],
                 ["title", title],
                 ["question", question],
                 ["difficulty", difficulty],
-                ["categories", Array.isArray(categories) ? categories.join(",") : String(categories)],
+                ["categories", Array.isArray(topic) ? topic.join(",") : String(topic)],
             ]
         );
         addSession(collabSessionId, sessionDetails);
 
         console.log(
-            `Collab session ready for users ${userIdOne} and ${userIdTwo}, questionId: ${questionId}, timestamp: ${timestamp}, collabSessionId: ${collabSessionId} \n
+            `Collab session ready for users ${userId} and ${peerId}, questionId: ${questionId}, timestamp: ${timestamp}, collabSessionId: ${collabSessionId} \n
             Publishing to topic ${TOPICS_COLLAB.COLLAB_SESSION_READY}`
         );
 
@@ -123,8 +135,8 @@ export class CollabMessageHandler {
             eventType: TOPICS_COLLAB.COLLAB_SESSION_READY,
             data: {
                 collabSessionId: collabSessionId,
-                userIdOne: userIdOne,
-                userIdTwo: userIdTwo
+                userIdOne: userId,
+                userIdTwo: peerId
             }
         };
 
@@ -133,7 +145,7 @@ export class CollabMessageHandler {
         const userStatusUpdateEventOne: Omit<UserStatusUpdateEvent, 'eventId'> = {
             eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
             data: {
-                userId: userIdOne,
+                userId: userId,
                 collabSessionId: collabSessionId
             }
         };
@@ -143,7 +155,7 @@ export class CollabMessageHandler {
         const userStatusUpdateEventTwo: Omit<UserStatusUpdateEvent, 'eventId'> = {
             eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
             data: {
-                userId: userIdTwo,
+                userId: peerId,
                 collabSessionId: collabSessionId
             }
         };
