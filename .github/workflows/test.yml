@@ -71,3 +71,57 @@ jobs:
       - name: Run tests
         run: pnpm test
         working-directory: ./services/question-service
+  
+  integration_test_user:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # INSTALL PNPM
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      # SETUP NODE
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Install deps
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./services/user-service
+      
+      # Run integration tests
+      - name: Run integration tests
+        run: pnpm test tests/integration/
+        working-directory: ./services/user-service
+
+  integration_test_question:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # INSTALL PNPM
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      # SETUP NODE
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Install deps
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./services/question-service
+      
+      # Run integration tests
+      - name: Run integration tests
+        run: pnpm test tests/integration/
+        working-directory: ./services/question-service
