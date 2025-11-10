@@ -37,7 +37,7 @@ describe('ConsumerMessageHandler', () => {
     const processCollabSessionReadySpy = spyOn(messageHandler as any, 'processCollabSessionReady').and.callThrough();
 
     messageHandler.handleMessage(mockMessage, collabSessionReadyTopic);
-    expect(processCollabSessionReadySpy).toHaveBeenCalledWith(mockMessage.value?.toString() || '');
+    expect(processCollabSessionReadySpy).toHaveBeenCalledWith(mockMessage);
   });
 
   it('should handle unknown topic messages', async () => {
@@ -48,6 +48,6 @@ describe('ConsumerMessageHandler', () => {
     const processUnknownTopicSpy = spyOn(messageHandler as any, 'processUnknownTopic').and.callThrough();
 
     messageHandler.handleMessage(mockMessage, unknownTopic);
-    expect(processUnknownTopicSpy).toHaveBeenCalledWith(mockMessage.value?.toString() || '');
+    expect(processUnknownTopicSpy).toHaveBeenCalledWith(mockMessage);
   });
 });
