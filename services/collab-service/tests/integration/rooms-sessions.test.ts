@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑11-10
+Scope: Generated Test code for Integration of room and session.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { addActiveRoom, removeActiveRoom, disconnectSocketFromRoom, getActiveRooms } from '../../src/rooms.js';

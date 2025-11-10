@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑11-10
+Scope: Generated Test code for Rooms.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 1. Mock External Dependencies
