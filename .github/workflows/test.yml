@@ -10,103 +10,73 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
   # Job to test the question-service
-  test-question-service:
-    name: Test Question Service
-    runs-on: ubuntu-latest
-
+jobs:
+  test_user:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+      # INSTALL PNPM
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
-
-      - name: Setup Node.js
+          version: 10
+      
+      # SETUP NODE
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: services/question-service/pnpm-lock.yaml
+          node-version: 22
 
+      # Install deps
       - name: Install dependencies
-        working-directory: services/question-service
-        run: pnpm install --frozen-lockfile
-
+        run: pnpm install
+        working-directory: ./services/user-service
+      
+      # test
       - name: Run tests
-        working-directory: services/question-service
         run: pnpm test
+        working-directory: ./services/user-service
 
-      - name: Generate coverage report
-        working-directory: services/question-service
-        run: pnpm test:coverage
-        continue-on-error: true
+      - name: Run integration tests
+        run: pnpm test tests/integration/
+        working-directory: ./services/user-service
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: question-service-coverage
-          path: services/question-service/coverage/
-          retention-days: 7
-
-  # Job to test the user-service
-  test-user-service:
-    name: Test User Service
-    runs-on: ubuntu-latest
-
+  test_question:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+      # INSTALL PNPM
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
-
-      - name: Setup Node.js
+          version: 10
+      
+      # SETUP NODE
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: services/user-service/pnpm-lock.yaml
+          node-version: 22
 
+      # Install deps
       - name: Install dependencies
-        working-directory: services/user-service
-        run: pnpm install --frozen-lockfile
-
+        run: pnpm install
+        working-directory: ./services/question-service
+      
+      # test
       - name: Run tests
-        working-directory: services/user-service
         run: pnpm test
+        working-directory: ./services/question-service
 
-      - name: Generate coverage report
-        working-directory: services/user-service
-        run: pnpm test:coverage
-        continue-on-error: true
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: user-service-coverage
-          path: services/user-service/coverage/
-          retention-days: 7
-
-  # Final job that depends on all test jobs to verify success
-  verify-tests:
-    name: Verify All Tests Passed
-    runs-on: ubuntu-latest
-    needs:
-      - test-question-service
-      - test-user-service
-
-    steps:
-      - name: All tests passed
-        run: |
-          echo "✅ All tests have passed successfully!"
-          echo "Services tested:"
-          echo "  - Question Service"
-          echo "  - User Service"
+      - name: Run integration tests
+        run: pnpm test tests/integration/
+        working-directory: ./services/question-service
+  
