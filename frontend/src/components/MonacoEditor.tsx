@@ -14,6 +14,7 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { useSession } from "@/lib/auth-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useNavigate } from "@tanstack/react-router";
 
 /** Monaco Editor options
  * See: https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -65,9 +66,10 @@ function PythonMonacoEditor({
   const [websocketProvider, setWebsocketProvider] =
     useState<WebsocketProvider | null>(null);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const navigate = useNavigate();
 
-  const userId = useSession().data?.user?.id || "user1";
-  const userName = useSession().data?.user?.name || "User";
+  const userId = useSession().data?.user?.id;
+  const userName = useSession().data?.user?.name;
   const roomname = sessionId;
   const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
   .toString(16)
@@ -83,9 +85,9 @@ function PythonMonacoEditor({
 
   // this effect manages the lifetime of the provider
   useEffect(() => {
-    if (!userId || !roomname) {
+    if (!userId || !roomname || !userName) {
       console.warn(
-        "Missing userId or roomname, cannot connect to collab session."
+        "Missing userId, userName, or roomname, cannot connect to collab session."
       );
       return;
     }
@@ -128,6 +130,7 @@ function PythonMonacoEditor({
         alert(
           "Connection failed: You may be unauthorized to join this collaboration session."
         );
+        navigate({ to: '/home' });
         return;
       }
     });
