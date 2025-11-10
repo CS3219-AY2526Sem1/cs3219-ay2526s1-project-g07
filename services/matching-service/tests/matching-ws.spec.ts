@@ -59,11 +59,11 @@ async function cleanup(): Promise<void> {
 }
 
 describe("Web socket events (async)", () => {
-  beforeEach(async () => {
+  beforeAll(async () => {
     await init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanup();
   });
 

@@ -2,10 +2,11 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { WS_EVENTS_MATCHING } from '../../../shared/ws-events';
 import type { UserId } from '../../../shared/types/matching-types';
-import type { UserMatchingRequest, MatchFoundData } from '../../../shared/types/matching-types';
+import type { MatchFoundData } from '../../../shared/types/matching-types';
+import { useNavigate } from '@tanstack/react-router';
 
 export const useMatchingWebSocket = (
-  serverUrl: string = 'http://localhost:4000'
+  serverUrl: string = 'http://localhost:3000'
 ): UseMatchingWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [matchingStatus, setMatchingStatus] = useState<MatchingStatus>('disconnected');
@@ -14,6 +15,7 @@ export const useMatchingWebSocket = (
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   const clearError = useCallback(() => {
     setError(null);
@@ -24,6 +26,17 @@ export const useMatchingWebSocket = (
     console.log('WebSocket:', message);
   }, []);
 
+  const handleCollabSessionReady = useCallback((sessionId: string) => {
+    console.log('Navigating to collaboration session:', sessionId);
+    navigate({ to: `/collab/${sessionId}`, params: { sessionId } });
+  }, [navigate]);
+  
+  const handleUserDequeued = useCallback((userId: string) => {
+    console.log(`User ${userId} has been dequeued from matching`);
+    setMatchingStatus('cancelled');
+    updateMessage('You have been removed from the matching queue');
+  }, [updateMessage]);
+  
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
       console.log('Socket already connected');
@@ -84,6 +97,17 @@ export const useMatchingWebSocket = (
       updateMessage(`Matching failed: ${data.message || 'Unknown error'}`);
     });
 
+    socketRef.current.on(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, (data: any) => {
+      console.log('Collaboration session is ready');
+      setMatchingStatus('collab_session_ready');
+      updateMessage('Collaboration session is ready');
+      handleCollabSessionReady(data.sessionId);
+    });
+
+    socketRef.current.on(WS_EVENTS_MATCHING.USER_DEQUEUED, (data: any) => {
+      handleUserDequeued(data.userId);
+    });
+
     // Error handler
     socketRef.current.on(WS_EVENTS_MATCHING.ERROR, (error) => {
       console.error('WebSocket error:', error);
@@ -94,15 +118,24 @@ export const useMatchingWebSocket = (
   }, [serverUrl, clearError, updateMessage]);
 
   const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      console.log('Disconnecting from WebSocket...');
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      setIsConnected(false);
-      setMatchingStatus('disconnected');
-      setMatchData(null);
-      updateMessage('Manually disconnected');
+    if (!socketRef.current) {
+      console.error('No WebSocket connection to disconnect');
+      return;
     }
+
+    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_SUCCESS);
+    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_FAILED);
+    socketRef.current?.off(WS_EVENTS_MATCHING.COLLAB_SESSION_READY);
+    socketRef.current?.off(WS_EVENTS_MATCHING.USER_DEQUEUED);
+    socketRef.current?.off(WS_EVENTS_MATCHING.ERROR);
+
+    console.log('Disconnecting from WebSocket...');
+    socketRef.current.disconnect();
+    socketRef.current = null;
+    setIsConnected(false);
+    setMatchingStatus('disconnected');
+    setMatchData(null);
+    updateMessage('Manually disconnected');
   }, [updateMessage]);
 
   const joinUser = useCallback((userId: UserId) => {
@@ -142,7 +175,7 @@ export const useMatchingWebSocket = (
   };
 };
 
-type MatchingStatus = 'disconnected' | 'connecting' | 'connected' | 'queued' | 'matched' | 'cancelled' | 'failed';
+type MatchingStatus = 'disconnected' | 'connecting' | 'connected' | 'queued' | 'matched' | 'cancelled' | 'failed' | 'collab_session_ready';
 
 interface UseMatchingWebSocketReturn {
   // Connection status

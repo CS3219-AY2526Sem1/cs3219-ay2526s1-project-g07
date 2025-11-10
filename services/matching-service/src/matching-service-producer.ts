@@ -1,5 +1,5 @@
 import { Kafka, type Producer } from 'kafkajs';
-import { Matcher } from './matcher';
+import { Matcher, MatcherEvents } from './matcher';
 import { TOPICS_MATCHING } from '../../../shared/kafka-topics';
 import type { MatchPreference, MatchResult } from '../../../shared/types/matching-types';
 
@@ -25,7 +25,7 @@ export class MatchingServiceProducer {
 
   private subscribe() {
     // Listen for match found events from the matcher
-    this.matcher.emitter.on('matchFound', async (match) => this.handleMatchFound(match));
+    this.matcher.emitter.on(MatcherEvents.EVENT_MATCH_FOUND, async (match) => this.handleMatchFound(match));
   }
 
   private async handleMatchFound(match: MatchResult) {
