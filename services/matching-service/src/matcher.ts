@@ -31,7 +31,7 @@ export class Matcher {
       timestamp: Date.now()
     };
 
-    const queue = await this.queue;
+    const queue = await this.queue(Matcher.REDIS_KEY_MATCHING_QUEUE);
     if (queue.some(request => request.userId.id === userId.id)) {
       await this.dequeue({ id: userId.id });
     }
@@ -74,7 +74,7 @@ export class Matcher {
     }
 
     try {
-      const userRequests = await this.queue;
+      const userRequests = await this.queue(cacheKey);
       const filteredRequests = userRequests.filter(r => r.userId.id !== userId);
 
       await this.redisClient.instance.del(cacheKey);
@@ -166,11 +166,11 @@ export class Matcher {
 
   private async handleNoMatch() {
     console.log('No suitable match found at this time.');
-    console.log(JSON.stringify(await this.queue));
+    console.log(JSON.stringify(await this.queue(Matcher.REDIS_KEY_MATCHING_QUEUE)));
   }
 
   private async findMatch(): Promise<MatchResult | null> {
-    const userRequests = await this.queue;
+    const userRequests = await this.queue(Matcher.REDIS_KEY_MATCHING_QUEUE);
     if (userRequests.length < 2) {
       console.log('Not enough users in the queue to find a match.');
       return null; // Not enough users to match
@@ -217,9 +217,9 @@ export class Matcher {
     console.log('Matcher cleanup completed.');
   }
 
-  private get queue(): Promise<UserMatchingRequest[]> {
-    return this.redisClient.instance.lRange(Matcher.REDIS_KEY_MATCHING_QUEUE, 0, -1)
-      .then(requests => requests.map(request => JSON.parse(request as string) as UserMatchingRequest));
+  private async queue(cacheKey: string): Promise<UserMatchingRequest[]> {
+    const requests = await this.redisClient.instance.lRange(cacheKey, 0, -1);
+    return requests.map(request => JSON.parse(request as string) as UserMatchingRequest);
   }
 }
 
