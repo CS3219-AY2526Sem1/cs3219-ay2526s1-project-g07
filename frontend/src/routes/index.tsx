@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,47 +9,44 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function Index() {
-
-  const session = useSession()
-  const navigate = useNavigate()
-  const [sessionChecked, setSessionChecked] = useState(false)
+  const session = useSession();
+  const navigate = useNavigate();
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     // Only proceed when session is not pending (finished loading)
     if (!session.isPending && !sessionChecked) {
-      console.log('Session check finished:', session)
-      
+      console.log("Session check finished:", session);
+
       if (session.data?.user) {
-        console.log('User is authenticated, redirecting to /home')
-        navigate({ to: '/home' })
+        console.log("User is authenticated, redirecting to /home");
+        navigate({ to: "/home" });
       } else {
-        console.log('User is not authenticated, staying on index page')
+        console.log("User is not authenticated, staying on index page");
       }
-      
-      setSessionChecked(true)
+
+      setSessionChecked(true);
     }
-  }, [session.isPending, session.data, navigate, sessionChecked])
+  }, [session.isPending, session.data, navigate, sessionChecked]);
 
   // Show loading while session is pending or we haven't checked yet
   if (session.isPending || !sessionChecked) {
-    return null
+    return null;
   }
 
   // If user is authenticated, don't render (redirect will happen)
   if (session.data?.user) {
-    return null
+    return null;
   }
 
   // If user is not logged in, show the landing page
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="mx-16 w-full h-180 md:h-140 p-0 max-w-4xl">

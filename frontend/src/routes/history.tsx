@@ -9,7 +9,7 @@ export const Route = createFileRoute("/history")({
 // attempt history
 function RouteComponent() {
   redirectIfNotAuthenticated();
-  
+
   return (
     <div>
       <Navbar />

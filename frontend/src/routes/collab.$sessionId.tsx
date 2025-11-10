@@ -8,25 +8,30 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useSession } from "@/lib/auth-client";
 import CodeOutput from "../components/CodeOutput";
 import PythonMonacoEditor from "../components/MonacoEditor";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated, useCurrentUser } from "../hooks/user-hooks";
-import { useSession } from "@/lib/auth-client";
-
+import {
+  redirectIfNotAuthenticated,
+  useCurrentUser,
+} from "../hooks/user-hooks";
 
 export const Route = createFileRoute("/collab/$sessionId")({
   // Loader fetches the question before rendering
   loader: async ({ params }) => {
-    const response = await fetch(`/api/collab/sessions/${params.sessionId}/question`);
+    const response = await fetch(
+      `/api/collab/sessions/${params.sessionId}/question`
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch question");
     }
     // Assuming the API returns { question: string }
     const data = await response.json();
-    return { 
-      question_title: data.title, 
-      question_text: data.question };
+    return {
+      question_title: data.title,
+      question_text: data.question,
+    };
   },
   component: RouteComponent,
 });
@@ -50,7 +55,7 @@ function RouteComponent() {
   });
   const navigate = Route.useNavigate();
   const userId = useSession().data?.user?.id;
-  const {isPending, user} = useCurrentUser();
+  const { isPending, user } = useCurrentUser();
 
   if (isPending) {
     return <div>Loading...</div>;
@@ -68,7 +73,7 @@ function RouteComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ collabSessionId: sessionId, userId: user?.id  }),
+        body: JSON.stringify({ collabSessionId: sessionId, userId: user?.id }),
       });
       const data = await response.text();
       if (response.ok) {
@@ -114,25 +119,27 @@ function RouteComponent() {
 
   const endCollabSession = useCallback(async () => {
     // Logic to end the collaboration session
-      try {
-        const response = await fetch(`/api/collab/rooms/${sessionId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userId }),
-        });
-        if (response.ok) {
-          // redirect to home
-          navigate({ to: '/home' });
-        } else {
-          const data = await response.text();
-          alert(`Failed to end session: ${data || response.statusText}`);
-        }
-      } catch (e: unknown) {
-        console.error("Error ending collaboration session:", e);
-        alert(`Failed to end session: ${e instanceof Error ? e.message : String(e)}`);
+    try {
+      const response = await fetch(`/api/collab/rooms/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+      if (response.ok) {
+        // redirect to home
+        navigate({ to: "/home" });
+      } else {
+        const data = await response.text();
+        alert(`Failed to end session: ${data || response.statusText}`);
       }
+    } catch (e: unknown) {
+      console.error("Error ending collaboration session:", e);
+      alert(
+        `Failed to end session: ${e instanceof Error ? e.message : String(e)}`
+      );
+    }
   }, [navigate, sessionId]);
 
   const toggleAiDebugPanel = useCallback(() => {
@@ -217,7 +224,11 @@ function RouteComponent() {
                       )}
                     </div>
                   </div>
-                  <PythonMonacoEditor code={code} onCodeChange={setCode} sessionId={sessionId} />
+                  <PythonMonacoEditor
+                    code={code}
+                    onCodeChange={setCode}
+                    sessionId={sessionId}
+                  />
                 </div>
               </ResizablePanel>
               <ResizableHandle />
@@ -278,7 +289,13 @@ function RouteComponent() {
             </>
           )}
         </ResizablePanelGroup>
-        <Button variant="destructive" className="m-1" onClick={endCollabSession}>End Session</Button>
+        <Button
+          variant="destructive"
+          className="m-1"
+          onClick={endCollabSession}
+        >
+          End Session
+        </Button>
       </div>
     </div>
   );
