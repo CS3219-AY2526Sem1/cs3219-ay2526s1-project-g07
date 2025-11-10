@@ -7,14 +7,14 @@ I also extracted the component from the parent file for better modularity.
 */
 
 import Editor, { type OnChange, type OnMount } from "@monaco-editor/react";
+import { useNavigate } from "@tanstack/react-router";
 import type { editor } from "monaco-editor";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
-import { useSession } from "@/lib/auth-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useNavigate } from "@tanstack/react-router";
+import { useSession } from "@/lib/auth-client";
 
 /** Monaco Editor options
  * See: https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -72,8 +72,8 @@ function PythonMonacoEditor({
   const userName = useSession().data?.user?.name;
   const roomname = sessionId;
   const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
-  .toString(16)
-  .padStart(6, "0")}`; // assign a random color
+    .toString(16)
+    .padStart(6, "0")}`; // assign a random color
 
   // Clean up Yjs document on unmount
   useEffect(() => {
@@ -106,7 +106,9 @@ function PythonMonacoEditor({
 
       // code 4000 indicates normal closure after user removal via API
       if (code === USER_REMOVED_CLOSE_CODE) {
-        console.log(`Connection closed normally after user removal (Code ${code})`);
+        console.log(
+          `Connection closed normally after user removal (Code ${code})`
+        );
         return;
       }
 
@@ -130,7 +132,7 @@ function PythonMonacoEditor({
         alert(
           "Connection failed: You may be unauthorized to join this collaboration session."
         );
-        navigate({ to: '/home' });
+        navigate({ to: "/home" });
         return;
       }
     });
@@ -182,7 +184,9 @@ function PythonMonacoEditor({
 
       // Loop through all connected users' awareness states
       for (const [clientId, state] of awareness.getStates()) {
-        const user = state?.user as { userId: number; name: string; color: string } | undefined;
+        const user = state?.user as
+          | { userId: number; name: string; color: string }
+          | undefined;
         if (user) {
           // Logic for the User Bar (updates React state)
           if (userIdSet.has(user.userId)) {
@@ -221,8 +225,8 @@ function PythonMonacoEditor({
         `;
         }
       }
-      console.log("Active users updated:", usersForBar);  
-      console.log('user set'  , userIdSet);
+      console.log("Active users updated:", usersForBar);
+      console.log("user set", userIdSet);
       setActiveUsers(usersForBar);
 
       // Inject the CSS into the document
@@ -270,14 +274,22 @@ function PythonMonacoEditor({
 
   return (
     <>
-      <div className="user-bar" style={{ display: "flex", gap: "2px", margin: "4px", justifyContent: "flex-end" }}>
+      <div
+        className="user-bar"
+        style={{
+          display: "flex",
+          gap: "2px",
+          margin: "4px",
+          justifyContent: "flex-end",
+        }}
+      >
         {activeUsers.map((user) => (
           <Avatar key={user.clientId} title={user.name}>
-              <AvatarFallback 
-                  style={{ backgroundColor: user.color, color: 'white' }}
-              >
-                  {user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
+            <AvatarFallback
+              style={{ backgroundColor: user.color, color: "white" }}
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         ))}
       </div>

@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
+    "check:unsafe": "biome check --write --unsafe",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
     "preview": "rsbuild preview"

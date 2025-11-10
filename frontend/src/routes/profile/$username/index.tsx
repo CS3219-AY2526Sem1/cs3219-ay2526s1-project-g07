@@ -1,172 +1,179 @@
-import { useState, useRef } from 'react'
-import Navbar from '@/src/components/Navbar'
-import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
-} from '@/components/ui/dialog'
-import { getSession } from '@/lib/auth-client'
-import { redirectIfNotAuthenticated } from '@/src/hooks/user-hooks'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { getSession } from "@/lib/auth-client";
+import Navbar from "@/src/components/Navbar";
+import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
-export const Route = createFileRoute('/profile/$username/')({
+export const Route = createFileRoute("/profile/$username/")({
   component: RouteComponent,
   loader: async () => {
-    const userInfo = await getSession()
-    const userId = userInfo?.data?.user.id
+    const userInfo = await getSession();
+    const userId = userInfo?.data?.user.id;
 
     try {
-      const response = await fetch(`/api/user/getUserData/${userId}`)
-      const data = await response.json()
-      console.log('Profile data:', data)
-      return data
+      const response = await fetch(`/api/user/getUserData/${userId}`);
+      const data = await response.json();
+      console.log("Profile data:", data);
+      return data;
     } catch (error) {
-      console.error('Error fetching profile data:', error)
-      return null
+      console.error("Error fetching profile data:", error);
+      return null;
     }
-  }
-})
+  },
+});
 
 function RouteComponent() {
   redirectIfNotAuthenticated();
 
-  const { username } = Route.useParams()
-  const data = Route.useLoaderData()
+  const { username } = Route.useParams();
+  const data = Route.useLoaderData();
 
   const [formData, setFormData] = useState({
     username: data?.name || username,
-    description: data?.description || 'No description available',
-    profileImage: data?.profileImage || null
-  })
+    description: data?.description || "No description available",
+    profileImage: data?.profileImage || null,
+  });
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(data?.profileImage || null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    data?.profileImage || null
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const compressImage = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
       reader.onload = (event) => {
-        const img = new Image()
-        img.src = event.target?.result as string
+        const img = new Image();
+        img.src = event.target?.result as string;
         img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const ctx = canvas.getContext('2d')
-          
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
           // Resize to max 400x400 while maintaining aspect ratio
-          const MAX_SIZE = 400
-          let width = img.width
-          let height = img.height
-          
+          const MAX_SIZE = 400;
+          let width = img.width;
+          let height = img.height;
+
           if (width > height) {
             if (width > MAX_SIZE) {
-              height = (height * MAX_SIZE) / width
-              width = MAX_SIZE
+              height = (height * MAX_SIZE) / width;
+              width = MAX_SIZE;
             }
           } else {
             if (height > MAX_SIZE) {
-              width = (width * MAX_SIZE) / height
-              height = MAX_SIZE
+              width = (width * MAX_SIZE) / height;
+              height = MAX_SIZE;
             }
           }
-          
-          canvas.width = width
-          canvas.height = height
-          ctx?.drawImage(img, 0, 0, width, height)
-          
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+
           // Compress to 70% quality
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7)
-          resolve(compressedBase64)
-        }
-        img.onerror = reject
-      }
-      reader.onerror = reject
-    })
-  }
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(compressedBase64);
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
-      return
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
     }
 
     // Validate file size (max 5MB before compression)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size should be less than 5MB')
-      return
+      alert("Image size should be less than 5MB");
+      return;
     }
 
     try {
-      const compressedImage = await compressImage(file)
-      setPreviewImage(compressedImage)
-      setFormData({ ...formData, profileImage: compressedImage })
+      const compressedImage = await compressImage(file);
+      setPreviewImage(compressedImage);
+      setFormData({ ...formData, profileImage: compressedImage });
     } catch (error) {
-      console.error('Error compressing image:', error)
-      alert('Error processing image')
+      console.error("Error compressing image:", error);
+      alert("Error processing image");
     }
-  }
+  };
 
   const handleSave = async () => {
-    console.log("hello")
-    setIsLoading(true)
+    console.log("hello");
+    setIsLoading(true);
 
     try {
-      const userInfo = await getSession()
-      const userId = userInfo?.data?.user.id
+      const userInfo = await getSession();
+      const userId = userInfo?.data?.user.id;
 
       // TODO: Replace with actual API call to save data
       const response = await fetch(`/api/user/updateUserData/${userId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: formData.username,
           description: formData.description,
-          profileImage: formData.profileImage
-        })
-      })
+          profileImage: formData.profileImage,
+        }),
+      });
 
       if (response.ok) {
-        console.log('Profile updated successfully')
-        setIsOpen(false)
+        console.log("Profile updated successfully");
+        setIsOpen(false);
         // Optionally refresh the page or update local state
-        window.location.reload()
+        window.location.reload();
       } else {
-        console.error('Error updating profile')
-        alert('Error updating profile')
+        console.error("Error updating profile");
+        alert("Error updating profile");
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
-      alert('Error updating profile')
+      console.error("Error updating profile:", error);
+      alert("Error updating profile");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Use data from backend or fallback values
-  const displayName = data?.name || username
-  const displayDescription = data?.description || 'No description available'
-  const displayImage = data?.profileImage
+  const displayName = data?.name || username;
+  const displayDescription = data?.description || "No description available";
+  const displayImage = data?.profileImage;
 
   const getUserInitials = (name: string) => {
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
-  }
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <>
@@ -234,7 +241,9 @@ function RouteComponent() {
                       <Input
                         id="username"
                         value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, username: e.target.value })
+                        }
                       />
                     </div>
                     <div className="grid gap-2">
@@ -242,7 +251,12 @@ function RouteComponent() {
                       <Textarea
                         id="description"
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
+                        }
                         placeholder="Enter your description here..."
                         rows={4}
                       />
@@ -261,7 +275,7 @@ function RouteComponent() {
                       onClick={handleSave}
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Saving...' : 'Save Changes'}
+                      {isLoading ? "Saving..." : "Save Changes"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -271,5 +285,5 @@ function RouteComponent() {
         </Card>
       </div>
     </>
-  )
+  );
 }
