@@ -90,7 +90,9 @@ function RouteComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: q }),
+        // body: JSON.stringify({ question: q }),
+        // TODO change to collabSessionId, userId
+        body: JSON.stringify({ collabSessionId: sessionId, userId: isPending ? "" : user?.id}),
       });
       const data = await response.text();
       if (response.ok) {

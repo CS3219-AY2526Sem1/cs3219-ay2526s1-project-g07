@@ -1,7 +1,7 @@
 import type { EachMessagePayload } from 'kafkajs';
 import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
 import { addSession, generateRandomSessionId, getSessionDetails } from '../sessions.js';
-import type { AIQuestionResponseEvent, CollabSessionReadyEvent } from './events.js';
+import type { AIQuestionResponseEvent, CollabSessionReadyEvent, UserStatusUpdateEvent } from './events.js';
 import { kafkaClient } from '../index.js';
 
 export class CollabMessageHandler { 
@@ -128,6 +128,26 @@ export class CollabMessageHandler {
             }
         };
 
-        await kafkaClient.getProducer().publishEvent(collabSessionReadyEvent);
+        await kafkaClient.getProducer().publishEvent<CollabSessionReadyEvent>(collabSessionReadyEvent);
+
+        const userStatusUpdateEventOne: Omit<UserStatusUpdateEvent, 'eventId'> = {
+            eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
+            data: {
+                userId: userIdOne,
+                collabSessionId: collabSessionId
+            }
+        };
+
+        await kafkaClient.getProducer().publishEvent<UserStatusUpdateEvent>(userStatusUpdateEventOne);
+
+        const userStatusUpdateEventTwo: Omit<UserStatusUpdateEvent, 'eventId'> = {
+            eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
+            data: {
+                userId: userIdTwo,
+                collabSessionId: collabSessionId
+            }
+        };
+
+        await kafkaClient.getProducer().publishEvent<UserStatusUpdateEvent>(userStatusUpdateEventTwo);
     }
 }
