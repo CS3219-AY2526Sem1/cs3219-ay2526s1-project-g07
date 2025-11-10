@@ -12,10 +12,10 @@ export class ConsumerMessageHandler {
     this.webSocket = webSocket;
   }
 
-  handleMessage(message: KafkaMessage, topic: string) {
+  async handleMessage(message: KafkaMessage, topic: string) {
     switch (topic) {
       case TOPICS_MATCHING.COLLAB_SESSION_READY:
-        this.processCollabSessionReady(message);
+        await this.processCollabSessionReady(message);
         break;
 
       default:
@@ -24,7 +24,7 @@ export class ConsumerMessageHandler {
     }
   }
 
-  protected processCollabSessionReady(message: KafkaMessage) {
+  protected async processCollabSessionReady(message: KafkaMessage) {
     try {
       if (!message.value) {
         console.error(`Received empty message for collab session ready: ${message}`);
@@ -39,8 +39,8 @@ export class ConsumerMessageHandler {
       this.webSocket?.emitCollabSessionReady(userIdOne, userIdTwo, collabSessionId);
 
       // Clean up
-      this.matcher.dequeue({ id: userIdOne }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
-      this.matcher.dequeue({ id: userIdTwo }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+      await this.matcher.dequeue({ id: userIdOne }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+      await this.matcher.dequeue({ id: userIdTwo }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
     } catch (err) {
       console.error(`Failed to process collab session ready message:`, message, err);
     }

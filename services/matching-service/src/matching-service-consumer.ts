@@ -26,7 +26,7 @@ export class MatchingServiceConsumer {
   private async run() {
     await this.consumer.run({
           eachMessage: async ({ topic, partition, message }) => {
-            this.messageHandler.handleMessage(message, topic);
+            await this.messageHandler.handleMessage(message, topic);
           }
         });
   }
