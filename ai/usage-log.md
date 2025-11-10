@@ -11029,3 +11029,110 @@ This matches your AIQuestionHintRequestEvent with _meta at the root and ensures 
 
 ---
 
+
+## Generate Session and Room functionality
+
+### Prompt/Command
+Generate the session and room functionality of the collab-session service
+
+### Participant
+
+### Assistant
+
+> ChatGPT 4.1
+> 2025‑10‑24
+
+Generated the session management code as well as active room management code. 
+I verified the functionality and modified it to fit the requirements of our application.
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- I verified the functionality and modified it to fit the requirements of our application.
+
+
+## Generate Session and Room functionality
+
+**Participant:** richiehx
+**Assistant:** ChatGPT 4.1
+
+### Prompt/Command
+Generate the session and room functionality of the collab-session service
+
+### Assistant
+
+> ChatGPT 4.1
+> 2025‑10‑24
+
+Generated the session management code as well as active room management code. 
+I verified the functionality and modified it to fit the requirements of our application.
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- I verified the functionality and modified it to fit the requirements of our application.
+
+## Explain the WebSocket and generate the WebSocket functionality
+
+**Participant:** richiehx
+**Assistant:** ChatGPT 4.1
+
+### Prompt/Command
+How does the Websocket work in setting up the collab session? Generate some of the code for me.
+
+### Assistant
+
+> ChatGPT 4.1
+> 2025‑10‑24
+
+Explained how the WebSocket worked.
+Generated some of the WebSocket functionality.
+I verified the functionality and modified it to fit the requirements of our application.
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- I verified the functionality and modified it to fit the requirements of our application.
+
+
+## Generate Test code
+
+**Participant:** richiehx
+**Assistant:** ChatGPT 4.1
+
+### Prompt/Command
+Generate test code for rooms and sessions. Generate integration tests for integration of rooms and sessions.
+
+### Assistant
+
+> ChatGPT 4.1
+> 2025‑11-10
+
+Generated unit tests for rooms and sessions, integration tests for the integration of room and session.
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- I verified the functionality and modified it to fit the requirements of our application.
+
+
