@@ -20,7 +20,6 @@ const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 dotenv_1.default.config();
 const PORT = process.env.PORT || 3000;
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || "localhost:9092").split(",");
 async function main() {
     // --- Middleware ---
     app.use((0, cors_1.default)({
@@ -29,7 +28,7 @@ async function main() {
     app.use(express_1.default.json());
     const kafka = new kafkajs_1.Kafka({
         clientId: 'matching-service',
-        brokers: KAFKA_BROKERS,
+        brokers: (process.env.KAFKA_BROKERS || "localhost:9092").split(","),
     });
     // --- Core Components ---
     const redisClient = new client_1.RedisClient();
@@ -106,6 +105,7 @@ async function main() {
         const { userId } = req.body;
         console.log(`Received matching cancel request for user id: ${userId.id}`);
         matcher.dequeue(userId);
+        matcher.dequeue(userId, true, matcher_js_1.Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
         return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
     });
     // --- Error Handling Middleware ---

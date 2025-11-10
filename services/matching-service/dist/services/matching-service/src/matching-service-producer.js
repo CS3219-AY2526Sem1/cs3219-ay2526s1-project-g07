@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchingServiceProducer = void 0;
+const matcher_1 = require("./matcher");
 const kafka_topics_1 = require("../../../shared/kafka-topics");
 class MatchingServiceProducer {
     constructor(kafka, matcher) {
@@ -17,7 +18,7 @@ class MatchingServiceProducer {
     }
     subscribe() {
         // Listen for match found events from the matcher
-        this.matcher.emitter.on('matchFound', async (match) => this.handleMatchFound(match));
+        this.matcher.emitter.on(matcher_1.MatcherEvents.EVENT_MATCH_FOUND, async (match) => this.handleMatchFound(match));
     }
     async handleMatchFound(match) {
         const { firstUserId, secondUserId, preferences } = match;

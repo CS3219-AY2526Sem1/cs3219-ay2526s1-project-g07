@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchingWS = void 0;
+const matcher_1 = require("./matcher");
 const ws_events_1 = require("../../../shared/ws-events");
 class MatchingWS {
     constructor(io, matcher) {
@@ -40,6 +41,10 @@ class MatchingWS {
             socket.on(ws_events_1.WS_EVENTS_MATCHING.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
             socket.on(ws_events_1.WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(socket, error));
         });
+        this.matcher.emitter.on(matcher_1.MatcherEvents.EVENT_USER_DEQUEUED, (userId) => {
+            this.emitUserDequeued(userId.id);
+        });
+        console.log('Matching WebSocket server initialized and listening for connections.');
     }
     async HandleConnectionInterrupt(userId) {
         if (!userId)
@@ -52,6 +57,10 @@ class MatchingWS {
         console.log(`Emitting collab session ready to user ${userId} and peer ${peerId} for session ${sessionId}`);
         this.io.to(`user_${userId}`).emit(ws_events_1.WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
         this.io.to(`user_${peerId}`).emit(ws_events_1.WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+    }
+    emitUserDequeued(userId) {
+        console.log(`Emitting user dequeued event to user ${userId}`);
+        this.io.to(`user_${userId}`).emit(ws_events_1.WS_EVENTS_MATCHING.USER_DEQUEUED, { userId });
     }
 }
 exports.MatchingWS = MatchingWS;

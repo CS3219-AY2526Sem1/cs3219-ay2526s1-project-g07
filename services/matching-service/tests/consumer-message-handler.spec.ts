@@ -38,7 +38,7 @@ describe('ConsumerMessageHandler', () => {
     } as KafkaMessage;
     const processCollabSessionReadySpy = spyOn(messageHandler as any, 'processCollabSessionReady').and.callThrough();
 
-    messageHandler.handleMessage(mockMessage, collabSessionReadyTopic);
+    await messageHandler.handleMessage(mockMessage, collabSessionReadyTopic);
     expect(processCollabSessionReadySpy).toHaveBeenCalledWith(mockMessage);
   });
 
@@ -49,7 +49,7 @@ describe('ConsumerMessageHandler', () => {
     } as KafkaMessage;
     const processUnknownTopicSpy = spyOn(messageHandler as any, 'processUnknownTopic').and.callThrough();
 
-    messageHandler.handleMessage(mockMessage, unknownTopic);
+    await messageHandler.handleMessage(mockMessage, unknownTopic);
     expect(processUnknownTopicSpy).toHaveBeenCalledWith(mockMessage);
   });
 });

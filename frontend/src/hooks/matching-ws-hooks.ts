@@ -6,7 +6,7 @@ import type { MatchFoundData } from '../../../shared/types/matching-types';
 import { useNavigate } from '@tanstack/react-router';
 
 export const useMatchingWebSocket = (
-  serverUrl: string = 'http://localhost:4000'
+  serverUrl: string = 'http://localhost:3000'
 ): UseMatchingWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [matchingStatus, setMatchingStatus] = useState<MatchingStatus>('disconnected');
@@ -26,16 +26,16 @@ export const useMatchingWebSocket = (
     console.log('WebSocket:', message);
   }, []);
 
-  const handleCollabSessionReady = (sessionId: string) => {
+  const handleCollabSessionReady = useCallback((sessionId: string) => {
     console.log('Navigating to collaboration session:', sessionId);
     navigate({ to: `/collab/${sessionId}`, params: { sessionId } });
-  };
-
-  const handleUserDequeued = (userId: string) => {
+  }, [navigate]);
+  
+  const handleUserDequeued = useCallback((userId: string) => {
     console.log(`User ${userId} has been dequeued from matching`);
     setMatchingStatus('cancelled');
     updateMessage('You have been removed from the matching queue');
-  };
+  }, [updateMessage]);
   
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {

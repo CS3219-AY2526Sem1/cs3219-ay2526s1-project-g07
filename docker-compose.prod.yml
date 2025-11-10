@@ -195,8 +195,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - PUBLIC_MATCHING_SERVICE_WS_URL=http://matching-service:5006
-      - PUBLIC_MATCHING_SERVICE_URL=http://matching-service:5006
+      - PUBLIC_MATCHING_SERVICE_WS_URL=${PUBLIC_MATCHING_SERVICE_WS_URL}
+      - PUBLIC_MATCHING_SERVICE_URL=${PUBLIC_MATCHING_SERVICE_URL}
     networks:
       - app-network
 
