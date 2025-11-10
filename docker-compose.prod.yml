@@ -132,11 +132,11 @@ services:
         condition: service_started
     environment:
       - HOST=0.0.0.0
-      - PORT=4000
-      - HOST_URL=http://localhost:3000
-      - WS_PORT=http://localhost:5000
+      - PORT=5006
+      - WS_PORT=5006
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - KAFKA_BROKERS=kafka:9092
     ports:
       - "5006:5006"
     networks:
@@ -194,6 +194,9 @@ services:
       - matching-service
     ports:
       - "80:80"
+    environment:
+      - PUBLIC_MATCHING_SERVICE_WS_URL=${PUBLIC_MATCHING_SERVICE_WS_URL}
+      - PUBLIC_MATCHING_SERVICE_URL=${PUBLIC_MATCHING_SERVICE_URL}
     networks:
       - app-network
 

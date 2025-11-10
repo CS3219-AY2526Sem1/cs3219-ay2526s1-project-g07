@@ -36,6 +36,13 @@ class RedisClient {
         return client;
     }
     async quit() {
+        if (this.instance && this.instance.isOpen) {
+            await this.instance.quit();
+            console.log('Redis client safely closed.');
+        }
+        else {
+            console.log('Redis client already closed or not initialized.');
+        }
         if (!this.instance.isOpen) {
             console.log('Redis client already disconnected');
             return;
