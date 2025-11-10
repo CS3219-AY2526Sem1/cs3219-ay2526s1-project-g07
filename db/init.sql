@@ -8,7 +8,8 @@ CREATE TABLE "user" (
   "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   "description" TEXT,
   "role" TEXT,
-  "profileImage" TEXT
+  "profileImage" TEXT,
+  "collab_id" TEXT
 );
 
 CREATE TABLE "session" (
