@@ -14,55 +14,28 @@ import Navbar from "../components/Navbar";
 import { redirectIfNotAuthenticated } from "../hooks/user-hooks";
 import { useSession } from "@/lib/auth-client";
 
-const q = `
-Write a function that reverses a string. The input string is given as an array of characters \`s\`.
-
-You must do this by modifying the input array in-place with \`O(1)\` extra memory.
-
----
-**Example 1:**
-**Input**: \`s = ["h","e","l","l","o"]\`
-**Output**: \`["o","l","l","e","h"]\`
-
-**Example 2:**
-**Input**: \`s = ["H","a","n","n","a","h"]\`
-**Output**: \`["h","a","n","n","a","H"]\`
-
----
-
-**Constraints:**
-*   \`1 <= s.length <= 10^5\`
-*   \`s[i]\` is a printable ASCII character.
-`;
-
-const defaultCode = `def solution(s):
-    """
-    Reverse a string in-place with O(1) extra memory.
-    :type s: List[str]
-    :rtype: None Do not return anything, modify s in-place instead.
-    """
-    left, right = 0, len(s) - 1
-    while left < right:
-        s[left], s[right] = s[right], s[left]
-        left += 1
-        right -= 1
-
-# Test the solution
-test_input = ["h","e","l","l","o"]
-solution(test_input)
-print(test_input)  # Expected: ["o","l","l","e","h"]`;
 
 export const Route = createFileRoute("/collab/$sessionId")({
+  // Loader fetches the question before rendering
+  loader: async ({ params }) => {
+    const response = await fetch(`/api/collab/sessions/${params.sessionId}/question`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch question");
+    }
+    // Assuming the API returns { question: string }
+    const data = await response.json();
+    return { 
+      question_title: data.title, 
+      question_text: data.question };
+  },
   component: RouteComponent,
 });
-
-
-
 
 // collaborative coding session
 function RouteComponent() {
   const { sessionId } = Route.useParams();
-  const [code, setCode] = useState(defaultCode);
+  const { question_title, question_text } = Route.useLoaderData();
+  const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [aiHintContent, setAiHintContent] = useState({
@@ -79,7 +52,7 @@ function RouteComponent() {
   const userId = useSession().data?.user?.id;
 
   const resetCode = useCallback(() => {
-    setCode(defaultCode);
+    setCode("");
   }, []);
 
   const fetchAiHint = useCallback(async () => {
@@ -90,7 +63,7 @@ function RouteComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: question_text }),
       });
       const data = await response.text();
       if (response.ok) {
@@ -120,7 +93,7 @@ function RouteComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: q, code, output }),
+        body: JSON.stringify({ question: question_text, code, output }),
       });
       const data = await response.text();
       setAiDebugContent({ loading: false, content: data, error: "" });
@@ -144,9 +117,6 @@ function RouteComponent() {
           },
           body: JSON.stringify({ userId }),
         });
-        // const response = await fetch('/api/collab/health', {
-        //   method: "GET"
-        // });
         if (response.ok) {
           // redirect to home
           navigate({ to: '/home' });
@@ -184,9 +154,9 @@ function RouteComponent() {
             className="!overflow-auto pt-6 pb-12"
           >
             <div className="overflow-auto px-6 py-2">
-              <div className="font-semibold mb-6 text-lg">Reverse String</div>
+              <div className="font-semibold mb-6 text-lg">{question_title}</div>
               <div className="whitespace-pre-wrap text-sm min-w-fit question-desc-markdown">
-                <Markdown>{q}</Markdown>
+                <Markdown>{question_text}</Markdown>
               </div>
               <hr className="my-6" />
               <div className="flex flex-col gap-6 text-sm">
