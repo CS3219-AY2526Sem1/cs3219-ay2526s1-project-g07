@@ -19,10 +19,13 @@ export class CollabProducer {
                 ...event,
                 eventId: uuidv4(), // Different from collabSessionId in CollabSessionReadyEvent
             } as T;
-            
+
+            const correlationId = (fullEvent as any)._meta?.correlationId;
+
             const messages = [{
                 key: key || fullEvent.eventId,
                 value: JSON.stringify(fullEvent),
+                headers: correlationId ? { correlationId: Buffer.from(correlationId) } : undefined,
             }] //timestamp defaults to Date.now()
 
             const result = await this.producer.send({

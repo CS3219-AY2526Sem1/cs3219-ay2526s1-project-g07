@@ -1,8 +1,6 @@
 import { type Consumer, type EachMessagePayload } from 'kafkajs';
-import type { EventType } from './events.js';
 import { CollabMessageHandler } from './collabMessageHandler.js';
 
-export type EventHandler<T extends EventType> = (event: T) => Promise<void>;
 
 export class CollabConsumer {
     private consumer: Consumer;
