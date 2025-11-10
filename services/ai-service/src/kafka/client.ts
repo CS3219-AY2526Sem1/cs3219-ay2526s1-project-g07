@@ -1,3 +1,8 @@
+// AI Assistance Disclosure:
+// Tool: GitHub Copilot (model: GPT-5), date: 2025-11-09
+// Scope: Requested for assistance to retrieve kafka response for API
+// Author review: I have ran the kafka component on this service and verified that it is working as intended.
+
 import {Kafka } from 'kafkajs';
 import { AiKafkaProducer } from './producer.js';
 import { AiKafkaConsumer } from './consumer.js';

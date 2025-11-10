@@ -1,3 +1,8 @@
+// AI Assistance Disclosure:
+// Tool: GitHub Copilot (model: GPT-5), date: 2025-11-11
+// Scope: Requested for assistance to integrate kafka to the API logic to retrieve data from other services
+// Author review: I have tested the endpoint with a curl request and is working as intended.
+
 import type { GoogleGenAI } from "@google/genai";
 import { Hono } from "hono";
 import debugCode from "../service/debugCode.js";

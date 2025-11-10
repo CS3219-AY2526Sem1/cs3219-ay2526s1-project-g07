@@ -1,3 +1,8 @@
+// AI Assistance Disclosure:
+// Tool: GitHub Copilot (model: GPT-5), date: 2025-11-10
+// Scope: Requested for assistance to integrate pendingReply for messageHandler
+// Author review: I have ran the kafka component on this service and verified that messageHandler is being able to handle the pending requests.
+
 import { type Consumer, type EachMessagePayload } from 'kafkajs';
 import type { EventType } from './events.js';
 import { MessageHandler } from './messageHandler.js';
