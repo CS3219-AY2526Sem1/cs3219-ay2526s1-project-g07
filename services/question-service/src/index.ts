@@ -1,16 +1,18 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { logger } from "hono/logger";
 import questionController from './controllers/questionController.js'
 import { KafkaClient } from './kafka/client.js'
 import { handleMatchingSuccess } from './kafka/messageHandler.js'
 import 'dotenv/config'
 
 const app = new Hono()
+app.use(logger());
 
 // Enable CORS for all routes
 app.use('*', cors({
-  origin: ['http://localhost:80', 'http://127.0.0.1:80', 'http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:80', 'http://127.0.0.1:80', 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://pp.kirara.dev'],
   credentials: true,
 }))
 
