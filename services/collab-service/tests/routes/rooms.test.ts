@@ -7,7 +7,7 @@ vi.mock('../../src/rooms.js', () => ({
 }));
 
 // 2. Import the Actual Routers (now that dependencies are mocked)
-import roomRouter from '../../src/routes/room.js';
+import roomRouter from '../../src/routes/rooms.js';
 import { removeActiveRoom } from '../../src/rooms.js';
 
 // --- Setup Data ---

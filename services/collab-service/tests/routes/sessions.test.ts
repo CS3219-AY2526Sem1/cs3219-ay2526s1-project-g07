@@ -53,8 +53,8 @@ describe('API Routes', () => {
       expect(response.status).toBe(200);
 
       const json = await response.json();
-      // The route returns sessionDetails.question
-      expect(json).toEqual(MOCK_QUESTION.text);
+      // The route returns sessionDetails
+      expect(json).toEqual({title: MOCK_SESSION_DETAILS.title, question: MOCK_SESSION_DETAILS.question });
 
       // 3. Verify the dependency was called correctly
       expect(vi.mocked(getSessionDetails)).toHaveBeenCalledTimes(1);

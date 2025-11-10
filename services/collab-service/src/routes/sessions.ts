@@ -12,7 +12,7 @@ app.get("/:sessionId/question", async (c) => {
     return c.json({ message: `Session with sessionId: ${sessionId} not found` }, 404);
   }
 
-  return c.json(sessionDetails.question);
+  return c.json({title: sessionDetails.title, question: sessionDetails.question }, 200);
 });
 
 
