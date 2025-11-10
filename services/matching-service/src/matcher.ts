@@ -82,7 +82,8 @@ export class Matcher {
         await this.redisClient.instance.rPush(cacheKey, JSON.stringify(r));
       }
 
-      console.log(`✅ User ${userId} removed from the matching queue.`);
+      console.log(`✅ User ${userId} removed from 
+        ${cacheKey === Matcher.REDIS_KEY_SUCCESSFUL_MATCHES ? 'successful matches' : 'matching'} queue.`)
       if (activateEvent) {
         this.emitter.emit(MatcherEvents.EVENT_USER_DEQUEUED, userId);
         console.log(`Event emitted for user ${userId} dequeued.`);
