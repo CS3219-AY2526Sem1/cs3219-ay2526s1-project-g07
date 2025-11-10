@@ -5,6 +5,8 @@ Scope: Generated implementation of the Rooms.
 Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
 */
 
+import { removeSession } from "./sessions.js";
+
 // Keep track of connected clients per session
 const activeRooms = new Map<string, Map<string, WebSocket>>(); // sessionId → Map of userIds to their WebSocket connections (max 2 users in one room)
 
@@ -45,8 +47,8 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
     if (room.size === 0) {
       activeRooms.delete(sessionId);
 
-      // Clean up empty session (Optional for now)
-      // removeSession(sessionId);
+      // Clean up empty session
+      removeSession(sessionId);
     }
     console.log(`Removed user ${userId} from room ${sessionId}`);
   }
@@ -63,8 +65,8 @@ export const disconnectSocketFromRoom = (sessionId: string, userId: string, ws: 
       if (room.size === 0) {
         activeRooms.delete(sessionId);
 
-        // Clean up empty session (Optional for now)
-        // removeSession(sessionId);
+        // Clean up empty session
+        removeSession(sessionId);
       }
       console.log(`Removed user socket of ${userId} from room ${sessionId}`);
     }
@@ -80,7 +82,7 @@ export const getActiveRoom = (sessionId: string) => {
   return activeRooms.get(sessionId);
 };
 
-export const isRoomFull = (sessionId: string, userId: string) => {
+export const canJoinRoom = (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (!room) {
     return false;
