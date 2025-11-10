@@ -1,6 +1,7 @@
 import { Kafka } from 'kafkajs';
 import type { Producer, ProducerRecord } from 'kafkajs';
 import type { QuestionSuccessMessage, QuestionErrorMessage } from './types.js';
+import 'dotenv/config';
 
 export class QuestionProducer {
   private kafka: Kafka;
@@ -101,4 +102,7 @@ export class QuestionProducer {
   }
 }
 
-export const questionProducer = new QuestionProducer();
+// Export singleton instance with default brokers, but allow creating instances with custom config
+export const questionProducer = new QuestionProducer(
+  (process.env.KAFKA_BROKERS || "localhost:9094").split(",")
+);

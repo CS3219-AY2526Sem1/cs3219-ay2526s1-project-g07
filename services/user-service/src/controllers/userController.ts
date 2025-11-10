@@ -32,6 +32,7 @@ userController.get("/getUserData/:userId", async (c: Context) => {
       name: userData.name,
       description: userData.description,
       profileImage: userData.profileImage,
+      collabId: userData.collab_id,
     })
   } catch (error) {
     console.error('Error in getUserData:', error)
