@@ -7,13 +7,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth-client";
-import { useSession } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth-client";
 import { useIsAdmin, useProfileImage } from "@/src/hooks/user-hooks";
 
 const baseNavbarLinks = [
   { name: "Home", to: "/home" },
-  { name: "History", to: "/history" },
   { name: "Profile", to: "/profile" },
 ];
 
@@ -46,18 +44,24 @@ function Navbar() {
   // Get user initials for avatar fallback
   const getUserInitials = (email?: string, name?: string) => {
     if (name) {
-      return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+      return name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
     }
     if (email) {
-      return email.slice(0, 2).toUpperCase()
+      return email.slice(0, 2).toUpperCase();
     }
-    return 'U'
-  }
+    return "U";
+  };
 
   // Combine base links with admin links if user is admin
-  const navbarLinks = isAdmin && !isLoading 
-    ? [...baseNavbarLinks, ...adminNavbarLinks]
-    : baseNavbarLinks;
+  const navbarLinks =
+    isAdmin && !isLoading
+      ? [...baseNavbarLinks, ...adminNavbarLinks]
+      : baseNavbarLinks;
 
   return (
     <div className="flex items-center justify-between gap-6 w-full h-14 px-6 mb-6 border-b border-gray-200 shrink-0">
@@ -80,20 +84,25 @@ function Navbar() {
           <DropdownMenuTrigger className="cursor-pointer">
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarImage src={profileImage || session.data.user.image || undefined} />
+                <AvatarImage
+                  src={profileImage || session.data.user.image || undefined}
+                />
                 <AvatarFallback>
-                  {getUserInitials(session.data.user.email, session.data.user.name)}
+                  {getUserInitials(
+                    session.data.user.email,
+                    session.data.user.name
+                  )}
                 </AvatarFallback>
               </Avatar>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem className="cursor-pointer">
-              <Link 
-                to="/profile/$username" 
+              <Link
+                to="/profile/$username"
                 params={{ username: session.data.user.name }}
                 className="w-full"
-              >                
+              >
                 Profile
               </Link>
             </DropdownMenuItem>

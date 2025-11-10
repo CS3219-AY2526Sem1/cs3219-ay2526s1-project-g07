@@ -1,7 +1,14 @@
-// AI Assistance Disclosure:
-// Tool: GitHub Copilot (model: claude-sonnet-3.5), date: 2025-10-12
-// Scope: Generated instantiation of kafka client for collab-service
-// Author review: I have reviewed the code for correctness and ran it in a test file to ensure that the event gets produced.
+
+/*
+AI Assistance Disclosure:
+Tool: GitHub Copilot (model: claude-sonnet-3.5), date: 2025-10-12
+Scope: Generated instantiation of kafka client for collab-service
+Author review: I have reviewed the code for correctness and ran it in a test file to ensure that the event gets produced.
+
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑10‑24
+Scope: Generated some functions of the WebSocket and asked for explanations of the WebSocket.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
 
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
@@ -11,7 +18,8 @@ import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
 import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
-import rooms from "./routes/room.js";
+import rooms from "./routes/rooms.js";
+import sessions from "./routes/sessions.js";
 import { cors } from 'hono/cors'
 import { logger } from "hono/logger";
 
@@ -56,6 +64,7 @@ app.get("/health", (c) => {
 });
 
 app.route("/rooms", rooms);
+app.route("/sessions", sessions);
 
 // ------------------- WebSocket & HTTP Server Setup ------------------ //
 const server = serve(

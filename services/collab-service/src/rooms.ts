@@ -1,3 +1,11 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT (model: GPT-4.1), date: 2025‑10‑24
+Scope: Generated implementation of the Rooms.
+Author review: I validated correctness of the functions, removed unnecessary code, and modified the code to fit the requirements.
+*/
+
+import { removeSession } from "./sessions.js";
 import { kafkaClient } from "./index.js";
 import type { UserStatusUpdateEvent } from "./kafka/events.js";
 import { TOPICS_COLLAB } from "./kafka/utils.js";
@@ -54,8 +62,8 @@ export const removeActiveRoom = async (sessionId: string, userId: string) => {
     if (room.size === 0) {
       activeRooms.delete(sessionId);
 
-      // Clean up empty session (Optional for now)
-      // removeSession(sessionId);
+      // Clean up empty session
+      removeSession(sessionId);
     }
     console.log(`Removed user ${userId} from room ${sessionId}`);
   }
@@ -84,8 +92,8 @@ export const disconnectSocketFromRoom = async (sessionId: string, userId: string
       if (room.size === 0) {
         activeRooms.delete(sessionId);
 
-        // Clean up empty session (Optional for now)
-        // removeSession(sessionId);
+        // Clean up empty session
+        removeSession(sessionId);
       }
       console.log(`Removed user socket of ${userId} from room ${sessionId}`);
     }
@@ -101,7 +109,7 @@ export const getActiveRoom = (sessionId: string) => {
   return activeRooms.get(sessionId);
 };
 
-export const isRoomFull = (sessionId: string, userId: string) => {
+export const canJoinRoom = (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (!room) {
     return false;
