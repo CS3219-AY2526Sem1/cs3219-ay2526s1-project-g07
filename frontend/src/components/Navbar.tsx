@@ -13,7 +13,6 @@ import { useIsAdmin, useProfileImage } from "@/src/hooks/user-hooks";
 
 const baseNavbarLinks = [
   { name: "Home", to: "/home" },
-  { name: "History", to: "/history" },
   { name: "Profile", to: "/profile" },
 ];
 

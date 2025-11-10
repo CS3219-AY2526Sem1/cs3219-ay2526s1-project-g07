@@ -24,7 +24,7 @@ export function redirectIfNotAuthenticated() {
     if (!user) {
       navigate({ to: '/login' })
     } 
-  }, [user])
+  }, [user, isPending, navigate])
 }
 
 export function redirectIfAuthenticated() {
@@ -37,7 +37,7 @@ export function redirectIfAuthenticated() {
     if (user) {
       navigate({ to: '/home' })
     } 
-  }, [user])
+  }, [user, isPending, navigate])
 }
 
 export function useCheckAndRedirectToCollab() {
