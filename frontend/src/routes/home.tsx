@@ -45,7 +45,7 @@ function RouteComponent() {
   const [matchingSuccess, setMatchingSuccess] = useState<string | null>(null);
   redirectIfNotAuthenticated();
   const { user, isPending } = useCurrentUser();
-  const MATCHING_SERVICE_WS_URL = import.meta.env.VITE_MATCHING_SERVICE_WS_URL || 'http://localhost:4000';
+  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || 'http://localhost:4000';
 
   // WebSocket integration
   const {

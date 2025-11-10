@@ -195,8 +195,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - VITE_MATCHING_SERVICE_WS_URL=http://matching-service:${WS_PORT}
-      - VITE_MATCHING_SERVICE_URL=http://matching-service:5006
+      - PUBLIC_MATCHING_SERVICE_WS_URL=http://matching-service:${WS_PORT}
+      - PUBLIC_MATCHING_SERVICE_URL=http://matching-service:5006
     networks:
       - app-network
 

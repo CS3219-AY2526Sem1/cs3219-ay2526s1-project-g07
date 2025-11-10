@@ -1,13 +1,11 @@
 import type { UserMatchingCancelRequest, UserMatchingRequest } from '../../../shared/types/matching-types.ts';
 import { API_ENDPOINTS_MATCHING } from '../../../shared/api-endpoints.ts';
 
-const MATCHING_SERVICE_BASE_URL = import.meta.env.VITE_MATCHING_SERVICE_URL || 'http://localhost:4000';
-
 export const matchingService = {
   // Start matching request
   async startMatching(request: UserMatchingRequest): Promise<void> {
     try {
-      const response = await fetch(`${MATCHING_SERVICE_BASE_URL}${API_ENDPOINTS_MATCHING.MATCHING_REQUEST}`, {
+      const response = await fetch(`${import.meta.env.PUBLIC_MATCHING_SERVICE_URL}${API_ENDPOINTS_MATCHING.MATCHING_REQUEST}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,7 +26,7 @@ export const matchingService = {
   // Cancel matching request
   async cancelMatching(request: UserMatchingCancelRequest): Promise<void> {
     try {
-      const response = await fetch(`${MATCHING_SERVICE_BASE_URL}${API_ENDPOINTS_MATCHING.MATCHING_CANCEL}`, {
+      const response = await fetch(`${import.meta.env.PUBLIC_MATCHING_SERVICE_URL}${API_ENDPOINTS_MATCHING.MATCHING_CANCEL}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
