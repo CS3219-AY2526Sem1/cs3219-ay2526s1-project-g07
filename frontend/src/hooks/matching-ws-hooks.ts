@@ -118,15 +118,24 @@ export const useMatchingWebSocket = (
   }, [serverUrl, clearError, updateMessage]);
 
   const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      console.log('Disconnecting from WebSocket...');
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      setIsConnected(false);
-      setMatchingStatus('disconnected');
-      setMatchData(null);
-      updateMessage('Manually disconnected');
+    if (!socketRef.current) {
+      console.error('No WebSocket connection to disconnect');
+      return;
     }
+
+    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_SUCCESS);
+    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_FAILED);
+    socketRef.current?.off(WS_EVENTS_MATCHING.COLLAB_SESSION_READY);
+    socketRef.current?.off(WS_EVENTS_MATCHING.USER_DEQUEUED);
+    socketRef.current?.off(WS_EVENTS_MATCHING.ERROR);
+
+    console.log('Disconnecting from WebSocket...');
+    socketRef.current.disconnect();
+    socketRef.current = null;
+    setIsConnected(false);
+    setMatchingStatus('disconnected');
+    setMatchData(null);
+    updateMessage('Manually disconnected');
   }, [updateMessage]);
 
   const joinUser = useCallback((userId: UserId) => {
