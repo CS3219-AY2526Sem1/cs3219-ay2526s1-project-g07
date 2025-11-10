@@ -51,7 +51,7 @@ describe('Session Management Unit Tests', () => {
     
     // 3. Reset the uuid mock for predictable ID generation
     vi.mocked(uuidv4).mockClear();
-    vi.mocked(uuidv4).mockReturnValue('mock-uuid-1234'as any);
+    vi.mocked(uuidv4).mockReturnValue('mock-uuid-1234' as any);
   });
 
   describe('addSession and getSessions', () => {
