@@ -41,19 +41,19 @@ export class Matcher {
     console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
-  async dequeue(user: UserId, activateEvent?: boolean, cacheKey: string = Matcher.REDIS_KEY_MATCHING_QUEUE): Promise<void> {
+  async dequeue(userId: UserId, activateEvent?: boolean, cacheKey: string = Matcher.REDIS_KEY_MATCHING_QUEUE): Promise<void> {
     // For cases where dequeue is called after redis client is closed
     if (!this.redisClient?.instance?.isOpen) {
       return Promise.resolve();
     }
 
-    if (!user) {
+    if (!userId || !userId.id) {
       console.error('dequeue called with invalid user');
       return Promise.resolve();
     }
 
-    const userId = user.id;
-    if (!userId) {
+    const id = userId.id;
+    if (!id) {
       console.error('dequeue called with invalid userId');
       return Promise.resolve();
     }
@@ -69,13 +69,13 @@ export class Matcher {
 
     if (!acquired) {
       await new Promise(res => setTimeout(res, 50));
-      console.log(`Retrying dequeue for user ${userId}`);
-      return this.dequeue(user);
+      console.log(`Retrying dequeue for user ${id}`);
+      return this.dequeue(userId);
     }
 
     try {
       const userRequests = await this.queue(cacheKey);
-      const filteredRequests = userRequests.filter(r => r.userId.id !== userId);
+      const filteredRequests = userRequests.filter(r => r.userId.id !== id);
 
       await this.redisClient.instance.del(cacheKey);
       for (const r of filteredRequests) {
