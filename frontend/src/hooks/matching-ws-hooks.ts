@@ -6,7 +6,7 @@ import type { MatchFoundData } from '../../../shared/types/matching-types';
 import { useNavigate } from '@tanstack/react-router';
 
 export const useMatchingWebSocket = (
-  serverUrl: string = 'http://localhost:3000'
+  serverUrl: string = '/'
 ): UseMatchingWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [matchingStatus, setMatchingStatus] = useState<MatchingStatus>('disconnected');
@@ -48,6 +48,8 @@ export const useMatchingWebSocket = (
     clearError();
 
     socketRef.current = io(serverUrl, {
+      transports: ['websocket'],
+      path: '/api/match/ws',
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,

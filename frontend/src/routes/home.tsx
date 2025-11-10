@@ -46,9 +46,10 @@ function RouteComponent() {
   redirectIfNotAuthenticated();
   const { user, isPending } = useCurrentUser();
   const { isChecking } = useCheckAndRedirectToCollab();
-  
-  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || 'http://localhost:3000';
-  
+
+  // No need for injection in production
+  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || '/';
+
   // WebSocket integration
   const {
     isConnected: wsConnected,
