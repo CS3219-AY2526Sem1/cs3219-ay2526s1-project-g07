@@ -64,13 +64,13 @@ export class MessageHandler {
         if (!correlationId) {
             console.warn('Question response without correlationId');
             return;
-        } else if (!this.pendingReplies?.has(correlationId)) {
+        } else if (!this.pendingReplies.has(correlationId)) {
             console.error(`No correlation Id in pending replies for correlationId`);
             return;
         }
 
         // Reply to pending request
-        const entry = this.pendingReplies!.get(correlationId)!;
+        const entry = this.pendingReplies.get(correlationId)!;
         clearTimeout(entry.timer);
 
         const {collabSessionId, userId, question} = event?.data;
@@ -83,7 +83,7 @@ export class MessageHandler {
         }
 
         entry.resolve(event.data); //Sends data back
-        this.pendingReplies!.delete(correlationId);
+        this.pendingReplies.delete(correlationId);
         console.log(`Resolved pending request for correlationId ${correlationId}`);
     }
 }

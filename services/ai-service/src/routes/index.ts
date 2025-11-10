@@ -45,6 +45,7 @@ app.post("/hint", async (c) => {
 
   } catch (err) {
     console.error("Error:", err);
+    return c.text("Error retrieving question details", 500);
   }
   
   if (!response || !response.question) {
