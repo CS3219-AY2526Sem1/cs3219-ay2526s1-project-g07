@@ -19,6 +19,7 @@ import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
 import { checkSessionAndUsers } from "./sessions.js";
 import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
 import rooms from "./routes/room.js";
+import sessions from "./routes/sessions.js";
 import { cors } from 'hono/cors'
 import { logger } from "hono/logger";
 
@@ -63,6 +64,7 @@ app.get("/health", (c) => {
 });
 
 app.route("/rooms", rooms);
+app.route("/sessions", sessions);
 
 // ------------------- WebSocket & HTTP Server Setup ------------------ //
 const server = serve(
