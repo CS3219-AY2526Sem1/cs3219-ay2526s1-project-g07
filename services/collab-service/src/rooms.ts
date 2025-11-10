@@ -83,6 +83,6 @@ export const isRoomFull = (sessionId: string, userId: string) => {
     return false;
   }
 
-  return room.size >= 2;
+  return room.size >= 2; // yes
 };
 
