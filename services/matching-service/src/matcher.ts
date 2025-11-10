@@ -6,7 +6,8 @@ import { randomUUID } from 'crypto';
 
 export class Matcher {
   private readonly redisClient: RedisClient;
-  static readonly redisCacheKey = 'matching_queue';
+  static readonly REDIS_KEY_MATCHING_QUEUE = 'matching_queue';
+  static readonly REDIS_KEY_SUCCESSFUL_MATCHES = 'successful_matches';
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
@@ -32,20 +33,26 @@ export class Matcher {
 
     const queue = await this.queue;
     if (queue.some(request => request.userId.id === userId.id)) {
-      await this.dequeue(userId);
+      await this.dequeue({ id: userId.id });
     }
 
-    await this.redisClient.instance.rPush(Matcher.redisCacheKey, JSON.stringify(userRequest));
+    await this.redisClient.instance.rPush(Matcher.REDIS_KEY_MATCHING_QUEUE, JSON.stringify(userRequest));
 
     console.log(`User ${userId.id} with preference ${preferences.topic} and ${preferences.difficulty} added to the matching queue.`);
   }
 
-  async dequeue(userId: UserId): Promise<void> {
+  async dequeue(user: UserId, activateEvent?: boolean, cacheKey: string = Matcher.REDIS_KEY_MATCHING_QUEUE): Promise<void> {
     // For cases where dequeue is called after redis client is closed
     if (!this.redisClient?.instance?.isOpen) {
       return Promise.resolve();
     }
 
+    if (!user) {
+      console.error('dequeue called with invalid user');
+      return Promise.resolve();
+    }
+
+    const userId = user.id;
     if (!userId) {
       console.error('dequeue called with invalid userId');
       return Promise.resolve();
@@ -62,22 +69,24 @@ export class Matcher {
 
     if (!acquired) {
       await new Promise(res => setTimeout(res, 50));
-      console.log(`Retrying dequeue for user ${userId.id}`);
-      return this.dequeue(userId);
+      console.log(`Retrying dequeue for user ${userId}`);
+      return this.dequeue(user);
     }
 
     try {
       const userRequests = await this.queue;
-      const filteredRequests = userRequests.filter(r => r.userId.id !== userId.id);
+      const filteredRequests = userRequests.filter(r => r.userId.id !== userId);
 
-      await this.redisClient.instance.del(Matcher.redisCacheKey);
+      await this.redisClient.instance.del(cacheKey);
       for (const r of filteredRequests) {
-        await this.redisClient.instance.rPush(Matcher.redisCacheKey, JSON.stringify(r));
+        await this.redisClient.instance.rPush(cacheKey, JSON.stringify(r));
       }
 
-      console.log(`✅ User ${userId.id} removed from the matching queue.`);
-
-      this.emitter.emit(MatcherEvents.EVENT_USER_DEQUEUED, userId);
+      console.log(`✅ User ${userId} removed from the matching queue.`);
+      if (activateEvent) {
+        this.emitter.emit(MatcherEvents.EVENT_USER_DEQUEUED, userId);
+        console.log(`Event emitted for user ${userId} dequeued.`);
+      }
     } finally {
       // Release lock safely
       const releaseLockLuaScript = `
@@ -122,7 +131,7 @@ export class Matcher {
     const timeout = this.timeOutDuration;
     // @ts-ignore: redisClient.eval typing may vary
     const timedOutRaw: string[] = await this.redisClient.instance.eval(getTimedOutLuaScript, {
-      keys: [Matcher.redisCacheKey],
+      keys: [Matcher.REDIS_KEY_MATCHING_QUEUE],
       arguments: [now.toString(), timeout.toString()]
     });
     if (timedOutRaw && timedOutRaw.length > 0) {
@@ -163,14 +172,26 @@ export class Matcher {
   private async findMatch(): Promise<MatchResult | null> {
     const userRequests = await this.queue;
     if (userRequests.length < 2) {
+      console.log('Not enough users in the queue to find a match.');
       return null; // Not enough users to match
     }
 
     const firstUser = userRequests[0];
     for (let i = 1; i < userRequests.length; i++) {
       const potentialMatch = userRequests[i];
+
       if (MatchCriteria.isMatch(firstUser, potentialMatch)) {
-        // Found a match, dequeue when a collab session is ready
+        await this.addToMatchedQueue({
+          firstUserId: firstUser.userId,
+          secondUserId: potentialMatch.userId,
+          preferences: firstUser.preferences
+        });
+
+        // Do not emit events when dequeuing matched users
+        // This is so that users see that they are still queuing if they get matched
+        this.dequeue(firstUser.userId, false);
+        this.dequeue(potentialMatch.userId, false);
+
         console.log(`Matched users ${firstUser.userId.id} and ${potentialMatch.userId.id}`);
         return {
           firstUserId: firstUser.userId,
@@ -182,13 +203,22 @@ export class Matcher {
     return null; // No match found
   }
 
+  private async addToMatchedQueue(match: MatchResult): Promise<void> {
+    const matchData = {
+      firstUserId: match.firstUserId,
+      secondUserId: match.secondUserId,
+      preferences: match.preferences
+    };
+    await this.redisClient.instance.rPush(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES, JSON.stringify(matchData));
+  }
+
   async cleanUp() {
     await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
   }
 
   private get queue(): Promise<UserMatchingRequest[]> {
-    return this.redisClient.instance.lRange(Matcher.redisCacheKey, 0, -1)
+    return this.redisClient.instance.lRange(Matcher.REDIS_KEY_MATCHING_QUEUE, 0, -1)
       .then(requests => requests.map(request => JSON.parse(request as string) as UserMatchingRequest));
   }
 }

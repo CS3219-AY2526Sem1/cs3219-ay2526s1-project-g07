@@ -5,7 +5,7 @@ import { RedisClient } from '../../../redis/src/client';
 describe('Matcher', () => {
   let matcher: Matcher;
   let redisClient: RedisClient;
-  const cacheKey = Matcher.redisCacheKey;
+  const cacheKey = Matcher.REDIS_KEY_MATCHING_QUEUE;
 
   beforeAll(async () => {
     redisClient = new RedisClient();
@@ -124,6 +124,23 @@ describe('Matcher', () => {
       const ids = [match?.firstUserId, match?.secondUserId];
       expect(ids).toContain({ id: '1' });
       expect(ids).toContain({ id: '2' });
+    });
+
+    it('should return null when no match is found', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
+      const match = await matcher['findMatch']();
+      expect(spyFindMatch).toHaveBeenCalled();
+      expect(match).toBeNull();
+    });
+
+    it('should not match users with different preferences', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '2' }, { topic: 'Science', difficulty: 'medium' });
+      const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
+      const match = await matcher['findMatch']();
+      expect(spyFindMatch).toHaveBeenCalled();
+      expect(match).toBeNull();
     });
   });
 

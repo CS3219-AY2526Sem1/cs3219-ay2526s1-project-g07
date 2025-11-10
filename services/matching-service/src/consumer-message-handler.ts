@@ -39,8 +39,8 @@ export class ConsumerMessageHandler {
       this.webSocket?.emitCollabSessionReady(userIdOne, userIdTwo, collabSessionId);
 
       // Clean up
-      this.matcher.dequeue({ id: userIdOne });
-      this.matcher.dequeue({ id: userIdTwo });
+      this.matcher.dequeue({ id: userIdOne }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+      this.matcher.dequeue({ id: userIdTwo }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
     } catch (err) {
       console.error(`Failed to process collab session ready message:`, message, err);
     }
