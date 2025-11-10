@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "_comment_dev": "the tsc watches the project",
     "dev": "tsx watch src/index.ts",
     "_comment_build": "tsc -p tsconfig.json builds the project (with Typescript compiler)",
@@ -29,8 +32,11 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "@types/pg": "^8.15.5",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8"
   }
 }
