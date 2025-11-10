@@ -124,6 +124,7 @@ async function main() {
     console.log(`Received matching cancel request for user id: ${userId.id}`);
 
     matcher.dequeue(userId);
+    matcher.dequeue(userId, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
 
     return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
   });
