@@ -131,7 +131,7 @@ class Matcher {
     handleMatchFound(match) {
         const { firstUserId, secondUserId, preferences: { topic, difficulty } } = match;
         this.emitter.emit('matchFound', match);
-        console.log(`Match found between users ${firstUserId} and ${secondUserId} with topic ${topic} and difficulty ${difficulty}`);
+        console.log(`Match found between users ${firstUserId.id} and ${secondUserId.id} with topic ${topic} and difficulty ${difficulty}`);
     }
     async handleNoMatch() {
         console.log('No suitable match found at this time.');

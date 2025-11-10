@@ -10,6 +10,7 @@ export class Matcher {
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
+  EVENT_USER_DEQUEUED: string = 'userDequeued';
 
   constructor(redisClient: RedisClient) {
     this.emitter = new EventEmitter();
@@ -76,6 +77,8 @@ export class Matcher {
       }
 
       console.log(`✅ User ${userId.id} removed from the matching queue.`);
+
+      this.emitter.emit(this.EVENT_USER_DEQUEUED, userId);
     } finally {
       // Release lock safely
       const releaseLockLuaScript = `
@@ -150,7 +153,7 @@ export class Matcher {
   private handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId, preferences: {topic, difficulty} } = match;
     this.emitter.emit('matchFound', match);
-    console.log(`Match found between users ${firstUserId} and ${secondUserId} with topic ${topic} and difficulty ${difficulty}`);
+    console.log(`Match found between users ${firstUserId.id} and ${secondUserId.id} with topic ${topic} and difficulty ${difficulty}`);
   }
 
   private async handleNoMatch() {

@@ -27,7 +27,14 @@ export const useMatchingWebSocket = (
   }, []);
 
   const handleCollabSessionReady = (sessionId: string) => {
+    console.log('Navigating to collaboration session:', sessionId);
     navigate({ to: `/collab/${sessionId}`, params: { sessionId } });
+  };
+
+  const handleUserDequeued = (userId: string) => {
+    console.log(`User ${userId} has been dequeued from matching`);
+    setMatchingStatus('cancelled');
+    updateMessage('You have been removed from the matching queue');
   };
   
   const connect = useCallback(() => {
@@ -95,6 +102,10 @@ export const useMatchingWebSocket = (
       setMatchingStatus('collab_session_ready');
       updateMessage('Collaboration session is ready');
       handleCollabSessionReady(data.sessionId);
+    });
+
+    socketRef.current.on(WS_EVENTS_MATCHING.USER_DEQUEUED, (data: any) => {
+      handleUserDequeued(data.userId);
     });
 
     // Error handler
