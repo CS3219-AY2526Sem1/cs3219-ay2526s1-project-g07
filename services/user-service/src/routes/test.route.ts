@@ -15,4 +15,3 @@ testRoute.get("/table", async(c: Context) => {
 
 
 export default testRoute;
-

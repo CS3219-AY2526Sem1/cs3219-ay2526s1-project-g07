@@ -1,5 +1,7 @@
 import { EachMessagePayload } from 'kafkajs';
 import { TOPICS_SUBSCRIBED } from './utils.js';
+import { userRepository } from '../repositories/userRepository.js';
+import type { UserStatusUpdateEvent } from './types.js';
 
 export class MessageHandler {
     async handleMessage(payload: EachMessagePayload) {
@@ -26,7 +28,7 @@ export class MessageHandler {
         }
     }
 
-    private async processUserStatusUpdate(event: any) {
+    private async processUserStatusUpdate(event: UserStatusUpdateEvent) {
         console.log('Received kafka event on User-status-update:', event);
 
         const { userId, collabSessionId } = event.data;
@@ -37,10 +39,14 @@ export class MessageHandler {
             return;
         }
 
-        //TODO Update the user's status in the database based on collabSessionId - null means available, otherwise collaborating
-
-        //TODO DB to store both status and collabSessionId - new attributes
-
-        console.log(`Updated user ${userId} status to ${collabSessionId ? 'collaborating' : 'available'} in the database`);
+        try {
+            // Update the user's collab_id in the database
+            // null means user is available (not in any collab session)
+            // otherwise, collabSessionId contains the session they're in
+            await userRepository.updateUserCollabId(userId, collabSessionId);
+            console.log(`✅ Updated user ${userId} collab_id to ${collabSessionId || 'null'} in the database`);
+        } catch (error) {
+            console.error(`❌ Failed to update user ${userId} collab_id:`, error);
+        }
     }
 }

@@ -6,6 +6,9 @@ Author review: I validated correctness of the functions, removed unnecessary cod
 */
 
 import { removeSession } from "./sessions.js";
+import { kafkaClient } from "./index.js";
+import type { UserStatusUpdateEvent } from "./kafka/events.js";
+import { TOPICS_COLLAB } from "./kafka/utils.js";
 
 // Keep track of connected clients per session
 const activeRooms = new Map<string, Map<string, WebSocket>>(); // sessionId → Map of userIds to their WebSocket connections (max 2 users in one room)
@@ -36,7 +39,7 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
 };
 
 // Removes a specific user from a room, closes their socket, and cleans up empty sessions
-export const removeActiveRoom = (sessionId: string, userId: string) => {
+export const removeActiveRoom = async (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (room) {
     const socket = room.get(userId);
@@ -44,6 +47,18 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
       socket.close(USER_REMOVED_CLOSE_CODE, "User removed from room");
     }
     room.delete(userId);
+    
+    // Kafka sends event that user has left the collab session
+    const userStatusUpdateEvent: Omit<UserStatusUpdateEvent, 'eventId'> = {
+      eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
+      data: {
+          userId: userId,
+          collabSessionId: null
+      }
+    };
+
+    await kafkaClient.getProducer().publishEvent(userStatusUpdateEvent);
+
     if (room.size === 0) {
       activeRooms.delete(sessionId);
 
@@ -55,13 +70,25 @@ export const removeActiveRoom = (sessionId: string, userId: string) => {
 };
 
 // Removes a specific user from a room only if the current WebSocket is disconnected
-export const disconnectSocketFromRoom = (sessionId: string, userId: string, ws: WebSocket) => {
+export const disconnectSocketFromRoom = async (sessionId: string, userId: string, ws: WebSocket) => {
   const room = activeRooms.get(sessionId);
   if (room) {
     const socket = room.get(userId);
     if (socket === ws) {
       socket.close();
       room.delete(userId);
+
+      // Kafka sends event that user has left the collab session
+    const userStatusUpdateEvent: Omit<UserStatusUpdateEvent, 'eventId'> = {
+      eventType: TOPICS_COLLAB.USER_STATUS_UPDATE,
+      data: {
+          userId: userId,
+          collabSessionId: null
+      }
+    };
+
+    await kafkaClient.getProducer().publishEvent(userStatusUpdateEvent);
+
       if (room.size === 0) {
         activeRooms.delete(sessionId);
 

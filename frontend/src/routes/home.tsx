@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated, useCurrentUser } from "../hooks/user-hooks";
+import { redirectIfNotAuthenticated, useCurrentUser, useCheckAndRedirectToCollab } from "../hooks/user-hooks";
 import { matchingService } from "../lib/matching-service";
 import { useMatchingWebSocket } from "../hooks/matching-ws-hooks.ts";
 import { type MatchFoundData, type UserMatchingCancelRequest, type UserMatchingRequest } from "../../../shared/types/matching-types.ts";
@@ -45,7 +45,10 @@ function RouteComponent() {
   const [matchingSuccess, setMatchingSuccess] = useState<string | null>(null);
   redirectIfNotAuthenticated();
   const { user, isPending } = useCurrentUser();
-
+  const { isChecking } = useCheckAndRedirectToCollab();
+  
+  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || 'http://localhost:3000';
+  
   // WebSocket integration
   const {
     isConnected: wsConnected,
@@ -54,7 +57,7 @@ function RouteComponent() {
     matchData,
     error: wsError,
     joinUser,
-  } = useMatchingWebSocket();
+  } = useMatchingWebSocket(MATCHING_SERVICE_WS_URL);
 
   // Join WebSocket when user is connected
   useEffect(() => {
@@ -93,7 +96,7 @@ function RouteComponent() {
     }
   }, [wsMatchingStatus]);
 
-  if (isPending) {
+  if (isPending || isChecking) {
     return <></>;
   }
 

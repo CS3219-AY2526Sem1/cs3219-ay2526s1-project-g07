@@ -7,7 +7,7 @@ describe('MatchingServiceConsumer', () => {
   let msConsumer: MatchingServiceConsumer;
   let kafkaConsumer: Consumer;
   let mockMessageHandler: jasmine.SpyObj<MockConsumerMessageHandler>;
-  const matchingSuccessTopic = TOPICS_MATCHING.MATCHING_SUCCESS;
+  const topics = [TOPICS_MATCHING.COLLAB_SESSION_READY];
 
   // Mock Kafka instance
   const mockKafka = {
@@ -28,7 +28,7 @@ describe('MatchingServiceConsumer', () => {
     await msConsumer.init();
     expect(mockKafka.consumer).toHaveBeenCalledWith({ groupId: 'matching-group' });
     expect(kafkaConsumer.connect).toHaveBeenCalled();
-    expect(kafkaConsumer.subscribe).toHaveBeenCalledWith({ topics: [matchingSuccessTopic], fromBeginning: true });
+    expect(kafkaConsumer.subscribe).toHaveBeenCalledWith({ topics: topics, fromBeginning: true });
     expect(kafkaConsumer.run).toHaveBeenCalled();
   });
 
@@ -45,9 +45,9 @@ describe('MatchingServiceConsumer', () => {
     await msConsumer['run']();
     const runArgs = (kafkaConsumer.run as jasmine.Spy).calls.mostRecent().args[0];
     // Run message callback with mock message
-    await runArgs.eachMessage({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
+    await runArgs.eachMessage({ topic: topics[0], partition: 0, message: mockMessage });
 
-    expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, matchingSuccessTopic);
+    expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, topics[0]);
   });
 
   it('should handle empty message values gracefully', async () => {
@@ -56,8 +56,8 @@ describe('MatchingServiceConsumer', () => {
     await msConsumer['run']();
     const runArgs = (kafkaConsumer.run as jasmine.Spy).calls.mostRecent().args[0];
     // Run message callback with null value
-    await runArgs.eachMessage({ topic: matchingSuccessTopic, partition: 0, message: mockMessage });
+    await runArgs.eachMessage({ topic: topics[0], partition: 0, message: mockMessage });
 
-    expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, matchingSuccessTopic);
+    expect(mockMessageHandler.handleMessage).toHaveBeenCalledWith(mockMessage, topics[0]);
   });
 });

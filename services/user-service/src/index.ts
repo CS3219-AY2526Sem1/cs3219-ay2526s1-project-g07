@@ -1,13 +1,15 @@
 import 'dotenv/config'
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { auth } from "./lib/auth"; 
+import { auth } from "./lib/auth";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import type { Context } from "hono";
 import route from './routes/routes'
 import { KafkaClient } from './kafka/client';
 
 const app = new Hono()
+app.use(logger());
 
 app.get('/', (c: Context) => c.text('Hello Hono!'))
 
@@ -19,7 +21,7 @@ const kafkaConfig = {
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80"], 
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:80", "http://localhost:80", "https://pp.kirara.dev"],
   allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
   exposeHeaders: ["Content-Length", "Set-Cookie"],
@@ -45,7 +47,7 @@ const startServer = async () => {
   let kafkaClient: KafkaClient | null = null;
 
   try {
-    // Initialize database first    
+    // Initialize database first
     // Start the server
     serve({
       fetch: app.fetch,
@@ -70,7 +72,7 @@ const startServer = async () => {
         console.error("Error during Kafka client disconnection:", err);
         process.exit(1);
       }
-      
+
       process.exit(0);
     });
 

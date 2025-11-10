@@ -73,6 +73,7 @@ function RouteComponent() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
+        console.log("hello")
         setIsLoadingQuestion(true);
         const response = await fetch(`/api/questions/${questionId}`);
 

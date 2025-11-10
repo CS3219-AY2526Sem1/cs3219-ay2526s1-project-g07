@@ -2,50 +2,80 @@
 
 services:
 
-  collab-service:
-    image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
-    container_name: collab-service
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: kafka
     environment:
-      - HOST=0.0.0.0
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     ports:
-      - "5004:5004"
+      - "9094:9094"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
-  ai-service:
-    image: ghcr.io/cs3219-ay2526sem1/g07-ai-service:latest
-    container_name: ai-service
-    environment:
-      - HOST=0.0.0.0
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-    ports:
-      - "5005:5005"
-    networks:
-      - app-network
-
-  matching-service:
-    image: ghcr.io/cs3219-ay2526sem1/g07-matching-service:latest
-    container_name: matching-service
-    environment:
-      - HOST=0.0.0.0
-      - PORT=4000
-      - HOST_URL=http://localhost:3000
-      - WS_PORT=http://localhost:5000
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    ports:
-      - "5006:5006"
-    networks:
-      - app-network
-
-  frontend:
-    image: ghcr.io/cs3219-ay2526sem1/g07-frontend:latest
-    container_name: frontend
-    ports:
-      - "80:80"
+  kafka-init: # Topic initialization service
+    image: apache/kafka:4.0.0
+    container_name: kafka-init
     depends_on:
-      - collab-service
-      - ai-service
+      kafka:
+        condition: service_healthy
+    # one-time initialization
+    restart: "no"
+    command: >
+      bash -c '
+      echo "Waiting for Kafka to start..." &&
+      sleep 15 &&
+      echo "Verifying Kafka connectivity..." &&
+      for i in {1..30}; do
+        if /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 > /dev/null 2>&1; then
+          echo "Kafka is ready. Creating topics..." &&
+          break
+        fi
+        echo "Attempt $$i: Kafka not ready yet, retrying in 2 seconds..." &&
+        sleep 2
+      done &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic matching-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic matching-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic question-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic question-success --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic question-failure --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-hint-request --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic ai-question-response --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic collab-session-ready --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      /opt/kafka/bin/kafka-topics.sh --create --topic user-status-update --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      echo "All topics created successfully!"
+      '
+    networks:
+      - app-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    ports:
+      - '8080:8080'
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_READONLY=false
+      - KAFKA_CLUSTERS_0_TOPIC_AUTO_CREATE=true
     networks:
       - app-network
 
@@ -54,6 +84,119 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+
+  collab-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
+    container_name: collab-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      - HOST=0.0.0.0
+      - KAFKA_BROKERS=kafka:9092
+    ports:
+      - "5004:5004"
+    networks:
+      - app-network
+
+  ai-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-ai-service:latest
+    container_name: ai-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      - HOST=0.0.0.0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - KAFKA_BROKERS=kafka:9092
+    ports:
+      - "5005:5005"
+    networks:
+      - app-network
+
+  matching-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-matching-service:latest
+    container_name: matching-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    environment:
+      - HOST=0.0.0.0
+      - PORT=5006
+      - WS_PORT=5006
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BROKERS=kafka:9092
+    ports:
+      - "5006:5006"
+    networks:
+      - app-network
+
+  question-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-question-service:latest
+    container_name: question-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      - HOST=0.0.0.0
+      - JWT_SECRET=${JWT_SECRET}
+      # TODO: standardize env vars across services
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE=${DATABASE_URL}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+    ports:
+      - "5001:5001"
+    networks:
+      - app-network
+
+  user-service:
+    image: ghcr.io/cs3219-ay2526sem1/g07-user-service:latest
+    container_name: user-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      - HOST=0.0.0.0
+      - KAFKA_BROKERS=kafka:9092
+      - JWT_SECRET=${JWT_SECRET}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # TODO: standardize env vars across services
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE=${DATABASE_URL}
+    ports:
+      - "5002:5002"
+    networks:
+      - app-network
+
+  frontend:
+    image: ghcr.io/cs3219-ay2526sem1/g07-frontend:latest
+    container_name: frontend
+    depends_on:
+      - question-service
+      - user-service
+      - collab-service
+      - ai-service
+      - matching-service
+    ports:
+      - "80:80"
+    environment:
+      - PUBLIC_MATCHING_SERVICE_WS_URL=${PUBLIC_MATCHING_SERVICE_WS_URL}
+      - PUBLIC_MATCHING_SERVICE_URL=${PUBLIC_MATCHING_SERVICE_URL}
     networks:
       - app-network
 

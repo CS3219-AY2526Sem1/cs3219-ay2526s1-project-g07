@@ -1,6 +1,7 @@
 import { Kafka } from 'kafkajs';
 import type { Consumer, EachMessagePayload } from 'kafkajs';
 import type { MatchingSuccessMessage } from './types.js';
+import 'dotenv/config';
 
 export class QuestionConsumer {
   private kafka: Kafka;
@@ -136,4 +137,7 @@ export class QuestionConsumer {
   }
 }
 
-export const questionConsumer = new QuestionConsumer();
+// Export singleton instance with default brokers, but allow creating instances with custom config
+export const questionConsumer = new QuestionConsumer(
+  (process.env.KAFKA_BROKERS || "localhost:9094").split(",")
+);

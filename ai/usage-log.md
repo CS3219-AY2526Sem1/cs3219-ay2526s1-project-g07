@@ -9446,6 +9446,1589 @@ The changes ensure that when the code does `import ... from '../../../shared/...
 
 ---
 
+## request_a4569ef3-6d22-42b3-a98c-07076b9d88db
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+For this route, i will be publishing an event to retrieve the question details from question service, afterwhich i will pass the event response to my ai getHint service to process and return the final response back to the API request
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:index.ts</p>
+</details>
+
+
+
+You’ll want a simple Kafka request-reply pattern: publish a request with a correlationId and replyTo topic, keep a pending Promise in memory, subscribe to the reply topic once, and resolve the Promise when the correlated reply arrives (with a timeout).
+
+Below are minimal changes and a small helper to wire this up.
+
+````typescript
+// ...existing code...
+import { kafkaClient } from "../index.js";
+import { TOPICS_AI } from "../kafka/utils.js";
+import { sendAndWait } from "../kafka/requestReply.js";
+// ...existing code...
+
+const app = new Hono();
+
+app.post("/hint", async (c) => {
+  const body = await c.req.json();
+  const { questionId } = body ?? {};
+
+  // Validate AI client
+  const ai = c.var.ai;
+  if (!ai) {
+    return c.text("AI client not initialized", 500);
+  }
+  if (!questionId) {
+    return c.text("Missing questionId", 400);
+  }
+
+  // 1) Publish request to Question Service and wait for reply via Kafka
+  // Note: replace the replyTopic if you use a different one in your system
+  const replyTopic = TOPICS_AI.AI_QUESTION_HINT_RESPONSE; // <-- ensure this topic exists
+  let questionDetails: any;
+  try {
+    questionDetails = await sendAndWait({
+      producer: kafkaClient.getProducer(),
+      consumer: kafkaClient.getConsumer(),
+      eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+      data: { questionId },
+      replyTopic,
+      timeoutMs: 10000,
+    });
+  } catch (err: any) {
+    console.error("Failed to retrieve question details:", err?.message ?? err);
+    return c.text("Failed to retrieve question details", 504);
+  }
+
+  // 2) Call AI to get hint using the retrieved question details
+  const question = questionDetails?.question ?? questionDetails?.prompt ?? questionDetails;
+  if (!question) {
+    return c.text("Invalid question details received", 502);
+  }
+
+  try {
+    const hint = await getHint(ai, question);
+    if (!hint) return c.text("Failed to get hint from AI", 500);
+    return c.text(hint);
+  } catch (err: any) {
+    console.error("AI getHint failed:", err?.message ?? err);
+    return c.text("AI hint generation failed", 500);
+  }
+});
+// ...existing code...
+````
+
+````typescript
+import { randomUUID } from "crypto";
+
+// Generic types for your kafkaClient wrapper
+type Producer = {
+  // Adapt this if your wrapper has a different signature
+  publishEvent: (payload: {
+    eventType: string;
+    data: any;
+    // If your publish supports headers or meta, include them here
+    headers?: Record<string, string | Buffer>;
+  }) => Promise<void>;
+};
+
+type Consumer = {
+  // Adjust to your wrapper. For KafkaJS it would be subscribe/run.
+  subscribe: (opts: { topic: string; fromBeginning?: boolean }) => Promise<void>;
+  run: (opts: {
+    eachMessage: (args: {
+      topic: string;
+      partition: number;
+      message: {
+        key: Buffer | null;
+        value: Buffer | null;
+        headers?: Record<string, Buffer | undefined>;
+      };
+    }) => Promise<void>;
+  }) => Promise<void>;
+};
+
+type SendAndWaitArgs = {
+  producer: Producer;
+  consumer: Consumer;
+  eventType: string;
+  data: any;
+  replyTopic: string;
+  timeoutMs?: number;
+};
+
+// In-memory pending map for correlationIds
+const pending = new Map<
+  string,
+  {
+    resolve: (data: any) => void;
+    reject: (err: Error) => void;
+    timer: NodeJS.Timeout;
+  }
+>();
+
+let replyConsumerStartedForTopic = new Set<string>();
+
+function getCorrelationIdFromMessage(msg: {
+  value: Buffer | null;
+  headers?: Record<string, Buffer | undefined>;
+}) {
+  // Prefer headers if provided
+  const fromHeader =
+    msg.headers?.correlationId && msg.headers.correlationId.toString();
+  if (fromHeader) return fromHeader;
+
+  // Fallback to meta embedded in payload
+  if (msg.value) {
+    try {
+      const payload = JSON.parse(msg.value.toString());
+      return payload?._meta?.correlationId || payload?.correlationId;
+    } catch {}
+  }
+  return undefined;
+}
+
+async function ensureReplyConsumer(consumer: Consumer, replyTopic: string) {
+  if (replyConsumerStartedForTopic.has(replyTopic)) return;
+
+  await consumer.subscribe({ topic: replyTopic, fromBeginning: false });
+  await consumer.run({
+    eachMessage: async ({ message }) => {
+      const correlationId = getCorrelationIdFromMessage(message);
+      if (!correlationId) return;
+
+      const entry = pending.get(correlationId);
+      if (!entry) return;
+
+      try {
+        const payload = message.value ? JSON.parse(message.value.toString()) : null;
+        // Expect the question service to echo the correlationId either in headers or _meta
+        entry.resolve(payload?.data ?? payload);
+      } catch (err: any) {
+        entry.reject(
+          new Error(`Failed to parse reply for ${correlationId}: ${err?.message ?? err}`)
+        );
+      } finally {
+        clearTimeout(entry.timer);
+        pending.delete(correlationId);
+      }
+    },
+  });
+
+  replyConsumerStartedForTopic.add(replyTopic);
+}
+
+export async function sendAndWait(args: SendAndWaitArgs) {
+  const {
+    producer,
+    consumer,
+    eventType,
+    data,
+    replyTopic,
+    timeoutMs = 10000,
+  } = args;
+
+  const correlationId = randomUUID();
+
+  // Start reply consumer for the topic once
+  await ensureReplyConsumer(consumer, replyTopic);
+
+  // Create a promise and store it in pending
+  const promise = new Promise<any>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending.delete(correlationId);
+      reject(new Error("Kafka reply timed out"));
+    }, timeoutMs);
+    pending.set(correlationId, { resolve, reject, timer });
+  });
+
+  // Publish the request. If your producer supports headers, use them.
+  // Otherwise include _meta in the payload so the responder can echo it back.
+  await producer.publishEvent({
+    eventType,
+    data: {
+      ...data,
+      _meta: {
+        correlationId,
+        replyTo: replyTopic,
+        // You can include any tracing info here as well
+      },
+    },
+    headers: {
+      correlationId, // safe if your wrapper forwards headers
+      replyTo: Buffer.from(replyTopic),
+    },
+  });
+
+  return promise;
+}
+````
+
+Notes:
+- Ensure your Question Service copies correlationId and replyTo from the request (either headers or _meta) into the reply message. Publish the reply payload to replyTo.
+- If TOPICS_AI.AI_QUESTION_HINT_RESPONSE does not exist, create a dedicated reply topic and use it in replyTopic.
+- If your kafkaClient wrapper exposes different consumer APIs than KafkaJS (subscribe/run), adjust Consumer accordingly.
+
+Questions:
+1) What are the exact Kafka topics for request and reply that your Question Service expects/uses?
+2) Does kafkaClient.getProducer().publishEvent support headers? If not, I’ll remove the headers and rely only on the _meta field.
+3) What is the shape of the reply payload from the Question Service (key names for the question text)?
+
+> *Response time: 80.19 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 15:14:41 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [ ] Modified
+- [X] Rejected
+
+### Author Notes
+
+- Provides an idea of how to implement request and response with kafka, to integrate with the /hint API endpoint, but does not suit current set up of kafka in the service
+
+---
+
+## request_9e60cdd1-7f09-4e36-85bb-148fccdd9953
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+what is the correlationId for?
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:client.ts</p>
+</details>
+
+
+
+The **correlationId** is used to match a Kafka reply back to the original request.
+
+### Why You Need It
+
+When you publish a request to Kafka and wait for a reply:
+
+1. **You publish** a request event with a unique `correlationId` (e.g., `"abc-123"`)
+2. **The Question Service** processes it and publishes a reply event **with the same** `correlationId`
+3. **Your AI Service consumer** receives many messages on the reply topic
+4. **The correlationId** lets you find which pending Promise corresponds to this specific reply
+
+Without it, you wouldn't know which request a reply belongs to—especially if multiple requests are in-flight at the same time.
+
+### How It Works in the Code
+
+```typescript
+// 1. Generate unique ID for this request
+const correlationId = randomUUID(); // e.g. "7f3e9a2b-..."
+
+// 2. Store a pending Promise in a Map
+pending.set(correlationId, { resolve, reject, timer });
+
+// 3. Publish request with correlationId embedded
+await producer.publishEvent({
+  eventType: "AI_QUESTION_HINT_REQUEST",
+  data: {
+    questionId: "123",
+    _meta: { correlationId, replyTo: "ai-hints-reply" }
+  }
+});
+
+// 4. Question Service replies with the SAME correlationId
+// Reply message: { correlationId: "7f3e9a2b-...", data: {...} }
+
+// 5. Your consumer receives the reply
+const entry = pending.get(correlationId); // ← finds the matching Promise
+if (entry) {
+  entry.resolve(payload); // ← resolves the waiting sendAndWait() call
+  pending.delete(correlationId);
+}
+```
+
+### Real-World Analogy
+
+It's like a restaurant order number:
+- You place order **#42** and get a ticket
+- Kitchen makes many orders simultaneously
+- When your food is ready, they call **#42**
+- You know it's yours because the numbers match
+
+The correlationId is your "order number" for async Kafka request-reply.
+
+> *Response time: 13.30 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 15:46:50 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [ ] Modified
+- [X] Rejected
+
+### Author Notes
+
+- Just to get an understanding of correlationid
+
+---
+
+## request_0ba53872-68a4-4371-a8e0-7bb7efa944ab
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+how do i modify my kafkaClient to handle this retrieveQuestionDetails which will send a kafka event and wait for the response
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:client.ts</p>
+</details>
+
+
+
+Here's how to modify your `KafkaClient` to handle the request-reply pattern for `retrieveQuestionDetails`:
+
+````typescript
+import {Kafka } from 'kafkajs';
+import { AiKafkaProducer } from './producer.js';
+import { AiKafkaConsumer } from './consumer.js';
+import { TOPICS_SUBSCRIBED, TOPICS_AI } from './utils.js';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface KafkaConfig {
+    clientId: string;
+    brokers: string[];
+    retry?: {
+        initialRetryTime?: number;
+        retries?: number;
+    };
+}
+
+export class KafkaClient {
+    private kafka : Kafka;
+    private producer: AiKafkaProducer
+    private consumer: AiKafkaConsumer;
+    private pending: Map<string,
+    {
+        resolve: (data: any) => void;
+        reject: (error: any) => void;
+        timer: NodeJS.Timeout;
+    }
+    >;
+    private replyConsumerStarted: boolean = false;
+
+    constructor(config: KafkaConfig) {
+        //Initialize Kafka client
+        this.kafka = new Kafka({
+            clientId: config.clientId,
+            brokers: config.brokers,
+            retry: config.retry || { initialRetryTime: 300, retries: 10 },
+        });
+        //Setup Producer
+        this.producer = new AiKafkaProducer(
+            this.kafka.producer({
+                idempotent: true, // to ensure message deduplication
+                transactionTimeout: 30000,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        //Setup Consumer
+        this.consumer = new AiKafkaConsumer(
+            this.kafka.consumer({
+                groupId: `${config.clientId}-group`,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        // Initialize pending map
+        this.pending = new Map();
+    }
+
+    getProducer(): AiKafkaProducer {
+        return this.producer;
+    }
+
+    getConsumer(): AiKafkaConsumer {
+        return this.consumer;
+    }
+
+    getClient(): Kafka {
+        return this.kafka;
+    }
+
+    async connect(): Promise<void> {
+        try {
+            await this.producer.getProducer().connect();
+            await this.consumer.getConsumer().connect();
+
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+            await this.consumer.startConsuming();
+
+            // Setup reply handler for request-reply pattern
+            await this.setupReplyHandler();
+
+            console.log('Kafka Client connected successfully');
+        } catch (err) {
+            console.error('Error connecting to Kafka:', err);
+            throw err;
+        }
+    }
+
+    async disconnect(): Promise<void> {
+        try {
+            // Clear all pending requests
+            this.pending.forEach((entry) => {
+                clearTimeout(entry.timer);
+                entry.reject(new Error('Kafka client disconnecting'));
+            });
+            this.pending.clear();
+
+            await this.producer.getProducer().disconnect();
+            await this.consumer.getConsumer().disconnect();
+            console.log('Kafka Client disconnected successfully');
+        } catch (err) {
+            console.error('Error disconnecting from Kafka:', err);
+            throw err;
+        }
+    }
+
+    /**
+     * Setup a dedicated handler for reply messages
+     * This listens to the reply topic and resolves pending promises
+     */
+    private async setupReplyHandler(): Promise<void> {
+        if (this.replyConsumerStarted) return;
+
+        const replyTopic = TOPICS_AI.AI_QUESTION_HINT_RESPONSE; // Define this in utils.ts
+
+        // Subscribe to reply topic
+        await this.consumer.getConsumer().subscribe({
+            topic: replyTopic,
+            fromBeginning: false
+        });
+
+        // Run consumer to handle reply messages
+        this.consumer.getConsumer().run({
+            eachMessage: async ({ topic, partition, message }) => {
+                if (topic !== replyTopic) return;
+
+                try {
+                    // Extract correlationId from headers or message body
+                    const correlationId =
+                        message.headers?.correlationId?.toString() ||
+                        this.extractCorrelationId(message.value);
+
+                    if (!correlationId) {
+                        console.warn('Received reply without correlationId');
+                        return;
+                    }
+
+                    // Find the pending request
+                    const entry = this.pending.get(correlationId);
+                    if (!entry) {
+                        console.warn(`No pending request found for correlationId: ${correlationId}`);
+                        return;
+                    }
+
+                    // Parse the reply payload
+                    const payload = message.value ? JSON.parse(message.value.toString()) : null;
+
+                    // Resolve the promise
+                    clearTimeout(entry.timer);
+                    entry.resolve(payload?.data ?? payload);
+                    this.pending.delete(correlationId);
+
+                    console.log(`Resolved reply for correlationId: ${correlationId}`);
+                } catch (err) {
+                    console.error('Error processing reply message:', err);
+                }
+            }
+        });
+
+        this.replyConsumerStarted = true;
+        console.log(`Reply consumer started for topic: ${replyTopic}`);
+    }
+
+    /**
+     * Extract correlationId from message payload
+     */
+    private extractCorrelationId(value: Buffer | null): string | undefined {
+        if (!value) return undefined;
+        try {
+            const payload = JSON.parse(value.toString());
+            return payload?._meta?.correlationId || payload?.correlationId;
+        } catch {
+            return undefined;
+        }
+    }
+
+    /**
+     * Send a request and wait for reply using the request-reply pattern
+     */
+    async retrieveQuestionDetails(
+        collabSessionId: string,
+        userId: string,
+        timeoutMs: number = 10000
+    ): Promise<any> {
+        const correlationId = uuidv4();
+        const replyTopic = TOPICS_AI.AI_QUESTION_HINT_RESPONSE;
+
+        // Create a promise and store it in pending
+        const promise = new Promise<any>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pending.delete(correlationId);
+                reject(new Error(`Request timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+
+            this.pending.set(correlationId, { resolve, reject, timer });
+        });
+
+        // Publish the request event
+        try {
+            await this.producer.publishEvent({
+                eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+                data: {
+                    collabSessionId,
+                    userId,
+                    _meta: {
+                        correlationId,
+                        replyTo: replyTopic,
+                    }
+                }
+            });
+
+            console.log(`Published request with correlationId: ${correlationId}`);
+        } catch (err) {
+            // Clean up if publish fails
+            const entry = this.pending.get(correlationId);
+            if (entry) {
+                clearTimeout(entry.timer);
+                this.pending.delete(correlationId);
+            }
+            throw err;
+        }
+
+        return promise;
+    }
+}
+````
+
+**Key changes:**
+
+1. **Initialized `pending` Map** in constructor to track in-flight requests
+2. **Added `setupReplyHandler()`** - Called during `connect()` to listen for reply messages
+3. **Added `extractCorrelationId()`** - Helper to extract correlationId from message payload
+4. **Completed `retrieveQuestionDetails()`**:
+   - Creates a Promise and stores it in `pending` with a timeout
+   - Publishes request with correlationId and replyTo metadata
+   - Returns the Promise (resolved when reply arrives)
+5. **Enhanced `disconnect()`** - Cleans up all pending requests
+
+**Don't forget to add to `utils.ts`:**
+````typescript
+export const TOPICS_AI = {
+  AI_QUESTION_HINT_REQUEST: 'ai-question-hint-request',
+  AI_QUESTION_HINT_RESPONSE: 'ai-question-hint-response', // ← Add this
+  // ...existing topics...
+};
+````
+
+**Question Service must:**
+- Read the `correlationId` and `replyTo` from the request
+- Publish the reply to `replyTo` topic with the same `correlationId` in headers or payload
+
+> *Response time: 26.74 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 15:51:26 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [ ] Modified
+- [X] Rejected
+
+### Author Notes
+
+- Requesting for a better approach that considers the current kafka implementation
+- Suggested response does not suit current kafka implementation well
+
+---
+
+## request_9a53afef-8299-4be6-8cf8-30053f1f8438
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+but i have already subscribed in kafkClient connect()
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:client.ts</p>
+</details>
+
+
+
+You don’t need a second subscribe. Keep your existing subscription and route replies in the same consumer loop. Add a per-topic handler to your AiKafkaConsumer and resolve pending Promises in KafkaClient.
+
+Here are minimal changes.
+
+````typescript
+// ...existing code...
+import type { Consumer, EachMessagePayload } from 'kafkajs';
+
+export class AiKafkaConsumer {
+  private consumer: Consumer;
+  private handlers = new Map<
+    string,
+    (args: { topic: string; partition: number; message: EachMessagePayload['message'] }) => Promise<void> | void
+  >();
+
+  constructor(consumer: Consumer) {
+    this.consumer = consumer;
+  }
+
+  getConsumer(): Consumer {
+    return this.consumer;
+  }
+
+  async subscribe(topics: string[]): Promise<void> {
+    for (const topic of topics) {
+      await this.consumer.subscribe({ topic, fromBeginning: false });
+    }
+  }
+
+  // Register a handler for a specific topic
+  addHandler(
+    topic: string,
+    handler: (args: { topic: string; partition: number; message: EachMessagePayload['message'] }) => Promise<void> | void
+  ) {
+    this.handlers.set(topic, handler);
+  }
+
+  async startConsuming(): Promise<void> {
+    await this.consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        const handler = this.handlers.get(topic);
+        if (handler) {
+          await handler({ topic, partition, message });
+        } else {
+          // ...existing code...
+          // No handler for this topic; keep your existing processing if any
+        }
+      },
+    });
+  }
+}
+// ...existing code...
+````
+
+````typescript
+import {Kafka } from 'kafkajs';
+import { AiKafkaProducer } from './producer.js';
+import { AiKafkaConsumer } from './consumer.js';
+import { TOPICS_SUBSCRIBED, TOPICS_AI } from './utils.js';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface KafkaConfig {
+    clientId: string;
+    brokers: string[];
+    retry?: {
+        initialRetryTime?: number;
+        retries?: number;
+    };
+}
+
+export class KafkaClient {
+    private kafka : Kafka;
+    private producer: AiKafkaProducer
+    private consumer: AiKafkaConsumer;
+    private pending: Map<string,
+    {
+        resolve: (data: any) => void;
+        reject: (error: any) => void;
+        timer: NodeJS.Timeout;
+    }
+    >;
+    private replyConsumerStarted: boolean = false;
+
+    constructor(config: KafkaConfig) {
+        this.kafka = new Kafka({
+            clientId: config.clientId,
+            brokers: config.brokers,
+            retry: config.retry || { initialRetryTime: 300, retries: 10 },
+        });
+
+        this.producer = new AiKafkaProducer(
+            this.kafka.producer({
+                idempotent: true,
+                transactionTimeout: 30000,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        this.consumer = new AiKafkaConsumer(
+            this.kafka.consumer({
+                groupId: `${config.clientId}-group`,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        this.pending = new Map();
+    }
+
+    getProducer(): AiKafkaProducer {
+        return this.producer;
+    }
+
+    getConsumer(): AiKafkaConsumer {
+        return this.consumer;
+    }
+
+    getClient(): Kafka {
+        return this.kafka;
+    }
+
+    async connect(): Promise<void> {
+        try {
+            await this.producer.getProducer().connect();
+            await this.consumer.getConsumer().connect();
+
+            // Subscribe once to all topics (including reply topic)
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+
+            // Attach reply handler BEFORE starting the consumer
+            this.setupReplyHandler();
+
+            await this.consumer.startConsuming();
+            console.log('Kafka Client connected successfully');
+        } catch (err) {
+            console.error('Error connecting to Kafka:', err);
+            throw err;
+        }
+    }
+
+    async disconnect(): Promise<void> {
+        try {
+            // Reject all pending
+            this.pending.forEach((entry) => {
+                clearTimeout(entry.timer);
+                entry.reject(new Error('Kafka client disconnecting'));
+            });
+            this.pending.clear();
+
+            await this.producer.getProducer().disconnect();
+            await this.consumer.getConsumer().disconnect();
+            console.log('Kafka Client disconnected successfully');
+        } catch (err) {
+            console.error('Error disconnecting from Kafka:', err);
+            throw err;
+        }
+    }
+
+    private setupReplyHandler(): void {
+        if (this.replyConsumerStarted) return;
+
+        const replyTopic = TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE;
+
+        this.consumer.addHandler(replyTopic, async ({ message }) => {
+            try {
+                const correlationId =
+                    message.headers?.correlationId?.toString() ||
+                    this.extractCorrelationId(message.value);
+
+                if (!correlationId) {
+                    console.warn('Reply without correlationId');
+                    return;
+                }
+
+                const entry = this.pending.get(correlationId);
+                if (!entry) {
+                    console.warn(`No pending request for correlationId: ${correlationId}`);
+                    return;
+                }
+
+                const payload = message.value ? JSON.parse(message.value.toString()) : null;
+                clearTimeout(entry.timer);
+                entry.resolve(payload?.data ?? payload);
+                this.pending.delete(correlationId);
+            } catch (err) {
+                console.error('Error handling reply message:', err);
+            }
+        });
+
+        this.replyConsumerStarted = true;
+    }
+
+    private extractCorrelationId(value: Buffer | null): string | undefined {
+        if (!value) return undefined;
+        try {
+            const payload = JSON.parse(value.toString());
+            return payload?._meta?.correlationId || payload?.correlationId;
+        } catch {
+            return undefined;
+        }
+    }
+
+    async retrieveQuestionDetails(
+        collabSessionId: string,
+        userId: string,
+        timeoutMs: number = 10000
+    ): Promise<any> {
+        const correlationId = uuidv4();
+        const replyTo = TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE;
+
+        // Promise for reply
+        const p = new Promise<any>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pending.delete(correlationId);
+                reject(new Error(`Request timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+            this.pending.set(correlationId, { resolve, reject, timer });
+        });
+
+        // Publish request (no extra subscribe needed)
+        await this.producer.publishEvent({
+            eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+            data: {
+                collabSessionId,
+                userId,
+                _meta: {
+                    correlationId,
+                    replyTo,
+                },
+            },
+        });
+
+        return p;
+    }
+}
+````
+
+Notes:
+- Single subscription remains; the reply handler just inspects messages for the reply topic and resolves pending by correlationId.
+- If your producer supports headers, you can also set a correlationId header; otherwise the _meta.correlationId is enough.
+
+> *Response time: 117.92 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 15:59:12 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [ ] Modified
+- [X] Rejected
+
+### Author Notes
+
+- Still not the approach that suits the current implementation, but getting there
+
+---
+
+## request_4d64fb7e-926b-4f90-8936-fbab983c50ae
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+i already have a handler class that handles message and determines the action for each topics
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:messageHandler.ts</p>
+</details>
+
+
+
+Perfect! You can integrate the reply handling into your existing `MessageHandler`. Here's how to modify your code:
+
+````typescript
+import type { EachMessagePayload } from 'kafkajs';
+import { TOPICS_SUBSCRIBED } from './utils.js';
+
+export class MessageHandler {
+    // Store reference to KafkaClient's pending map
+    private pendingReplies?: Map<string, {
+        resolve: (data: any) => void;
+        reject: (error: any) => void;
+        timer: NodeJS.Timeout;
+    }>;
+
+    // Allow KafkaClient to inject the pending map
+    setPendingReplies(pending: Map<string, any>) {
+        this.pendingReplies = pending;
+    }
+
+    async handleMessage(payload: EachMessagePayload): Promise<void> {
+        const {topic, partition, message} = payload;
+        if (!message.value) {
+            console.warn(`Received message with empty value on topic ${topic}, partition ${partition}`);
+            return;
+        }
+        const value = message.value.toString();
+        let event;
+        try {
+            event = JSON.parse(value);
+        } catch (err) {
+            console.error(`Failed to parse JSON message on topic ${topic}, partition ${partition}:`, value, err);
+            return;
+        }
+        switch (topic) {
+            case TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE:
+                await this.processQuestionResponse(message, event);
+                break;
+            default:
+                console.log(`Received message on unknown topic ${topic}: ${message.value?.toString()}`);
+        }
+    }
+
+    private async processQuestionResponse(message: any, event: any): Promise<void> {
+        // Extract correlationId from headers or payload
+        const correlationId =
+            message.headers?.correlationId?.toString() ||
+            event?._meta?.correlationId ||
+            event?.correlationId;
+
+        if (!correlationId) {
+            console.warn('Reply without correlationId, ignoring');
+            return;
+        }
+
+        // If this is a reply to a pending request, resolve it
+        if (this.pendingReplies?.has(correlationId)) {
+            const entry = this.pendingReplies.get(correlationId)!;
+            clearTimeout(entry.timer);
+            entry.resolve(event?.data ?? event);
+            this.pendingReplies.delete(correlationId);
+            console.log(`Resolved pending request for correlationId: ${correlationId}`);
+            return;
+        }
+
+        // Otherwise, process as a regular event (if needed)
+        console.log('Processing question response event (no pending request):', event);
+        const {collabSessionId, userId, question} = event?.data;
+
+        if (!collabSessionId || !userId || !question) {
+            console.error('Invalid event data:', event);
+            return;
+        }
+
+        // Handle non-request-reply messages if needed
+        // ...existing code...
+    }
+}
+````
+
+````typescript
+import {Kafka } from 'kafkajs';
+import { AiKafkaProducer } from './producer.js';
+import { AiKafkaConsumer } from './consumer.js';
+import { TOPICS_AI, TOPICS_SUBSCRIBED } from './utils.js';
+import { v4 as uuidv4 } from 'uuid';
+import { MessageHandler } from './messageHandler.js';
+
+export interface KafkaConfig {
+    clientId: string;
+    brokers: string[];
+    retry?: {
+        initialRetryTime?: number;
+        retries?: number;
+    };
+}
+
+export class KafkaClient {
+    private kafka : Kafka;
+    private producer: AiKafkaProducer
+    private consumer: AiKafkaConsumer;
+    private messageHandler: MessageHandler;
+    private pending: Map<string,
+    {
+        resolve: (data: any) => void;
+        reject: (error: any) => void;
+        timer: NodeJS.Timeout;
+    }
+    >;
+
+    constructor(config: KafkaConfig) {
+        this.kafka = new Kafka({
+            clientId: config.clientId,
+            brokers: config.brokers,
+            retry: config.retry || { initialRetryTime: 300, retries: 10 },
+        });
+
+        this.producer = new AiKafkaProducer(
+            this.kafka.producer({
+                idempotent: true,
+                transactionTimeout: 30000,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        this.consumer = new AiKafkaConsumer(
+            this.kafka.consumer({
+                groupId: `${config.clientId}-group`,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        this.pending = new Map();
+        this.messageHandler = new MessageHandler();
+        // Inject pending map into handler
+        this.messageHandler.setPendingReplies(this.pending);
+    }
+
+    getProducer(): AiKafkaProducer {
+        return this.producer;
+    }
+
+    getConsumer(): AiKafkaConsumer {
+        return this.consumer;
+    }
+
+    getClient(): Kafka {
+        return this.kafka;
+    }
+
+    async connect(): Promise<void> {
+        try {
+            await this.producer.getProducer().connect();
+            await this.consumer.getConsumer().connect();
+
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+
+            // Use the message handler for all topics
+            await this.consumer.startConsuming(this.messageHandler);
+
+            console.log('Kafka Client connected successfully');
+        } catch (err) {
+            console.error('Error connecting to Kafka:', err);
+            throw err;
+        }
+    }
+
+    async disconnect(): Promise<void> {
+        try {
+            this.pending.forEach((entry) => {
+                clearTimeout(entry.timer);
+                entry.reject(new Error('Kafka Client is disconnecting'));
+            });
+            this.pending.clear();
+
+            await this.producer.getProducer().disconnect();
+            await this.consumer.getConsumer().disconnect();
+            console.log('Kafka Client disconnected successfully');
+        } catch (err) {
+            console.error('Error disconnecting from Kafka:', err);
+            throw err;
+        }
+    }
+
+    async retrieveQuestionDetails(
+        collabSessionId: string,
+        userId: string,
+        timeoutMs: number = 10000
+    ): Promise<any> {
+        const correlationId = uuidv4();
+        const replyTo = TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE;
+
+        const promise = new Promise<any>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pending.delete(correlationId);
+                reject(new Error(`Request timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+
+            this.pending.set(correlationId, { resolve, reject, timer });
+        });
+
+        await this.producer.publishEvent({
+            eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+            data: {
+                collabSessionId,
+                userId,
+                _meta: {
+                    correlationId,
+                    replyTo,
+                }
+            }
+        });
+
+        console.log(`Published request with correlationId: ${correlationId}`);
+        return promise;
+    }
+}
+````
+
+**Key changes:**
+
+1. **MessageHandler** now receives the `pending` map from KafkaClient via `setPendingReplies()`
+2. **`processQuestionResponse()`** checks if correlationId exists in pending map:
+   - If yes → resolve the Promise (request-reply pattern)
+   - If no → process as regular event (if needed)
+3. **KafkaClient** injects the pending map into MessageHandler during construction
+4. All messages flow through your existing MessageHandler, no duplicate consumer logic
+
+This keeps your architecture clean with centralized message handling!
+
+> *Response time: 25.44 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 22:31:10 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Starting to fit our current kafka design approach - except that it has an unnecessary overhead of storing pending requests in KafkaClient
+- Modified by removing the pending data from KafkaClient and to only store and manage it via MessageHandler
+
+---
+
+## request_181a0e39-adcb-4ae2-92f3-ecaad9631dab
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+i already have messageHandler defined and instantiated in the AiKafkaConsumer
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:client.ts</p>
+</details>
+
+
+
+Perfect! Then you just need to inject the `pending` map into the existing `MessageHandler` instance in `AiKafkaConsumer`. Here's the simplified approach:
+
+````typescript
+import {Kafka } from 'kafkajs';
+import { AiKafkaProducer } from './producer.js';
+import { AiKafkaConsumer } from './consumer.js';
+import { TOPICS_AI, TOPICS_SUBSCRIBED } from './utils.js';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface KafkaConfig {
+    clientId: string;
+    brokers: string[];
+    retry?: {
+        initialRetryTime?: number;
+        retries?: number;
+    };
+}
+
+export class KafkaClient {
+    private kafka : Kafka;
+    private producer: AiKafkaProducer
+    private consumer: AiKafkaConsumer;
+    private pending: Map<string,
+    {
+        resolve: (data: any) => void;
+        reject: (error: any) => void;
+        timer: NodeJS.Timeout;
+    }
+    >;
+
+    constructor(config: KafkaConfig) {
+        //Initialize Kafka client
+        this.kafka = new Kafka({
+            clientId: config.clientId,
+            brokers: config.brokers,
+            retry: config.retry || { initialRetryTime: 300, retries: 10 },
+        });
+        //Setup Producer
+        this.producer = new AiKafkaProducer(
+            this.kafka.producer({
+                idempotent: true, // to ensure message deduplication
+                transactionTimeout: 30000,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        //Setup Consumer
+        this.consumer = new AiKafkaConsumer(
+            this.kafka.consumer({
+                groupId: `${config.clientId}-group`,
+                allowAutoTopicCreation: true,
+            })
+        );
+
+        this.pending = new Map();
+
+        // Inject pending map into the consumer's message handler
+        this.consumer.getMessageHandler().setPendingReplies(this.pending);
+    }
+
+    getProducer(): AiKafkaProducer {
+        return this.producer;
+    }
+
+    getConsumer(): AiKafkaConsumer {
+        return this.consumer;
+    }
+
+    getClient(): Kafka {
+        return this.kafka;
+    }
+
+    async connect(): Promise<void> {
+        try {
+            await this.producer.getProducer().connect();
+            await this.consumer.getConsumer().connect();
+
+            await this.consumer.subscribe(Object.values(TOPICS_SUBSCRIBED));
+            await this.consumer.startConsuming();
+
+            console.log('Kafka Client connected successfully');
+        } catch (err) {
+            console.error('Error connecting to Kafka:', err);
+            throw err;
+        }
+    }
+
+    async disconnect(): Promise<void> {
+        try {
+            this.pending.forEach((entry) => {
+                clearTimeout(entry.timer);
+                entry.reject(new Error('Kafka Client is disconnecting'));
+            });
+            this.pending.clear();
+
+            await this.producer.getProducer().disconnect();
+            await this.consumer.getConsumer().disconnect();
+            console.log('Kafka Client disconnected successfully');
+        } catch (err) {
+            console.error('Error disconnecting from Kafka:', err);
+            throw err;
+        }
+    }
+
+    async retrieveQuestionDetails(
+        collabSessionId: string,
+        userId: string,
+        timeoutMs: number = 10000
+    ): Promise<any> {
+        const correlationId = uuidv4();
+        const replyTo = TOPICS_SUBSCRIBED.COLLAB_QUESTION_RESPONSE;
+
+        const promise = new Promise<any>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pending.delete(correlationId);
+                reject(new Error(`Request timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+
+            this.pending.set(correlationId, { resolve, reject, timer });
+        });
+
+        await this.producer.publishEvent({
+            eventType: TOPICS_AI.AI_QUESTION_HINT_REQUEST,
+            data: {
+                collabSessionId,
+                userId,
+                _meta: {
+                    correlationId,
+                    replyTo,
+                }
+            }
+        });
+
+        console.log(`Published request with correlationId: ${correlationId}`);
+        return promise;
+    }
+}
+````
+
+**Add to your `AiKafkaConsumer`:**
+
+````typescript
+// ...existing code...
+
+export class AiKafkaConsumer {
+    // ...existing code...
+
+    getMessageHandler(): MessageHandler {
+        return this.messageHandler;
+    }
+
+    // ...existing code...
+}
+````
+
+**Key changes:**
+1. Removed `setUpReplyHandler()` - no longer needed
+2. In constructor, inject `pending` map into the existing MessageHandler via `this.consumer.getMessageHandler().setPendingReplies(this.pending)`
+3. Simplified `connect()` - just subscribe and start consuming (MessageHandler handles everything)
+4. The MessageHandler already has the logic to check correlationId and resolve pending requests
+
+This keeps all message routing in one place (MessageHandler) and avoids duplicate consumer logic!
+
+> *Response time: 16.25 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 22:33:53 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Modified to remove pending from KafkaClient
+
+---
+
+
+## request_1426f203-fc1c-43d0-a07c-af8eb3cd88ca
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+how can i then pass my response from processing the incoming request back to the api endpoint logic
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:messageHandler.ts</p>
+</details>
+
+
+
+The response is already being passed back through the Promise! The `entry.resolve(event?.data ?? event)` resolves the Promise that was returned by `createPendingRequest()`.
+
+Here's how the flow works:
+
+**In your API endpoint (`index.ts`):**
+
+````typescript
+app.post("/hint", async (c) => {
+  const body = await c.req.json();
+  const { collabSessionId, userId } = body;
+
+  if (!collabSessionId || !userId) {
+    return c.text("Missing collabSessionId or userId", 400);
+  }
+
+  const ai = c.var.ai;
+  if (!ai) {
+    return c.text("AI client not initialized", 500);
+  }
+
+  console.log(`Received hint request from ${userId} in ${collabSessionId}`);
+
+  try {
+    // This waits for the Promise to resolve with the question details
+    const questionDetails = await kafkaClient.retrieveQuestionDetails(collabSessionId, userId);
+
+    console.log("Retrieved question details:", questionDetails);
+
+    // Extract the question from the resolved data
+    const question = questionDetails?.question || questionDetails;
+
+    if (!question) {
+      return c.text("Failed to retrieve question details", 500);
+    }
+
+    // Now call AI with the question
+    const hint = await getHint(ai, question);
+    if (!hint) {
+      return c.text("Failed to get hint from AI", 500);
+    }
+
+    console.log("Sending hint response:", hint);
+    return c.text(hint);
+
+  } catch (err: any) {
+    console.error("Error:", err?.message ?? err);
+    return c.text(err?.message || "Error processing request", 500);
+  }
+});
+````
+
+**The Promise flow:**
+
+1. **API calls** `kafkaClient.retrieveQuestionDetails()` → returns a Promise
+2. **KafkaClient** calls `messageHandler.createPendingRequest()` → stores Promise in Map and returns it
+3. **API awaits** the Promise (blocked here, waiting)
+4. **Kafka message arrives** → `processQuestion()` is called
+5. **processQuestion** calls `entry.resolve(event?.data ?? event)` → **Promise resolves**
+6. **API continues** execution with the resolved data (questionDetails)
+7. **API uses** questionDetails to call `getHint(ai, question)`
+
+The key is that `entry.resolve()` **fulfills the Promise** that was created in `createPendingRequest()`, which allows the `await` in your API endpoint to continue with the resolved value.
+
+**You don't need to return anything from `processQuestion()`** - the resolve happens via the Promise mechanism. You can simplify it:
+
+````typescript
+private async processQuestion(message: any, event: any): Promise<void> {
+    console.log('Processing question event:', event);
+    const correlationId = message.headers?.correlationId?.toString() ||
+        event?._meta?.correlationId ||
+        event?.correlationId;
+
+    if (!correlationId) {
+        console.warn('Question response without correlationId');
+        return;
+    }
+
+    if (!this.pendingReplies.has(correlationId)) {
+        console.warn(`No pending request found for correlationId: ${correlationId}`);
+        return;
+    }
+
+    // Resolve the pending Promise with the event data
+    const entry = this.pendingReplies.get(correlationId)!;
+    clearTimeout(entry.timer);
+    entry.resolve(event?.data ?? event); // ← This passes data back to API
+    this.pendingReplies.delete(correlationId);
+
+    console.log(`Resolved pending request for correlationId: ${correlationId}`);
+}
+````
+
+The Promise mechanism handles passing the data back automatically! 🎯
+
+> *Response time: 18.30 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-09 23:58:09 (GMT+8)*
+
+### Action Taken
+
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Tested for correctness - able to return response in API endpoint 
+
+---
+
+
+## request_cab173b6-c968-4bbd-8ea1-3fc1d53bfc3b
+
+**Participant:** Sebtey
+**Assistant:** GitHub Copilot
+
+### Participant
+
+Based on AIQuestionHintRequestEvent, how should i receive the event in my collabMessageHandler?
+
+### Assistant
+
+<details>
+  <summary>Used 1 references</summary>
+  <p>📄 file:collabMessageHandler.ts</p>
+</details>
+
+
+
+You should read the request as:
+- data.collabSessionId
+- data.userId
+- _meta.correlationId (root-level)
+
+Here’s a safe receiver with validation and reusing correlationId in the response.
+
+````typescript
+// ...existing code...
+private async processAiServiceHintRequest(event: any) {
+  // Expected shape:
+  // {
+  //   eventType: "ai-question-hint-request",
+  //   data: { collabSessionId: string, userId: string },
+  //   _meta: { correlationId: string }
+  // }
+
+  const { data, _meta } = event ?? {};
+  const { collabSessionId, userId } = data ?? {};
+  const correlationId =
+    _meta?.correlationId ||
+    event?.correlationId ||               // tolerate legacy shapes
+    event?.data?._meta?.correlationId;    // if sender nested it
+
+  if (!collabSessionId || !userId) {
+    console.error("Missing userId or collabSessionId in AI hint request");
+    return;
+  }
+  if (!correlationId) {
+    console.error("Missing correlationId in AI hint request");
+    return;
+  }
+
+  const sessionDetails = getSessionDetails(collabSessionId);
+  if (!sessionDetails) {
+    console.error(`No session details for collabSessionId: ${collabSessionId}`);
+    return;
+  }
+
+  const questionDetails =
+    (sessionDetails.get("title") ?? "") + "\n" + (sessionDetails.get("question") ?? "");
+
+  const aiQuestionResponseEvent: Omit<AIQuestionResponseEvent, "eventId"> = {
+    eventType: TOPICS_COLLAB.AI_QUESTION_RESPONSE,
+    data: {
+      collabSessionId,
+      userId,
+      question: questionDetails,
+    },
+    _meta: { correlationId }, // reuse same ID
+  };
+
+  await kafkaClient.getProducer().publishEvent(aiQuestionResponseEvent);
+}
+// ...existing code...
+````
+
+This matches your AIQuestionHintRequestEvent with _meta at the root and ensures the response reuses the same correlationId.
+
+> *Response time: 53.41 seconds*
+> <br>*Model: auto*
+> <br>*Timestamp: 2025-11-10 00:48:22 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Modified the retrieval of question details
+
+---
+
 
 ## Generate Session and Room functionality
 
@@ -9551,3 +11134,5 @@ Generated unit tests for rooms and sessions, integration tests for the integrati
 ### Author Notes
 
 - I verified the functionality and modified it to fit the requirements of our application.
+
+
