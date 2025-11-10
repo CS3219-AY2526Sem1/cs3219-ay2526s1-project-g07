@@ -1,5 +1,5 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { Matcher } from './matcher';
+import { Matcher, MatcherEvents } from './matcher';
 import { WS_EVENTS_MATCHING } from '../../../shared/ws-events'
 import type { UserId } from '../../../shared/types/matching-types';
 
@@ -22,7 +22,7 @@ export class MatchingWS {
       socket.on(WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(socket, error));
     });
 
-    this.matcher.emitter.on(this.matcher.EVENT_USER_DEQUEUED, (userId: UserId) => {
+    this.matcher.emitter.on(MatcherEvents.EVENT_USER_DEQUEUED, (userId: UserId) => {
       this.emitUserDequeued(userId.id);
     });
     console.log('Matching WebSocket server initialized and listening for connections.');

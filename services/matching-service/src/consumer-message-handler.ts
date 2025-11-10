@@ -1,4 +1,4 @@
-import type { KafkaMessage } from "kafkajs";
+import type { Kafka, KafkaMessage } from "kafkajs";
 import { Matcher } from "./matcher";
 import { TOPICS_MATCHING } from "../../../shared/kafka-topics";
 import { MatchingWS } from "./matching-ws";
@@ -13,25 +13,40 @@ export class ConsumerMessageHandler {
   }
 
   handleMessage(message: KafkaMessage, topic: string) {
-    const value = message.value?.toString() || '';
     switch (topic) {
       case TOPICS_MATCHING.COLLAB_SESSION_READY:
-        this.processCollabSessionReady(value);
+        this.processCollabSessionReady(message);
         break;
 
       default:
-        this.processUnknownTopic(value);
+        this.processUnknownTopic(message);
         break;
     }
   }
 
-  protected processCollabSessionReady(value: string) {
-    const { eventType, data, eventId } = JSON.parse(value);
-    console.log(`Processing collaboration session ready: ${data.userIdOne}, ${data.userIdTwo}, ${data.collabSessionId}`);
-    this.webSocket?.emitCollabSessionReady(data.userIdOne, data.userIdTwo, data.collabSessionId);
+  protected processCollabSessionReady(message: KafkaMessage) {
+    try {
+      if (!message.value) {
+        console.error(`Received empty message for collab session ready: ${message}`);
+        return;
+      }
+
+      const collabSessionReadyEvent = JSON.parse(message.value?.toString() || '');
+      const { collabSessionId, userIdOne, userIdTwo } = collabSessionReadyEvent.data;
+
+      console.log(`Processing collaboration session ready: ${userIdOne}, ${userIdTwo}, ${collabSessionId}`);
+
+      this.webSocket?.emitCollabSessionReady(userIdOne, userIdTwo, collabSessionId);
+
+      // Clean up
+      this.matcher.dequeue({ id: userIdOne });
+      this.matcher.dequeue({ id: userIdTwo });
+    } catch (err) {
+      console.error(`Failed to process collab session ready message:`, message, err);
+    }
   }
 
-  protected processUnknownTopic(value: string) {
-    console.log(`Processing unknown topic message: ${value}`);
+  protected processUnknownTopic(message: KafkaMessage) {
+    console.log(`Processing unknown topic message: ${message.value?.toString() || ''}`);
   }
 }

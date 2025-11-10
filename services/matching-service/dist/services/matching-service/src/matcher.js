@@ -130,7 +130,7 @@ class Matcher {
     }
     handleMatchFound(match) {
         const { firstUserId, secondUserId, preferences: { topic, difficulty } } = match;
-        this.emitter.emit('matchFound', match);
+        this.emitter.emit(MatcherEvents.EVENT_MATCH_FOUND, match);
         console.log(`Match found between users ${firstUserId.id} and ${secondUserId.id} with topic ${topic} and difficulty ${difficulty}`);
     }
     async handleNoMatch() {

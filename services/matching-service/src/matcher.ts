@@ -10,7 +10,6 @@ export class Matcher {
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
   emitter: EventEmitter;
-  EVENT_USER_DEQUEUED: string = 'userDequeued';
 
   constructor(redisClient: RedisClient) {
     this.emitter = new EventEmitter();
@@ -78,7 +77,7 @@ export class Matcher {
 
       console.log(`✅ User ${userId.id} removed from the matching queue.`);
 
-      this.emitter.emit(this.EVENT_USER_DEQUEUED, userId);
+      this.emitter.emit(MatcherEvents.EVENT_USER_DEQUEUED, userId);
     } finally {
       // Release lock safely
       const releaseLockLuaScript = `
@@ -152,7 +151,7 @@ export class Matcher {
 
   private handleMatchFound(match: MatchResult) {
     const { firstUserId, secondUserId, preferences: {topic, difficulty} } = match;
-    this.emitter.emit('matchFound', match);
+    this.emitter.emit(MatcherEvents.EVENT_MATCH_FOUND, match);
     console.log(`Match found between users ${firstUserId.id} and ${secondUserId.id} with topic ${topic} and difficulty ${difficulty}`);
   }
 
@@ -171,9 +170,7 @@ export class Matcher {
     for (let i = 1; i < userRequests.length; i++) {
       const potentialMatch = userRequests[i];
       if (MatchCriteria.isMatch(firstUser, potentialMatch)) {
-        // Found a match
-        this.dequeue(firstUser.userId);
-        this.dequeue(potentialMatch.userId);
+        // Found a match, dequeue when a collab session is ready
         console.log(`Matched users ${firstUser.userId.id} and ${potentialMatch.userId.id}`);
         return {
           firstUserId: firstUser.userId,
@@ -194,4 +191,9 @@ export class Matcher {
     return this.redisClient.instance.lRange(Matcher.redisCacheKey, 0, -1)
       .then(requests => requests.map(request => JSON.parse(request as string) as UserMatchingRequest));
   }
+}
+
+export enum MatcherEvents {
+  EVENT_USER_DEQUEUED = 'userDequeued',
+  EVENT_MATCH_FOUND = 'matchFound',
 }
