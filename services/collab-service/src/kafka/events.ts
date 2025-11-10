@@ -5,6 +5,10 @@ export interface BaseEvent {
     eventType: string;
 }
 
+export interface EventMeta {
+    correlationId: string;
+}
+
 export interface CollabSessionReadyEvent extends BaseEvent {
     eventType: (typeof TOPICS_COLLAB)['COLLAB_SESSION_READY'];
     data: {
@@ -20,7 +24,8 @@ export interface AIQuestionResponseEvent extends BaseEvent {
         collabSessionId: string;
         userId: string;
         question: string; // question_title + '\n' + question_body
-    }
+    };
+    _meta: EventMeta;
 }
 
 export interface UserStatusUpdateEvent extends BaseEvent {
