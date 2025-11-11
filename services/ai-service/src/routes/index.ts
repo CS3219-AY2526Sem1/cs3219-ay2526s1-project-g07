@@ -33,7 +33,7 @@ app.post("/hint", async (c) => {
 
   console.log(`Received hint request from ${userId} in ${collabSessionId}`);
 
-  let response = null;
+  let response: { collabSessionId: string, userId: string, question: string } | null = null;
   try {
     response = await kafkaClient.retrieveQuestionDetails(collabSessionId, userId);
 
