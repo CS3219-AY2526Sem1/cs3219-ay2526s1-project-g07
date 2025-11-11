@@ -222,10 +222,6 @@ function RouteComponent() {
   ));
 
 
-  topic_options.map((topic) => {
-    console.log(topic.toLowerCase().replace(/\s+/g, "_"))
-  })
-
 
 
   return (
