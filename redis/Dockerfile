@@ -7,14 +7,14 @@ WORKDIR /app
 RUN apk add --no-cache gcompat
 
 # Copy Redis source files
-COPY redis/redis.conf redis/package.json redis/package-lock.json redis/tsconfig.json ./
+COPY redis.conf package.json package-lock.json tsconfig.json ./
 
 # Install dependencies
 RUN npm ci
 RUN npm dedupe 
 
 # Build the project
-COPY redis/src ./src
+COPY src ./src
 RUN npm run build
 
 FROM base AS runner

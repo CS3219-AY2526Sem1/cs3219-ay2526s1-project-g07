@@ -14,8 +14,22 @@ class Matcher {
             this.tryFindMatch();
             this.tryTimeOut();
         }, this.matchInterval);
+        // Clean up corrupted data every 5 minutes
+        setInterval(() => {
+            this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
+            this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+        }, 5 * 60 * 1000);
     }
     async enqueue(userId, preferences) {
+        // Validate input data
+        if (!userId || !userId.id) {
+            console.error('Cannot enqueue: invalid userId provided');
+            throw new Error('Invalid userId provided for enqueue operation');
+        }
+        if (!preferences || !preferences.topic || !preferences.difficulty) {
+            console.error('Cannot enqueue: invalid preferences provided');
+            throw new Error('Invalid preferences provided for enqueue operation');
+        }
         const userRequest = {
             userId: userId,
             preferences: {
@@ -59,7 +73,14 @@ class Matcher {
         }
         try {
             const userRequests = await this.queue(cacheKey);
-            const filteredRequests = userRequests.filter(r => r.userId.id !== id);
+            const filteredRequests = userRequests.filter(r => {
+                // Defensive check: ensure userId and userId.id exist
+                if (!r || !r.userId || !r.userId.id) {
+                    console.warn('Invalid request found in queue, removing:', r);
+                    return false; // Remove invalid entries
+                }
+                return r.userId.id !== id;
+            });
             await this.redisClient.instance.del(cacheKey);
             for (const r of filteredRequests) {
                 await this.redisClient.instance.rPush(cacheKey, JSON.stringify(r));
@@ -130,12 +151,19 @@ class Matcher {
         return (Date.now() - requestTimestamp) >= this.timeOutDuration;
     }
     async tryFindMatch() {
-        const match = await this.findMatch();
-        if (match) {
-            this.handleMatchFound(match);
+        try {
+            const match = await this.findMatch();
+            if (match) {
+                this.handleMatchFound(match);
+            }
+            else {
+                this.handleNoMatch();
+            }
         }
-        else {
-            this.handleNoMatch();
+        catch (error) {
+            console.error('Error during match finding process:', error);
+            // Clean up corrupted data if match finding fails
+            await this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
         }
     }
     handleMatchFound(match) {
@@ -184,13 +212,57 @@ class Matcher {
         };
         await this.redisClient.instance.rPush(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES, JSON.stringify(matchData));
     }
+    async cleanUpCorruptedData(cacheKey = Matcher.REDIS_KEY_MATCHING_QUEUE) {
+        console.log(`Cleaning up corrupted data in ${cacheKey}...`);
+        const rawRequests = await this.redisClient.instance.lRange(cacheKey, 0, -1);
+        const validRequests = [];
+        for (const request of rawRequests) {
+            try {
+                const parsed = JSON.parse(request);
+                // Validate the parsed object has required properties
+                if (parsed && parsed.userId && parsed.userId.id && parsed.preferences) {
+                    validRequests.push(parsed);
+                }
+                else {
+                    console.warn('Removing invalid request from queue:', parsed);
+                }
+            }
+            catch (error) {
+                console.error('Removing unparseable request from queue:', request, error);
+            }
+        }
+        // Replace the queue with only valid requests
+        await this.redisClient.instance.del(cacheKey);
+        if (validRequests.length > 0) {
+            for (const validRequest of validRequests) {
+                await this.redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest));
+            }
+        }
+        console.log(`✅ Cleaned up ${rawRequests.length - validRequests.length} corrupted entries from ${cacheKey}`);
+    }
     async cleanUp() {
         await this.redisClient.quit();
         console.log('Matcher cleanup completed.');
     }
     async queue(cacheKey) {
         const requests = await this.redisClient.instance.lRange(cacheKey, 0, -1);
-        return requests.map(request => JSON.parse(request));
+        return requests
+            .map(request => {
+            try {
+                const parsed = JSON.parse(request);
+                // Validate the parsed object has required properties
+                if (!parsed || !parsed.userId || !parsed.userId.id || !parsed.preferences) {
+                    console.warn('Invalid request structure found in queue:', parsed);
+                    return null;
+                }
+                return parsed;
+            }
+            catch (error) {
+                console.error('Failed to parse request from queue:', request, error);
+                return null;
+            }
+        })
+            .filter((request) => request !== null);
     }
 }
 exports.Matcher = Matcher;
