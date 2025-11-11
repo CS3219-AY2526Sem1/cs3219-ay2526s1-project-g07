@@ -7,8 +7,9 @@ import type {
 export const matchingService = {
   // Start matching request
   async startMatching(request: UserMatchingRequest): Promise<void> {
+    // Default to empty string because api endpoints start with a /
     const matchingBaseUrl =
-      import.meta.env.PUBLIC_MATCHING_SERVICE_URL || "http://localhost:3000";
+      import.meta.env.PUBLIC_MATCHING_SERVICE_URL || "";
     try {
       const response = await fetch(
         `${matchingBaseUrl}${API_ENDPOINTS_MATCHING.MATCHING_REQUEST}`,
@@ -32,8 +33,9 @@ export const matchingService = {
 
   // Cancel matching request
   async cancelMatching(request: UserMatchingCancelRequest): Promise<void> {
+    // Default to empty string because api endpoints start with a /
     const matchingBaseUrl =
-      import.meta.env.PUBLIC_MATCHING_SERVICE_URL || "http://localhost:3000";
+      import.meta.env.PUBLIC_MATCHING_SERVICE_URL || "";
     try {
       const response = await fetch(
         `${matchingBaseUrl}${API_ENDPOINTS_MATCHING.MATCHING_CANCEL}`,
