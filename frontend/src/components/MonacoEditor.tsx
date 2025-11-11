@@ -71,9 +71,9 @@ function PythonMonacoEditor({
   const userId = useSession().data?.user?.id;
   const userName = useSession().data?.user?.name;
   const roomname = sessionId;
-  const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
+  const userColor = useMemo(() => `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
     .toString(16)
-    .padStart(6, "0")}`; // assign a random color
+    .padStart(6, "0")}`, []); // assign a random color
 
   // Clean up Yjs document on unmount
   useEffect(() => {
@@ -147,7 +147,7 @@ function PythonMonacoEditor({
     return () => {
       provider?.destroy();
     };
-  }, [ydoc, userId, roomname, userName, userColor, navigate]);
+  }, [ydoc, roomname, userId, userName, userColor, navigate]);
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
