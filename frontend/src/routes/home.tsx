@@ -273,6 +273,7 @@ function RouteComponent() {
             variant="outline"
             className="flex-1 border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
             hidden={!isMatching && wsMatchingStatus !== "queued"}
+            disabled={wsMatchingStatus === "matched" || !!matchData}
             onClick={handleCancelMatching}
           >
             Cancel Matching
