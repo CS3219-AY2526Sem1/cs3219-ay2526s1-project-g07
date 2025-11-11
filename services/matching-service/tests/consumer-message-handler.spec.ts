@@ -42,6 +42,21 @@ describe('ConsumerMessageHandler', () => {
     expect(processCollabSessionReadySpy).toHaveBeenCalledWith(mockMessage);
   });
 
+  it('should handle question failure topic messages', async () => {
+    const questionFailureTopic = TOPICS_MATCHING.QUESTION_FAILURE;
+    const mockMessage = {
+      value: Buffer.from(JSON.stringify({
+        userId: '1',
+        peerId: '2',
+        error: 'Some error occurred'
+      }))
+    } as KafkaMessage;
+    const processQuestionFailureSpy = spyOn(messageHandler as any, 'processQuestionFailure').and.callThrough();
+
+    await messageHandler.handleMessage(mockMessage, questionFailureTopic);
+    expect(processQuestionFailureSpy).toHaveBeenCalledWith(mockMessage);
+  });
+
   it('should handle unknown topic messages', async () => {
     const unknownTopic = 'kdjsaiwmcaosm';
     const mockMessage = { 
