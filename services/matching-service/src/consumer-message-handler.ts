@@ -17,6 +17,10 @@ export class ConsumerMessageHandler {
       case TOPICS_MATCHING.COLLAB_SESSION_READY:
         await this.processCollabSessionReady(message);
         break;
+      
+      case 'question-failure':
+        await this.processQuestionFailure(message);
+        break;
 
       default:
         this.processUnknownTopic(message);
@@ -43,6 +47,27 @@ export class ConsumerMessageHandler {
       await this.matcher.dequeue({ id: userIdTwo }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
     } catch (err) {
       console.error(`Failed to process collab session ready message:`, message, err);
+    }
+  }
+
+  protected async processQuestionFailure(message: KafkaMessage) {
+    try {
+      if (!message.value) {
+        console.error(`Received empty message for question failure: ${message}`);
+        return;
+      }
+
+      const questionFailureEvent = JSON.parse(message.value?.toString() || '');
+      const { userId, peerId, error } = questionFailureEvent.data;
+      console.log(`Processing question failure for user ${userId} & peer ${peerId} due to ${error}`);
+      this.webSocket?.emitQuestionFailure(userId, error);
+      this.webSocket?.emitQuestionFailure(peerId, error);
+
+      // Clean up
+      await this.matcher.dequeue({ id: userId }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+      await this.matcher.dequeue({ id: peerId }, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+    } catch (err) {
+      console.error(`Failed to process question failure message:`, message, err);
     }
   }
 
