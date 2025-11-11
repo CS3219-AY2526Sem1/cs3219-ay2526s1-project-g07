@@ -10,6 +10,7 @@ export class Matcher {
   static readonly REDIS_KEY_SUCCESSFUL_MATCHES = 'successful_matches';
   matchInterval = 5000; // Interval to check for matches in milliseconds
   timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
+  cleanUpInterval = 300000; // Interval to clean up corrupted data in milliseconds
   emitter: EventEmitter;
 
   constructor(redisClient: RedisClient) {
@@ -24,7 +25,7 @@ export class Matcher {
     setInterval(() => {
       this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
       this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
-    }, 5 * 60 * 1000);
+    }, this.cleanUpInterval);
   }
 
   async enqueue(userId: UserId, preferences: { topic: string; difficulty: Difficulty }): Promise<void> {
