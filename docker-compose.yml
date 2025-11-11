@@ -1,5 +1,8 @@
 services:
   redis:
+    build:
+        context: ./redis
+        dockerfile: Dockerfile
     image: redis:7-alpine
     container_name: redis
     ports:
@@ -10,6 +13,11 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     
   postgres:
     image: postgres:16

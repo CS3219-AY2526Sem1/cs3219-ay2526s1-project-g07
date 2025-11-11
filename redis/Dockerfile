@@ -21,6 +21,8 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN apk add --no-cache redis
+
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
@@ -38,4 +40,4 @@ EXPOSE 6379
 LABEL org.opencontainers.image.source=https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07
 LABEL org.opencontainers.image.description="CS3219 AY2526S1 Project G07 PeerPrep Redis Service"
 
-CMD [ "npm", "start" ]
+CMD ["redis-server", "--appendonly", "yes"]

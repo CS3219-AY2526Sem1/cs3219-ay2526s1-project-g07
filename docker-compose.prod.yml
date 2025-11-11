@@ -86,6 +86,11 @@ services:
       - "6379:6379"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   collab-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
@@ -129,7 +134,7 @@ services:
       kafka-init:
         condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
     environment:
       - HOST=0.0.0.0
       - PORT=5003

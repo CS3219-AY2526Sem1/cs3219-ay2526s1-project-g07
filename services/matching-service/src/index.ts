@@ -19,6 +19,8 @@ const httpServer = createServer(app);
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
+const REDIS_HOST = process.env.REDIS_HOST || 'redis';
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 async function main() {
   // --- Middleware ---
@@ -35,7 +37,7 @@ async function main() {
 
   // --- Core Components ---
   const redisClient = new RedisClient();
-  await redisClient.init();
+  await redisClient.init(REDIS_HOST, Number(REDIS_PORT));
 
   const matcher = new Matcher(redisClient);
 
