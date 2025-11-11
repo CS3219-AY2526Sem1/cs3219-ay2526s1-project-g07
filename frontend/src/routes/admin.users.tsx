@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -48,7 +48,7 @@ function RouteComponent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,7 +68,7 @@ function RouteComponent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const promoteToAdmin = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
@@ -119,7 +119,7 @@ function RouteComponent() {
 
   useEffect(() => {
     fetchUsers();
-  }, [isAdmin, isLoading]);
+  }, [fetchUsers]);
 
   if (isLoading) {
     return <div></div>;
