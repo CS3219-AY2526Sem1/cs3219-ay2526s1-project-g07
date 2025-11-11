@@ -50,7 +50,8 @@ class MatchingWS {
         if (!userId)
             return Promise.resolve();
         console.log(`Handling connection interrupt for user ${userId.id}`);
-        await this.matcher.dequeue(userId);
+        await this.matcher.dequeue(userId, false, matcher_1.Matcher.REDIS_KEY_MATCHING_QUEUE);
+        await this.matcher.dequeue(userId, true, matcher_1.Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
     }
     emitCollabSessionReady(userId, peerId, sessionId) {
         const payload = { userId, peerId, sessionId };
@@ -60,7 +61,7 @@ class MatchingWS {
     }
     emitUserDequeued(userId) {
         console.log(`Emitting user dequeued event to user ${userId}`);
-        this.io.to(`user_${userId}`).emit(ws_events_1.WS_EVENTS_MATCHING.USER_DEQUEUED, { userId });
+        this.io.to(`user_${userId}`).emit(ws_events_1.WS_EVENTS_MATCHING.USER_DEQUEUED, userId);
     }
 }
 exports.MatchingWS = MatchingWS;
