@@ -55,6 +55,9 @@ function RouteComponent() {
   const { user, isPending } = useCurrentUser();
   const { isChecking } = useCheckAndRedirectToCollab();
 
+  // No need for injection in production
+  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || '/';
+
   // WebSocket integration
   const {
     isConnected: wsConnected,
@@ -63,7 +66,7 @@ function RouteComponent() {
     matchData,
     error: wsError,
     joinUser,
-  } = useMatchingWebSocket();
+  } = useMatchingWebSocket(MATCHING_SERVICE_WS_URL);
 
   // Join WebSocket when user is connected
   useEffect(() => {
