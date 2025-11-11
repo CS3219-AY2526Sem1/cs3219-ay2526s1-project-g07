@@ -238,6 +238,7 @@ function RouteComponent() {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="username">Username</Label>
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is correctly associated with input below */}
                       <Input
                         id="username"
                         value={formData.username}
