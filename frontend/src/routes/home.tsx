@@ -220,6 +220,14 @@ function RouteComponent() {
       {topic}
     </SelectItem>
   ));
+
+
+  topic_options.map((topic) => {
+    console.log(topic.toLowerCase().replace(/\s+/g, "_"))
+  })
+
+
+
   return (
     <div>
       <Navbar />
