@@ -15,7 +15,7 @@ export default defineConfig({
     proxy: {
       "/api/questions": { target: "http://localhost:5001" },
       "/api/user": { target: "http://localhost:5002" },
-      "/api/match": { target: "http://127.0.0.1:5003", ws: true, pathRewrite: { '^/api/match': '' }, },
+      "/api/match": { target: "http://127.0.0.1:5003", ws: true, },
       "/api/collab": { target: "http://127.0.0.1:5004", ws: true, pathRewrite: { '^/api/collab': '' }, },
       "/api/ai": { target: "http://localhost:5005" },
     },
