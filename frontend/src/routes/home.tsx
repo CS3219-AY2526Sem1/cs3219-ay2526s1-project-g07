@@ -71,7 +71,7 @@ function RouteComponent() {
       console.log("Joining WebSocket with user:", user.id);
       joinUser({ id: user.id });
     }
-  }, [user?.id, wsConnected]);
+  }, [user?.id, wsConnected, joinUser]);
 
   // Handle WebSocket status changes
   useEffect(() => {
