@@ -58,7 +58,7 @@ export class ConsumerMessageHandler {
       }
 
       const questionFailureEvent = JSON.parse(message.value?.toString() || '');
-      const { userId, peerId, error } = questionFailureEvent.data;
+      const { userId, peerId, error } = questionFailureEvent;
       console.log(`Processing question failure for user ${userId} & peer ${peerId} due to ${error}`);
       this.webSocket?.emitQuestionFailure(userId, error);
       this.webSocket?.emitQuestionFailure(peerId, error);
