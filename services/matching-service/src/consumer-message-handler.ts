@@ -18,7 +18,7 @@ export class ConsumerMessageHandler {
         await this.processCollabSessionReady(message);
         break;
       
-      case 'question-failure':
+      case TOPICS_MATCHING.QUESTION_FAILURE:
         await this.processQuestionFailure(message);
         break;
 
