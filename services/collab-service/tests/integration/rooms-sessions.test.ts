@@ -17,6 +17,14 @@ const mockWebSocket = () => ({
   close: vi.fn(),
 });
 
+vi.mock('../../src/index.js', () => ({
+  kafkaClient: {
+    getProducer: () => ({
+      publishEvent: vi.fn().mockResolvedValue(undefined),
+    }),
+  },
+}));
+
 describe('Rooms and Sessions System Integration Tests', () => {
   const SESSION_ID = 'sess-789';
   const DUMMY_SESSION_DETAILS: SessionDetails = {
@@ -38,7 +46,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
   });
 
   describe('Integration with removeActiveRoom', () => {
-    it('should clean up the room AND the session state when the last user is removed', () => {
+    it('should clean up the room AND the session state when the last user is removed', async () => {
       const ws1 = mockWebSocket();
 
       // SETUP: Simulate session creation and user entering the room
@@ -50,7 +58,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
       expect(getSessions().has(SESSION_ID)).toBe(true); // Session is active
 
       // ACTION: Remove the last user
-      removeActiveRoom(SESSION_ID, USER_ID_1);
+      await removeActiveRoom(SESSION_ID, USER_ID_1);
 
       // ASSERTIONS:
       // 1. Room is cleaned up (rooms.js logic)
@@ -61,7 +69,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
       expect(ws1.close).toHaveBeenCalled();
     });
 
-    it('should NOT clean up the session state if the room is NOT empty', () => {
+    it('should NOT clean up the session state if the room is NOT empty', async () => {
       // SETUP: Session is active, room has two users
       addSession(SESSION_ID, DUMMY_SESSION_DETAILS);
       addActiveRoom(SESSION_ID, USER_ID_1, mockWebSocket() as any);
@@ -71,7 +79,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
       expect(getSessions().has(SESSION_ID)).toBe(true);
 
       // ACTION: Remove one user
-      removeActiveRoom(SESSION_ID, USER_ID_1);
+      await removeActiveRoom(SESSION_ID, USER_ID_1);
 
       // ASSERTIONS:
       // 1. Room still exists with one user
@@ -82,7 +90,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
   });
 
   describe('Integration with disconnectSocketFromRoom', () => {
-    it('should clean up the room AND the session state when the last socket disconnects', () => {
+    it('should clean up the room AND the session state when the last socket disconnects', async () => {
       const ws2 = mockWebSocket();
 
       // SETUP: Session created, room has one user
@@ -93,7 +101,7 @@ describe('Rooms and Sessions System Integration Tests', () => {
       expect(getSessions().has(SESSION_ID)).toBe(true);
 
       // ACTION: Disconnect the last socket
-      disconnectSocketFromRoom(SESSION_ID, USER_ID_2, ws2 as any);
+      await disconnectSocketFromRoom(SESSION_ID, USER_ID_2, ws2 as any);
 
       // ASSERTIONS:
       // 1. Room is cleaned up

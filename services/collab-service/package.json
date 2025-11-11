@@ -5,7 +5,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest"
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "4.0.8",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",
     "vitest": "^4.0.8"
