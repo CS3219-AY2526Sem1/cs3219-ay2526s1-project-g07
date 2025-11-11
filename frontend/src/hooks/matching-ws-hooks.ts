@@ -8,7 +8,7 @@ import type {
 import { WS_EVENTS_MATCHING } from "../../../shared/ws-events";
 
 export const useMatchingWebSocket = (
-  serverUrl: string = '/'
+  serverUrl: string = "/"
 ): UseMatchingWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [matchingStatus, setMatchingStatus] =
@@ -57,8 +57,8 @@ export const useMatchingWebSocket = (
     clearError();
 
     socketRef.current = io(serverUrl, {
-      transports: ['websocket'],
-      path: '/api/match/ws',
+      transports: ["websocket"],
+      path: "/api/match/ws",
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
@@ -94,15 +94,12 @@ export const useMatchingWebSocket = (
     });
 
     // Matching event handlers
-    socketRef.current.on(
-      WS_EVENTS_MATCHING.COLLAB_SESSION_READY,
-      (data) => {
-        console.log("Collaboration session is ready");
-        setMatchingStatus("collab_session_ready");
-        updateMessage("Collaboration session is ready");
-        handleCollabSessionReady(data.sessionId);
-      }
-    );
+    socketRef.current.on(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, (data) => {
+      console.log("Collaboration session is ready");
+      setMatchingStatus("collab_session_ready");
+      updateMessage("Collaboration session is ready");
+      handleCollabSessionReady(data.sessionId);
+    });
 
     socketRef.current.on(WS_EVENTS_MATCHING.USER_DEQUEUED, (userId: string) => {
       handleUserDequeued(userId);

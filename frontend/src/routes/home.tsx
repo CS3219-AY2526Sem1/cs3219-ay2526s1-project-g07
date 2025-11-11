@@ -216,13 +216,13 @@ function RouteComponent() {
   ];
 
   const selectItems = topic_options.map((topic) => (
-    <SelectItem key={topic.toLowerCase().replace(/\s+/g, "_")} value={topic.toLowerCase().replace(/\s+/g, "_")}>
+    <SelectItem
+      key={topic.toLowerCase().replace(/\s+/g, "_")}
+      value={topic.toLowerCase().replace(/\s+/g, "_")}
+    >
       {topic}
     </SelectItem>
   ));
-
-
-
 
   return (
     <div>
@@ -238,9 +238,7 @@ function RouteComponent() {
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Topic" />
               </SelectTrigger>
-              <SelectContent>
-                {selectItems}
-              </SelectContent>
+              <SelectContent>{selectItems}</SelectContent>
             </Select>
             <Select onValueChange={setDifficulty}>
               <SelectTrigger className="w-48">
