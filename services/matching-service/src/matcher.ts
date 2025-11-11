@@ -293,7 +293,7 @@ export class Matcher {
       `✅ Atomic cleanup on ${cacheKey}: total=${total}, kept=${kept}, removed=${removed}`
     );
   }
-  
+
   async cleanUp() {
     await this.redisClient.quit();
     console.log('Matcher cleanup completed.');
