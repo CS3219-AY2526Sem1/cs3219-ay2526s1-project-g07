@@ -18,11 +18,7 @@ const app = express();
 const httpServer = createServer(app);
 
 dotenv.config();
-const HOST_URL = process.env.HOST_URL || 'http://localhost:3000';
-const PORT = process.env.PORT || 4000;
-const REDIS_DB_INDEX = process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE
-  ? parseInt(process.env.REDIS_DATABASE_INDEX_MATCHING_SERVICE)
-  : 0;
+const PORT = process.env.PORT || 3000;
 
 async function main() {
   // --- Middleware ---
@@ -34,7 +30,7 @@ async function main() {
 
   const kafka = new Kafka({
     clientId: 'matching-service',
-    brokers: ['localhost:9094']
+    brokers: (process.env.KAFKA_BROKERS || "localhost:9092").split(","),
   });
 
   // --- Core Components ---
@@ -42,9 +38,6 @@ async function main() {
   await redisClient.init();
 
   const matcher = new Matcher(redisClient);
-  const messageHandler = new ConsumerMessageHandler(matcher);
-  const producer = new MatchingServiceProducer(kafka, matcher);
-  const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
   // --- Websocket & Kafka Connections ---
   const io = new SocketIOServer(httpServer, {
@@ -62,6 +55,11 @@ async function main() {
       console.error('Error initializing WebSocket:', error);
     }
   }
+
+  // Kafka Producer & Consumer
+  const messageHandler = new ConsumerMessageHandler(matcher, ws);
+  const producer = new MatchingServiceProducer(kafka, matcher);
+  const consumer = new MatchingServiceConsumer(kafka, messageHandler);
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     res.status(err.status || 500).json(err.message);
@@ -126,6 +124,7 @@ async function main() {
     console.log(`Received matching cancel request for user id: ${userId.id}`);
 
     matcher.dequeue(userId);
+    matcher.dequeue(userId, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
 
     return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
   });

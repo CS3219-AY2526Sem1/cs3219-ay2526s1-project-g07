@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import Navbar from "../../../components/Navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -16,9 +14,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { redirectIfNotAuthenticated, useIsAdmin } from "@/src/hooks/user-hooks";
+import Navbar from "../../../components/Navbar";
 
 interface Question {
   id: string;
@@ -27,13 +27,13 @@ interface Question {
   difficulty: string;
   topics: string[];
 }
-export const Route = createFileRoute('/admin/questions/')({
+export const Route = createFileRoute("/admin/questions/")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
   redirectIfNotAuthenticated();
-  
+
   const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
@@ -42,7 +42,9 @@ function RouteComponent() {
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("title-asc");
   const [loading, setLoading] = useState(true);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
+    null
+  );
 
   // Get unique topics from all questions
   const allTopics = Array.from(
@@ -54,21 +56,21 @@ function RouteComponent() {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/questions');
+        const response = await fetch("/api/questions");
 
         if (!response.ok) {
-          throw new Error('Failed to fetch questions');
+          throw new Error("Failed to fetch questions");
         }
 
         const data = await response.json();
-        console.log('Fetched questions:', data);
+        console.log("Fetched questions:", data);
 
         // The API returns { message, questions, count }
         const questionsData = data.questions || [];
         setQuestions(questionsData);
         setFilteredQuestions(questionsData);
       } catch (error) {
-        console.error('Error fetching questions:', error);
+        console.error("Error fetching questions:", error);
         // Keep empty state on error
         setQuestions([]);
         setFilteredQuestions([]);
@@ -134,33 +136,37 @@ function RouteComponent() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'easy': return 'text-green-600 bg-green-50 border-green-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'hard': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case "easy":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "medium":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "hard":
+        return "text-red-600 bg-red-50 border-red-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
   const handleDelete = async (questionId: string) => {
-    if (!confirm('Are you sure you want to delete this question?')) {
+    if (!confirm("Are you sure you want to delete this question?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/questions/${questionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
         // Remove question from local state
-        setQuestions(prev => prev.filter(q => q.id !== questionId));
-        console.log('Question deleted successfully');
+        setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+        console.log("Question deleted successfully");
       } else {
-        throw new Error('Failed to delete question');
+        throw new Error("Failed to delete question");
       }
     } catch (error) {
-      console.error('Error deleting question:', error);
-      alert('Failed to delete question. Please try again.');
+      console.error("Error deleting question:", error);
+      alert("Failed to delete question. Please try again.");
     }
   };
 
@@ -178,7 +184,7 @@ function RouteComponent() {
   }
 
   if (!isAdmin) {
-    return <Navigate to="/home" />
+    return <Navigate to="/home" />;
   }
 
   if (loading) {
@@ -286,33 +292,44 @@ function RouteComponent() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="h-12 px-4 text-left align-middle font-medium">Title</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Difficulty</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Topics</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Actions</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        Title
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        Difficulty
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        Topics
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredQuestions.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="h-24 text-center">
-                          {loading ? (
-                            "Loading questions..."
-                          ) : searchTerm ? (
-                            "No questions found matching your search."
-                          ) : (
-                            "No questions available. Add some questions to get started!"
-                          )}
+                          {loading
+                            ? "Loading questions..."
+                            : searchTerm
+                              ? "No questions found matching your search."
+                              : "No questions available. Add some questions to get started!"}
                         </td>
                       </tr>
                     ) : (
                       filteredQuestions.map((question) => (
-                        <tr key={question.id} className="border-b hover:bg-muted/50">
+                        <tr
+                          key={question.id}
+                          className="border-b hover:bg-muted/50"
+                        >
                           <td className="p-4">
                             <div className="font-medium">{question.title}</div>
                           </td>
                           <td className="p-4">
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getDifficultyColor(question.difficulty)}`}>
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getDifficultyColor(question.difficulty)}`}
+                            >
                               {question.difficulty}
                             </span>
                           </td>
@@ -335,49 +352,65 @@ function RouteComponent() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setSelectedQuestion(question)}
+                                    onClick={() =>
+                                      setSelectedQuestion(question)
+                                    }
                                   >
                                     View
                                   </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                                   <DialogHeader>
-                                    <DialogTitle>{selectedQuestion?.title}</DialogTitle>
+                                    <DialogTitle>
+                                      {selectedQuestion?.title}
+                                    </DialogTitle>
                                   </DialogHeader>
                                   <div className="space-y-4">
                                     <div>
-                                      <h4 className="font-semibold mb-2">Difficulty</h4>
-                                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getDifficultyColor(selectedQuestion?.difficulty || '')}`}>
+                                      <h4 className="font-semibold mb-2">
+                                        Difficulty
+                                      </h4>
+                                      <span
+                                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getDifficultyColor(selectedQuestion?.difficulty || "")}`}
+                                      >
                                         {selectedQuestion?.difficulty}
                                       </span>
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold mb-2">Topics</h4>
+                                      <h4 className="font-semibold mb-2">
+                                        Topics
+                                      </h4>
                                       <div className="flex flex-wrap gap-1">
-                                        {selectedQuestion?.topics.map((topic, index) => (
-                                          <span
-                                            key={index}
-                                            className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
-                                          >
-                                            {topic}
-                                          </span>
-                                        ))}
+                                        {selectedQuestion?.topics.map(
+                                          (topic, index) => (
+                                            <span
+                                              key={index}
+                                              className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
+                                            >
+                                              {topic}
+                                            </span>
+                                          )
+                                        )}
                                       </div>
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold mb-2">Question</h4>
+                                      <h4 className="font-semibold mb-2">
+                                        Question
+                                      </h4>
                                       <div className="bg-gray-50 p-4 rounded-md">
-                                        <p className="text-sm leading-relaxed">{selectedQuestion?.question}</p>
+                                        <p className="text-sm leading-relaxed">
+                                          {selectedQuestion?.question}
+                                        </p>
                                       </div>
                                     </div>
                                   </div>
                                 </DialogContent>
                               </Dialog>
-                              <Link to="/admin/questions/$questionId" params={{ questionId: question.id }}>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                >
+                              <Link
+                                to="/admin/questions/$questionId"
+                                params={{ questionId: question.id }}
+                              >
+                                <Button variant="outline" size="sm">
                                   Edit
                                 </Button>
                               </Link>
@@ -402,8 +435,6 @@ function RouteComponent() {
             </div>
           </CardContent>
         </Card>
-
-
       </div>
     </div>
   );

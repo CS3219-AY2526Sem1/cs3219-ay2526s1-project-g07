@@ -4,7 +4,7 @@ exports.MatchingServiceConsumer = void 0;
 const kafka_topics_1 = require("../../../shared/kafka-topics");
 class MatchingServiceConsumer {
     constructor(kafka, messageHandler) {
-        this.topics = [kafka_topics_1.TOPICS_MATCHING.MATCHING_SUCCESS];
+        this.topics = [kafka_topics_1.TOPICS_MATCHING.COLLAB_SESSION_READY];
         this.consumer = kafka.consumer({ groupId: 'matching-group' });
         this.messageHandler = messageHandler;
     }
@@ -20,7 +20,7 @@ class MatchingServiceConsumer {
     async run() {
         await this.consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
-                this.messageHandler.handleMessage(message, topic);
+                await this.messageHandler.handleMessage(message, topic);
             }
         });
     }

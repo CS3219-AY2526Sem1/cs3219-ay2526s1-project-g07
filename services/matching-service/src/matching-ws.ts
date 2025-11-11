@@ -1,5 +1,5 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { Matcher } from './matcher';
+import { Matcher, MatcherEvents } from './matcher';
 import { WS_EVENTS_MATCHING } from '../../../shared/ws-events'
 import type { UserId } from '../../../shared/types/matching-types';
 
@@ -21,6 +21,11 @@ export class MatchingWS {
       socket.on(WS_EVENTS_MATCHING.DISCONNECT, (reason) => this.OnClientDisconnect(socket, reason));
       socket.on(WS_EVENTS_MATCHING.ERROR, (error) => this.OnError(socket, error));
     });
+
+    this.matcher.emitter.on(MatcherEvents.EVENT_USER_DEQUEUED, (userId: UserId) => {
+      this.emitUserDequeued(userId.id);
+    });
+    console.log('Matching WebSocket server initialized and listening for connections.');
   }
 
   private async HandleConnectionInterrupt(userId: UserId | undefined): Promise<void> {
@@ -58,6 +63,18 @@ export class MatchingWS {
   private OnError = async (socket: CustomSocket, error: any) => {
     console.error('WebSocket error:', error);
     await this.HandleConnectionInterrupt(socket.userId);
+  }
+
+  emitCollabSessionReady(userId: string, peerId: string, sessionId: string) {
+    const payload = { userId, peerId, sessionId };
+    console.log(`Emitting collab session ready to user ${userId} and peer ${peerId} for session ${sessionId}`);
+    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+    this.io.to(`user_${peerId}`).emit(WS_EVENTS_MATCHING.COLLAB_SESSION_READY, payload);
+  }
+
+  emitUserDequeued(userId: string) {
+    console.log(`Emitting user dequeued event to user ${userId}`);
+    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.USER_DEQUEUED, { userId });
   }
 }
 

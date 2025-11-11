@@ -79,4 +79,34 @@ jobs:
       - name: Run integration tests
         run: pnpm test tests/integration/
         working-directory: ./services/question-service
-  
+
+  test_collab:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - uses: actions/checkout@v4
+
+      # INSTALL PNPM
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      # SETUP NODE
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Install deps
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./services/collab-service
+      
+      # test
+      - name: Run tests
+        run: pnpm test
+        working-directory: ./services/collab-service
+

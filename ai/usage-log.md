@@ -9673,11 +9673,13 @@ export async function sendAndWait(args: SendAndWaitArgs) {
 ````
 
 Notes:
+
 - Ensure your Question Service copies correlationId and replyTo from the request (either headers or _meta) into the reply message. Publish the reply payload to replyTo.
 - If TOPICS_AI.AI_QUESTION_HINT_RESPONSE does not exist, create a dedicated reply topic and use it in replyTopic.
 - If your kafkaClient wrapper exposes different consumer APIs than KafkaJS (subscribe/run), adjust Consumer accordingly.
 
 Questions:
+
 1) What are the exact Kafka topics for request and reply that your Question Service expects/uses?
 2) Does kafkaClient.getProducer().publishEvent support headers? If not, I’ll remove the headers and rely only on the _meta field.
 3) What is the shape of the reply payload from the Question Service (key names for the question text)?
@@ -9761,6 +9763,7 @@ if (entry) {
 ### Real-World Analogy
 
 It's like a restaurant order number:
+
 - You place order **#42** and get a ticket
 - Kitchen makes many orders simultaneously
 - When your food is ready, they call **#42**
@@ -10042,6 +10045,7 @@ export class KafkaClient {
 5. **Enhanced `disconnect()`** - Cleans up all pending requests
 
 **Don't forget to add to `utils.ts`:**
+
 ````typescript
 export const TOPICS_AI = {
   AI_QUESTION_HINT_REQUEST: 'ai-question-hint-request',
@@ -10051,6 +10055,7 @@ export const TOPICS_AI = {
 ````
 
 **Question Service must:**
+
 - Read the `correlationId` and `replyTo` from the request
 - Publish the reply to `replyTo` topic with the same `correlationId` in headers or payload
 
@@ -10326,6 +10331,7 @@ export class KafkaClient {
 ````
 
 Notes:
+
 - Single subscription remains; the reply handler just inspects messages for the reply topic and resolves pending by correlationId.
 - If your producer supports headers, you can also set a correlationId header; otherwise the _meta.correlationId is enough.
 
@@ -10783,6 +10789,7 @@ export class AiKafkaConsumer {
 ````
 
 **Key changes:**
+
 1. Removed `setUpReplyHandler()` - no longer needed
 2. In constructor, inject `pending` map into the existing MessageHandler via `this.consumer.getMessageHandler().setPendingReplies(this.pending)`
 3. Simplified `connect()` - just subscribe and start consuming (MessageHandler handles everything)
@@ -10931,7 +10938,7 @@ The Promise mechanism handles passing the data back automatically! 🎯
 
 ### Author Notes
 
-- Tested for correctness - able to return response in API endpoint 
+- Tested for correctness - able to return response in API endpoint
 
 ---
 
@@ -10955,6 +10962,7 @@ Based on AIQuestionHintRequestEvent, how should i receive the event in my collab
 
 
 You should read the request as:
+
 - data.collabSessionId
 - data.userId
 - _meta.correlationId (root-level)

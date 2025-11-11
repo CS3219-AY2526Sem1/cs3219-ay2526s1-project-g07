@@ -3,6 +3,7 @@ import { TOPICS_COLLAB, TOPICS_SUBSCRIBED } from './utils.js';
 import { addSession, generateRandomSessionId, getSessionDetails } from '../sessions.js';
 import type { AIQuestionResponseEvent, CollabSessionReadyEvent, UserStatusUpdateEvent } from './events.js';
 import { kafkaClient } from '../index.js';
+import type { SessionDetails } from '../types.js';
 
 export class CollabMessageHandler { 
     async handleMessage(payload: EachMessagePayload) {
@@ -59,9 +60,9 @@ export class CollabMessageHandler {
             return;
         }
 
-        const questionDetails = (sessionDetails.get("title") ?? "") +
+        const questionDetails = (sessionDetails.title ?? "") +
             '\n' + 
-            (sessionDetails.get("question") ?? "");
+            (sessionDetails.question ?? "");
 
         const aiQuestionResponseEvent: Omit<AIQuestionResponseEvent, 'eventId'> = {
             eventType: TOPICS_COLLAB.AI_QUESTION_RESPONSE,
@@ -109,17 +110,16 @@ export class CollabMessageHandler {
         
         // Setup collab session from the information received
         const collabSessionId: string = generateRandomSessionId();
-        const sessionDetails = new Map<string, string>(
-            [
-                ["user1", userId], 
-                ["user2", peerId],
-                ["questionId", questionId],
-                ["title", title],
-                ["question", question],
-                ["difficulty", difficulty],
-                ["categories", Array.isArray(topic) ? topic.join(",") : String(topic)],
-            ]
-        );
+        const sessionDetails: SessionDetails = {
+            user1: userId,
+            user2: peerId,
+            questionId: questionId,
+            title: title,
+            question: question,
+            difficulty: difficulty,
+            categories: Array.isArray(topic) ? topic.join(",") : String(topic),
+        };
+
         addSession(collabSessionId, sessionDetails);
 
         console.log(
