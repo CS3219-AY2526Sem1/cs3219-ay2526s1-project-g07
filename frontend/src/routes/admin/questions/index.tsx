@@ -10,6 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { redirectIfNotAuthenticated, useIsAdmin } from "@/src/hooks/user-hooks";
 import Navbar from "../../../components/Navbar";
 
@@ -31,10 +38,18 @@ function RouteComponent() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("title-asc");
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
+
+  // Get unique topics from all questions
+  const allTopics = Array.from(
+    new Set(questions.flatMap((q) => q.topics))
+  ).sort();
 
   // Fetch questions from API
   useEffect(() => {
@@ -67,12 +82,13 @@ function RouteComponent() {
     fetchQuestions();
   }, []);
 
-  // Filter questions based on search term
+  // Filter and sort questions
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredQuestions(questions);
-    } else {
-      const filtered = questions.filter(
+    let filtered = [...questions];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
         (question) =>
           question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           question.difficulty
@@ -82,9 +98,59 @@ function RouteComponent() {
             topic.toLowerCase().includes(searchTerm.toLowerCase())
           )
       );
-      setFilteredQuestions(filtered);
     }
-  }, [searchTerm, questions]);
+
+    // Apply difficulty filter
+    if (difficultyFilter !== "all") {
+      filtered = filtered.filter(
+        (question) =>
+          question.difficulty.toLowerCase() === difficultyFilter.toLowerCase()
+      );
+    }
+
+    // Apply topic filter
+    if (topicFilter !== "all") {
+      filtered = filtered.filter((question) =>
+        question.topics.includes(topicFilter)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "title-asc":
+          return a.title.localeCompare(b.title);
+        case "title-desc":
+          return b.title.localeCompare(a.title);
+        case "difficulty-asc": {
+          const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
+          return (
+            (difficultyOrder[
+              a.difficulty.toLowerCase() as keyof typeof difficultyOrder
+            ] || 0) -
+            (difficultyOrder[
+              b.difficulty.toLowerCase() as keyof typeof difficultyOrder
+            ] || 0)
+          );
+        }
+        case "difficulty-desc": {
+          const difficultyOrderDesc = { easy: 1, medium: 2, hard: 3 };
+          return (
+            (difficultyOrderDesc[
+              b.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc
+            ] || 0) -
+            (difficultyOrderDesc[
+              a.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc
+            ] || 0)
+          );
+        }
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredQuestions(filtered);
+  }, [searchTerm, questions, difficultyFilter, topicFilter, sortBy]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -164,13 +230,87 @@ function RouteComponent() {
                 <Button>Add Question</Button>
               </Link>
             </div>
-            <div className="flex gap-4 mt-4">
-              <Input
-                placeholder="Search questions by title, difficulty, or category..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md"
-              />
+            <div className="flex flex-col gap-4 mt-4">
+              <div className="flex gap-4 flex-wrap">
+                <Input
+                  placeholder="Search questions by title, difficulty, or category..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-md flex-1"
+                />
+              </div>
+
+              <div className="flex gap-4 flex-wrap items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Difficulty:</span>
+                  <Select
+                    value={difficultyFilter}
+                    onValueChange={setDifficultyFilter}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Topic:</span>
+                  <Select value={topicFilter} onValueChange={setTopicFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="All Topics" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Topics</SelectItem>
+                      {allTopics.map((topic) => (
+                        <SelectItem key={topic} value={topic}>
+                          {topic}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Sort by:</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Title (A-Z)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="title-asc">Title (A-Z)</SelectItem>
+                      <SelectItem value="title-desc">Title (Z-A)</SelectItem>
+                      <SelectItem value="difficulty-asc">
+                        Difficulty (Easy-Hard)
+                      </SelectItem>
+                      <SelectItem value="difficulty-desc">
+                        Difficulty (Hard-Easy)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {(searchTerm ||
+                  difficultyFilter !== "all" ||
+                  topicFilter !== "all") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setDifficultyFilter("all");
+                      setTopicFilter("all");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -222,9 +362,9 @@ function RouteComponent() {
                           </td>
                           <td className="p-4">
                             <div className="flex flex-wrap gap-1">
-                              {question.topics.map((topic, index) => (
+                              {question.topics.map((topic) => (
                                 <span
-                                  key={index}
+                                  key={topic}
                                   className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                 >
                                   {topic}
@@ -236,7 +376,7 @@ function RouteComponent() {
                             <div className="flex gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button
+                                  {/* <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
@@ -244,7 +384,7 @@ function RouteComponent() {
                                     }
                                   >
                                     View
-                                  </Button>
+                                  </Button> */}
                                 </DialogTrigger>
                                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                                   <DialogHeader>
@@ -269,9 +409,9 @@ function RouteComponent() {
                                       </h4>
                                       <div className="flex flex-wrap gap-1">
                                         {selectedQuestion?.topics.map(
-                                          (topic, index) => (
+                                          (topic) => (
                                             <span
-                                              key={index}
+                                              key={topic}
                                               className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                             >
                                               {topic}

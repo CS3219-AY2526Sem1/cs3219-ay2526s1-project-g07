@@ -74,7 +74,7 @@ function RouteComponent() {
       console.log("Joining WebSocket with user:", user.id);
       joinUser({ id: user.id });
     }
-  }, [user?.id, wsConnected]);
+  }, [user?.id, wsConnected, joinUser]);
 
   // Handle WebSocket status changes
   useEffect(() => {
@@ -108,7 +108,7 @@ function RouteComponent() {
   }, [wsMatchingStatus]);
 
   if (isPending || isChecking) {
-    return <></>;
+    return null;
   }
 
   console.log("User data in Home route:", user);

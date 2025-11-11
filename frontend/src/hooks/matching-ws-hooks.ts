@@ -114,7 +114,13 @@ export const useMatchingWebSocket = (
       setError(typeof error === "string" ? error : "WebSocket error occurred");
       updateMessage(`Error: ${error}`);
     });
-  }, [serverUrl, clearError, updateMessage, handleUserDequeued, handleCollabSessionReady]);
+  }, [
+    serverUrl,
+    clearError,
+    updateMessage,
+    handleUserDequeued,
+    handleCollabSessionReady,
+  ]);
 
   const disconnect = useCallback(() => {
     if (!socketRef.current) {

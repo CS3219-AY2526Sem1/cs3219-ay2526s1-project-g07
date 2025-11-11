@@ -57,10 +57,6 @@ function RouteComponent() {
   const userId = useSession().data?.user?.id;
   const { isPending, user } = useCurrentUser();
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
   const resetCode = useCallback(() => {
     setCode("");
   }, []);
@@ -93,7 +89,7 @@ function RouteComponent() {
         error: `Failed to fetch hint: ${e instanceof Error ? e.message : String(e)}`,
       });
     }
-  }, []);
+  }, [user, sessionId]);
 
   const fetchAiDebug = useCallback(async () => {
     setAiDebugContent({ loading: true, content: "", error: "" });
@@ -115,7 +111,7 @@ function RouteComponent() {
         error: `Failed to fetch debug info: ${e instanceof Error ? e.message : String(e)}`,
       });
     }
-  }, [code, output]);
+  }, [code, output, question_text]);
 
   const endCollabSession = useCallback(async () => {
     // Logic to end the collaboration session
@@ -140,13 +136,17 @@ function RouteComponent() {
         `Failed to end session: ${e instanceof Error ? e.message : String(e)}`
       );
     }
-  }, [navigate, sessionId]);
+  }, [navigate, sessionId, userId]);
 
   const toggleAiDebugPanel = useCallback(() => {
     setShowDebugPanel((prev) => !prev);
   }, []);
 
   redirectIfNotAuthenticated();
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

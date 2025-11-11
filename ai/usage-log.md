@@ -11326,7 +11326,6 @@ export function useCheckAndRedirectToCollab() {
 </details>
 
 ### Step 4: Now let's check where users land after login and use this hook there
-
 <details>
   <summary>Read **home.tsx**</summary>
 
@@ -11672,17 +11671,14 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
 ## How It Works End-to-End
 
 **Backend (User Service):**
-
 - Kafka consumer listens to `'user-status-update'` topic
 - When message received: Updates
  in database
 -
-
  endpoint returns
  field
 
 **Frontend (Home Route):**
-
 - Hook fetches user data on mount
 - If
  exists → Auto-redirect to active session
@@ -11690,7 +11686,6 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
  is null → User can start new matching
 
 **Use Cases:**
-
 - ✅ User joins a collab →
  set → Next login redirects to active session
 - ✅ User leaves collab →
@@ -11698,7 +11693,6 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
 - ✅ User refreshes page in home → If in active collab, redirects back to session
 
 The feature is ready to test! You can verify by:
-
 1. Sending a Kafka message with a
  for your user
 2. Logging in as that user
@@ -12161,7 +12155,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
  and
  were being instantiated as singletons with default brokers (`localhost:9094`), but they weren't being initialized with the actual broker configuration from your environment variables.
 
-## What I Fixed
+## What I Fixed:
 
 1. **Producer singleton** - Now initializes with brokers from
  environment variable (or defaults to `localhost:9094`)
@@ -12169,7 +12163,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
  environment variable (or defaults to `localhost:9094`)
 3. **Added dotenv** - Both files now import `'dotenv/config'` to ensure environment variables are loaded before the singletons are created
 
-## How it works now
+## How it works now:
 
 - When
  and
@@ -12739,15 +12733,13 @@ echo "  - User Service"
 
 Perfect! ✅ I've created a GitHub Actions workflow for testing your question-service and user-service. Here's what the workflow includes:
 
-## Test Workflow Features
+## Test Workflow Features:
 
 ### **Triggers:**
-
 - Runs on push to `master`, `main`, or `develop` branches
 - Runs on pull requests to these branches
 
 ### **Question Service Tests:**
-
 - Sets up Node.js 20
 - Installs dependencies with `npm ci`
 - Runs tests with `npm test`
@@ -12755,7 +12747,6 @@ Perfect! ✅ I've created a GitHub Actions workflow for testing your question-se
 - Uploads coverage artifacts (kept for 7 days)
 
 ### **User Service Tests:**
-
 - Sets up Node.js 20
 - Installs dependencies with `npm ci`
 - Runs tests with `npm test`
@@ -12763,7 +12754,6 @@ Perfect! ✅ I've created a GitHub Actions workflow for testing your question-se
 - Uploads coverage artifacts (kept for 7 days)
 
 ### **Benefits:**
-
 - ✅ Both services tested in parallel for faster execution
 - ✅ Coverage reports generated and saved as artifacts
 - ✅ Final verification job ensures both test suites pass
@@ -13176,7 +13166,7 @@ jobs:
 
 Perfect! ✅ Now you have a clean setup:
 
-## How it works
+## How it works:
 
 1. **`test.yml`** - Runs tests for question-service and user-service
    - Triggers on push to master/main/develop
@@ -13323,22 +13313,18 @@ echo "  - User Service"
 Perfect! ✅ I've created a separate `test.yml` workflow file. Here's what it does:
 
 ## Test Workflow (
-
 )
 
 **Triggers:**
-
 - Runs on push to `master`, `main`, or `develop` branches
 - Runs on pull requests to these branches
 
 **Jobs:**
-
 1. **test-question-service** - Tests the question service with coverage
 2. **test-user-service** - Tests the user service with coverage
 3. **verify-tests** - Final verification that all tests passed
 
 **Features:**
-
 - ✅ Runs tests in parallel for both services
 - ✅ Generates and uploads coverage reports (kept for 7 days)
 - ✅ Caches npm dependencies for faster runs
@@ -13557,7 +13543,6 @@ I see! Both services use pnpm. Let me update the workflow:
 Perfect! ✅ I've updated the test workflow to use pnpm instead of npm for both services. The changes include:
 
 **Updates made:**
-
 1. Added `pnpm/action-setup@v3` step to install pnpm version 8
 2. Changed cache from `'npm'` to `'pnpm'`
 3. Changed cache-dependency-path to use
@@ -13601,11 +13586,10 @@ I'll help you push your local branch to the remote repository.
 Perfect! ✅ Your `finalize/user` branch has been successfully pushed to the remote repository.
 
 The branch is now:
-
 - Pushed to remote as
 
 - Set up to track the remote branch
-- Ready for you to create a pull request at: <https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07/pull/new/finalize/user>
+- Ready for you to create a pull request at: https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07/pull/new/finalize/user
 
 All your changes including the test workflow, Kafka integrations, and frontend redirect feature are now on the remote! 🎉
 
@@ -13733,7 +13717,6 @@ on:
 </details>
 
 Perfect! ✅ I've updated the test workflow to run on the `finalize/user` branch. Now the tests will run whenever you:
-
 - Push to `master` or `finalize/user` branches
 - Create a pull request to `master` or `finalize/user` branches
 
@@ -13999,7 +13982,6 @@ Perfect! Now I understand. The integration tests are already included when you r
 ## Running Tests Locally
 
 **For User Service:**
-
 ```bash
 cd services/user-service
 
@@ -14020,7 +14002,6 @@ pnpm test:coverage
 ```
 
 **For Question Service:**
-
 ```bash
 cd services/question-service
 
@@ -14151,7 +14132,6 @@ I'll add separate integration test jobs to the GitHub Actions workflow:
 Perfect! ✅ I've added separate integration test jobs to your GitHub Actions workflow. Now you have:
 
 **4 Jobs in total:**
-
 1. `test_user` - Runs all user-service tests (unit + integration)
 2. `test_question` - Runs all question-service tests (unit + integration)
 3. `integration_test_user` - Runs **only** user-service integration tests
@@ -14500,7 +14480,6 @@ Perfect! ✅ I've fixed the issue. The problem was that the
 .
 
 **What was wrong:**
-
 - The
  hooks were only watching
  changes
@@ -14511,7 +14490,6 @@ Perfect! ✅ I've fixed the issue. The problem was that the
 - This means if you're not authenticated, the redirect never happens
 
 **What I fixed:**
-
 - Added
  and
  to the dependency arrays for both
@@ -14538,33 +14516,21 @@ Try refreshing the page now - you should be redirected to `/login` when not auth
 - **write your notes here: (what you changed, why, and how you verified correctness)**
 
 ---
-
 ## request_8ecae8b4-ba94-41d5-9c07-eca2e05d06f0
-
 **Participant:** jiakai-17
 **Assistant:** GitHub Copilot
-
 ### Participant
-
 Write a github action to run "pnpm check" on the frontend folder.
-
 ### Assistant
-
 <details>
   <summary>Used 4 references</summary>
   <p>📄 package.json<br>📄 lint-frontend.yml<br>☰ tools.instructions.md<br>☰ instructionsList</p>
 </details>
-
-
-
 I'll help you create a GitHub Action workflow to run `pnpm check` on the frontend folder. Let me first check the current content of the lint-frontend.yml file to see if there's any existing configuration.
-
 Now I'll create a GitHub Action workflow to run `pnpm check` on the frontend folder:
-
 <details>
   <summary>🛠️ File Edit: lint-frontend.yml</summary>
   <p><strong>Multiple file changes (32 edits)</strong></p>
-
 ```yml
 # Lines 1-39:
 name: Lint Frontend
@@ -14600,39 +14566,30 @@ run: pnpm install --frozen-lockfile
 working-directory: ./frontend
 run: pnpm check
 ```
-
 </details>
-
 Perfect! I've created a GitHub Action workflow that will:
-
 1. **Trigger on**:
    - Pushes to `main` or `master` branches
    - Pull requests to `main` or `master` branches
    - Only when files in the
  directory are changed
-
 2. **Workflow steps**:
    - Checkout the code
    - Setup pnpm (version 10.17.0 as specified in your package.json)
    - Setup Node.js v20 with pnpm caching
    - Install dependencies in the frontend folder with frozen lockfile
    - Run `pnpm check` to execute Biome linting
-
 The workflow uses the exact pnpm version from your frontend
  and will help ensure code quality by automatically checking the frontend code with Biome on every push and pull request.
-
 > *Response time: 28.11 seconds*
 > <br>*Model: claude-sonnet-4.5*
 > <br>*Timestamp: 2025-11-11 00:37:44 (GMT+8)*
-
 ### Action Taken
-
 - [x] Accepted as-is
 - [ ] Modified
 - [ ] Rejected
-
 ### Author Notes
-
 - Accepted as is, tested in GitHub Actions
 
 ---
+
