@@ -114,8 +114,8 @@ async function main() {
   app.post(API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req: Request, res: Response) => {
     const matchingRequest = req.body as UserMatchingRequest;
     console.log(`Received matching request for user id: ${matchingRequest.userId.id}`);
-    
-    matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
+
+    await matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
 
     return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId.id}` });
   });
@@ -124,8 +124,8 @@ async function main() {
     const { userId } = req.body as UserMatchingCancelRequest;
     console.log(`Received matching cancel request for user id: ${userId.id}`);
 
-    matcher.dequeue(userId);
-    matcher.dequeue(userId, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+    await matcher.dequeue(userId, false, Matcher.REDIS_KEY_MATCHING_QUEUE);
+    await matcher.dequeue(userId, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
 
     return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
   });

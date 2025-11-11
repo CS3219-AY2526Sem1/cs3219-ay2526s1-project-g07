@@ -8,6 +8,7 @@ class Matcher {
     constructor(redisClient) {
         this.matchInterval = 5000; // Interval to check for matches in milliseconds
         this.timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
+        this.cleanUpInterval = 300000; // Interval to clean up corrupted data in milliseconds
         this.emitter = new events_1.EventEmitter();
         this.redisClient = redisClient;
         setInterval(() => {
@@ -18,7 +19,7 @@ class Matcher {
         setInterval(() => {
             this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
             this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
-        }, 5 * 60 * 1000);
+        }, this.cleanUpInterval);
     }
     async enqueue(userId, preferences) {
         // Validate input data
@@ -213,32 +214,47 @@ class Matcher {
         await this.redisClient.instance.rPush(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES, JSON.stringify(matchData));
     }
     async cleanUpCorruptedData(cacheKey = Matcher.REDIS_KEY_MATCHING_QUEUE) {
-        console.log(`Cleaning up corrupted data in ${cacheKey}...`);
-        const rawRequests = await this.redisClient.instance.lRange(cacheKey, 0, -1);
-        const validRequests = [];
-        for (const request of rawRequests) {
-            try {
-                const parsed = JSON.parse(request);
-                // Validate the parsed object has required properties
-                if (parsed && parsed.userId && parsed.userId.id && parsed.preferences) {
-                    validRequests.push(parsed);
-                }
-                else {
-                    console.warn('Removing invalid request from queue:', parsed);
-                }
-            }
-            catch (error) {
-                console.error('Removing unparseable request from queue:', request, error);
-            }
-        }
-        // Replace the queue with only valid requests
-        await this.redisClient.instance.del(cacheKey);
-        if (validRequests.length > 0) {
-            for (const validRequest of validRequests) {
-                await this.redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest));
-            }
-        }
-        console.log(`✅ Cleaned up ${rawRequests.length - validRequests.length} corrupted entries from ${cacheKey}`);
+        const lua = `
+      local key = KEYS[1]
+      local suffix = ARGV[1]
+      local tempKey = key .. ":tmp:" .. suffix
+
+      local requests = redis.call('LRANGE', key, 0, -1)
+      local valid = {}
+      local removed = 0
+
+      for i = 1, #requests do
+        local v = requests[i]
+        local ok, req = pcall(cjson.decode, v)
+        if ok and req and req.userId and req.userId.id and req.preferences then
+          table.insert(valid, v)      -- keep original JSON string
+        else
+          removed = removed + 1
+        end
+      end
+
+      -- ensure temp is clean
+      redis.call('DEL', tempKey)
+
+      if #valid > 0 then
+        -- rebuild into temp, then atomically replace original
+        redis.call('RPUSH', tempKey, unpack(valid))
+        redis.call('RENAME', tempKey, key)   -- atomic swap (overwrites destination)
+      else
+        -- no valid entries; just clear original
+        redis.call('DEL', key)
+      end
+
+      return { #requests, #valid, removed }
+    `;
+        const suffix = (0, crypto_1.randomUUID)();
+        const result = await this.redisClient.instance.eval(lua, {
+            keys: [cacheKey],
+            arguments: [suffix],
+        });
+        // result is an array: [total, kept, removed]
+        const [total, kept, removed] = result ?? [0, 0, 0];
+        console.log(`✅ Atomic cleanup on ${cacheKey}: total=${total}, kept=${kept}, removed=${removed}`);
     }
     async cleanUp() {
         await this.redisClient.quit();
