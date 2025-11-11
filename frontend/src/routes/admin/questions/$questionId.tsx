@@ -200,6 +200,7 @@ function RouteComponent() {
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
+                {/* biome-ignore lint/correctness/useUniqueElementIds: Label is correctly associated with input below */}
                 <Input
                   id="title"
                   value={formData.title}
@@ -318,6 +319,7 @@ function RouteComponent() {
                 <Label htmlFor="question">
                   Question Description (Markdown) *
                 </Label>
+                {/* biome-ignore lint/correctness/useUniqueElementIds: Label is correctly associated with input below */}
                 <Textarea
                   id="question"
                   value={formData.question}

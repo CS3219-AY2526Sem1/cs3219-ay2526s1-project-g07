@@ -55,9 +55,6 @@ function RouteComponent() {
   const { user, isPending } = useCurrentUser();
   const { isChecking } = useCheckAndRedirectToCollab();
 
-  const MATCHING_SERVICE_WS_URL =
-    import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || "http://localhost:3000";
-
   // WebSocket integration
   const {
     isConnected: wsConnected,
@@ -66,7 +63,7 @@ function RouteComponent() {
     matchData,
     error: wsError,
     joinUser,
-  } = useMatchingWebSocket(MATCHING_SERVICE_WS_URL);
+  } = useMatchingWebSocket();
 
   // Join WebSocket when user is connected
   useEffect(() => {
@@ -74,7 +71,7 @@ function RouteComponent() {
       console.log("Joining WebSocket with user:", user.id);
       joinUser({ id: user.id });
     }
-  }, [user?.id, wsConnected]);
+  }, [user?.id, wsConnected, joinUser]);
 
   // Handle WebSocket status changes
   useEffect(() => {
@@ -108,7 +105,7 @@ function RouteComponent() {
   }, [wsMatchingStatus]);
 
   if (isPending || isChecking) {
-    return <></>;
+    return null;
   }
 
   console.log("User data in Home route:", user);
