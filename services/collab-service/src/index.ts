@@ -16,7 +16,7 @@ import { Hono } from "hono";
 import { WebSocketServer } from "ws";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { KafkaClient, type KafkaConfig } from "./kafka/client.js";
-import { checkSessionAndUsers } from "./sessions.js";
+import { checkSessionAndUsers, getSessions } from "./sessions.js";
 import { addActiveRoom, disconnectSocketFromRoom, getActiveRoom } from "./rooms.js";
 import rooms from "./routes/rooms.js";
 import sessions from "./routes/sessions.js";
@@ -91,10 +91,10 @@ wss.on("connection", (ws, request) => {
   });
 
   ws.on("close", () => {
-    // Clean up when user disconnects
     console.log(`User ${ ws.userId } disconnected from session ${ ws.sessionId }`);
-    disconnectSocketFromRoom(ws.sessionId, ws.userId, ws as any); // Clean up user from active rooms after disconnect
-    console.log('Current active users after disconnect:', Array.from(getActiveRoom(ws.sessionId)?.keys() || []));
+    // disconnectSocketFromRoom(ws.sessionId, ws.userId, ws as any); // Clean up user from active rooms after disconnect
+    console.log('Current sessions:', Array.from(getSessions().keys() || []));
+    console.log('Current active users in room:', Array.from(getActiveRoom(ws.sessionId)?.keys() || []));
   });
 });
 

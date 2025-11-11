@@ -38,7 +38,7 @@ export const addActiveRoom = (sessionId: string, userId: string, ws: WebSocket) 
   console.log('Current active rooms:', Array.from(activeRooms.keys()));
 };
 
-// Removes a specific user from a room, closes their socket, and cleans up empty sessions
+// Removes a specific user from a room, closes their socket, and cleans up empty sessions (triggered when user explicitly leaves)
 export const removeActiveRoom = async (sessionId: string, userId: string) => {
   const room = activeRooms.get(sessionId);
   if (room) {
@@ -69,7 +69,8 @@ export const removeActiveRoom = async (sessionId: string, userId: string) => {
   }
 };
 
-// Removes a specific user from a room only if the current WebSocket is disconnected
+// NOT IN USE --> we clean up the active room when user explicitly leaves
+// Removes a specific user from a room only if the current WebSocket is disconnected (triggered when user disconnects / does not explicitly leave)
 export const disconnectSocketFromRoom = async (sessionId: string, userId: string, ws: WebSocket) => {
   const room = activeRooms.get(sessionId);
   if (room) {
