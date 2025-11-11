@@ -95,25 +95,8 @@ export const useMatchingWebSocket = (
 
     // Matching event handlers
     socketRef.current.on(
-      WS_EVENTS_MATCHING.MATCHING_SUCCESS,
-      (data: MatchFoundData) => {
-        console.log("Match found:", data);
-        setMatchingStatus("matched");
-        setMatchData(data);
-        updateMessage(`Match found! Session: ${data.collabSessionId}`);
-      }
-    );
-
-    socketRef.current.on(WS_EVENTS_MATCHING.MATCHING_FAILED, (data: any) => {
-      console.log("Matching failed:", data);
-      setMatchingStatus("failed");
-      setError(data.message || "Matching failed");
-      updateMessage(`Matching failed: ${data.message || "Unknown error"}`);
-    });
-
-    socketRef.current.on(
       WS_EVENTS_MATCHING.COLLAB_SESSION_READY,
-      (data: any) => {
+      (data) => {
         console.log("Collaboration session is ready");
         setMatchingStatus("collab_session_ready");
         updateMessage("Collaboration session is ready");
@@ -121,12 +104,12 @@ export const useMatchingWebSocket = (
       }
     );
 
-    socketRef.current.on(WS_EVENTS_MATCHING.USER_DEQUEUED, (data: any) => {
-      handleUserDequeued(data.userId);
+    socketRef.current.on(WS_EVENTS_MATCHING.USER_DEQUEUED, (userId: string) => {
+      handleUserDequeued(userId);
     });
 
     // Error handler
-    socketRef.current.on(WS_EVENTS_MATCHING.ERROR, (error) => {
+    socketRef.current.on(WS_EVENTS_MATCHING.ERROR, (error: Error) => {
       console.error("WebSocket error:", error);
       setError(typeof error === "string" ? error : "WebSocket error occurred");
       updateMessage(`Error: ${error}`);
@@ -139,8 +122,6 @@ export const useMatchingWebSocket = (
       return;
     }
 
-    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_SUCCESS);
-    socketRef.current?.off(WS_EVENTS_MATCHING.MATCHING_FAILED);
     socketRef.current?.off(WS_EVENTS_MATCHING.COLLAB_SESSION_READY);
     socketRef.current?.off(WS_EVENTS_MATCHING.USER_DEQUEUED);
     socketRef.current?.off(WS_EVENTS_MATCHING.ERROR);
