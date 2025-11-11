@@ -31,7 +31,8 @@ export class MatchingWS {
   private async HandleConnectionInterrupt(userId: UserId | undefined): Promise<void> {
     if (!userId) return Promise.resolve();
     console.log(`Handling connection interrupt for user ${userId.id}`);
-    await this.matcher.dequeue(userId);
+    await this.matcher.dequeue(userId, false, Matcher.REDIS_KEY_MATCHING_QUEUE);
+    await this.matcher.dequeue(userId, true, Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
   }
 
   private OnClientJoin = (socket: CustomSocket, userId: UserId) => {
@@ -60,7 +61,7 @@ export class MatchingWS {
     }
   }
 
-  private OnError = async (socket: CustomSocket, error: any) => {
+  private OnError = async (socket: CustomSocket, error: Error) => {
     console.error('WebSocket error:', error);
     await this.HandleConnectionInterrupt(socket.userId);
   }
@@ -74,7 +75,7 @@ export class MatchingWS {
 
   emitUserDequeued(userId: string) {
     console.log(`Emitting user dequeued event to user ${userId}`);
-    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.USER_DEQUEUED, { userId });
+    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.USER_DEQUEUED, userId);
   }
 }
 

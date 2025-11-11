@@ -43,8 +43,9 @@ async function main() {
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: "*",
-      methods: ["GET", "POST"]
-    }
+      methods: ["GET", "POST"],
+    },
+    path: "/api/match/ws",
   });
 
   const ws = new MatchingWS(io, matcher);
@@ -133,10 +134,6 @@ async function main() {
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error('Error occurred:', err);
     res.status(500).send({ error: 'An unexpected error occurred.' });
-  });
-
-  app.listen(PORT, () => {
-    console.log(`✅ Matching Service API is running at http://localhost:${PORT}`);
   });
 }
 
