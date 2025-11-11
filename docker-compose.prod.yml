@@ -76,6 +76,7 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_READONLY=false
       - KAFKA_CLUSTERS_0_TOPIC_AUTO_CREATE=true
+      - SERVER_SERVLET_CONTEXT_PATH=/kafkaui
     networks:
       - app-network
 
