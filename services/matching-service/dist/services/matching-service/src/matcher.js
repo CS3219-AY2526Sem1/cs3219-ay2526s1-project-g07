@@ -8,14 +8,29 @@ class Matcher {
     constructor(redisClient) {
         this.matchInterval = 5000; // Interval to check for matches in milliseconds
         this.timeOutDuration = 120000; // Timeout duration for user requests in milliseconds
+        this.cleanUpInterval = 300000; // Interval to clean up corrupted data in milliseconds
         this.emitter = new events_1.EventEmitter();
         this.redisClient = redisClient;
         setInterval(() => {
             this.tryFindMatch();
             this.tryTimeOut();
         }, this.matchInterval);
+        // Clean up corrupted data every 5 minutes
+        setInterval(() => {
+            this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
+            this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+        }, this.cleanUpInterval);
     }
     async enqueue(userId, preferences) {
+        // Validate input data
+        if (!userId || !userId.id) {
+            console.error('Cannot enqueue: invalid userId provided');
+            throw new Error('Invalid userId provided for enqueue operation');
+        }
+        if (!preferences || !preferences.topic || !preferences.difficulty) {
+            console.error('Cannot enqueue: invalid preferences provided');
+            throw new Error('Invalid preferences provided for enqueue operation');
+        }
         const userRequest = {
             userId: userId,
             preferences: {
@@ -59,7 +74,14 @@ class Matcher {
         }
         try {
             const userRequests = await this.queue(cacheKey);
-            const filteredRequests = userRequests.filter(r => r.userId.id !== id);
+            const filteredRequests = userRequests.filter(r => {
+                // Defensive check: ensure userId and userId.id exist
+                if (!r || !r.userId || !r.userId.id) {
+                    console.warn('Invalid request found in queue, removing:', r);
+                    return false; // Remove invalid entries
+                }
+                return r.userId.id !== id;
+            });
             await this.redisClient.instance.del(cacheKey);
             for (const r of filteredRequests) {
                 await this.redisClient.instance.rPush(cacheKey, JSON.stringify(r));
@@ -130,12 +152,19 @@ class Matcher {
         return (Date.now() - requestTimestamp) >= this.timeOutDuration;
     }
     async tryFindMatch() {
-        const match = await this.findMatch();
-        if (match) {
-            this.handleMatchFound(match);
+        try {
+            const match = await this.findMatch();
+            if (match) {
+                this.handleMatchFound(match);
+            }
+            else {
+                this.handleNoMatch();
+            }
         }
-        else {
-            this.handleNoMatch();
+        catch (error) {
+            console.error('Error during match finding process:', error);
+            // Clean up corrupted data if match finding fails
+            await this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
         }
     }
     handleMatchFound(match) {
@@ -184,13 +213,72 @@ class Matcher {
         };
         await this.redisClient.instance.rPush(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES, JSON.stringify(matchData));
     }
+    async cleanUpCorruptedData(cacheKey = Matcher.REDIS_KEY_MATCHING_QUEUE) {
+        const lua = `
+      local key = KEYS[1]
+      local suffix = ARGV[1]
+      local tempKey = key .. ":tmp:" .. suffix
+
+      local requests = redis.call('LRANGE', key, 0, -1)
+      local valid = {}
+      local removed = 0
+
+      for i = 1, #requests do
+        local v = requests[i]
+        local ok, req = pcall(cjson.decode, v)
+        if ok and req and req.userId and req.userId.id and req.preferences then
+          table.insert(valid, v)      -- keep original JSON string
+        else
+          removed = removed + 1
+        end
+      end
+
+      -- ensure temp is clean
+      redis.call('DEL', tempKey)
+
+      if #valid > 0 then
+        -- rebuild into temp, then atomically replace original
+        redis.call('RPUSH', tempKey, unpack(valid))
+        redis.call('RENAME', tempKey, key)   -- atomic swap (overwrites destination)
+      else
+        -- no valid entries; just clear original
+        redis.call('DEL', key)
+      end
+
+      return { #requests, #valid, removed }
+    `;
+        const suffix = (0, crypto_1.randomUUID)();
+        const result = await this.redisClient.instance.eval(lua, {
+            keys: [cacheKey],
+            arguments: [suffix],
+        });
+        // result is an array: [total, kept, removed]
+        const [total, kept, removed] = result ?? [0, 0, 0];
+        console.log(`✅ Atomic cleanup on ${cacheKey}: total=${total}, kept=${kept}, removed=${removed}`);
+    }
     async cleanUp() {
         await this.redisClient.quit();
         console.log('Matcher cleanup completed.');
     }
     async queue(cacheKey) {
         const requests = await this.redisClient.instance.lRange(cacheKey, 0, -1);
-        return requests.map(request => JSON.parse(request));
+        return requests
+            .map(request => {
+            try {
+                const parsed = JSON.parse(request);
+                // Validate the parsed object has required properties
+                if (!parsed || !parsed.userId || !parsed.userId.id || !parsed.preferences) {
+                    console.warn('Invalid request structure found in queue:', parsed);
+                    return null;
+                }
+                return parsed;
+            }
+            catch (error) {
+                console.error('Failed to parse request from queue:', request, error);
+                return null;
+            }
+        })
+            .filter((request) => request !== null);
     }
 }
 exports.Matcher = Matcher;
