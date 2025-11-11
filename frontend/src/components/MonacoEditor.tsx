@@ -81,7 +81,7 @@ function PythonMonacoEditor({
       console.log("Cleaning up ydoc on unmount");
       ydoc.destroy();
     };
-  }, []);
+  }, [ydoc.destroy]);
 
   // this effect manages the lifetime of the provider
   useEffect(() => {
@@ -147,7 +147,7 @@ function PythonMonacoEditor({
     return () => {
       provider?.destroy();
     };
-  }, [ydoc, userId, roomname]);
+  }, [ydoc, userId, roomname, userName, userColor, navigate]);
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
