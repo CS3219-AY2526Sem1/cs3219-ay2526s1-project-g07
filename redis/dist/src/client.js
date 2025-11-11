@@ -1,12 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RedisClient = void 0;
 const redis_1 = require("redis");
-const dotenv_1 = __importDefault(require("dotenv"));
-const path_1 = __importDefault(require("path"));
 class RedisClient {
     instance;
     constructor() {
@@ -17,9 +12,6 @@ class RedisClient {
     }
     async createRedisClient(database = 0) {
         // Start redis local with `npm run redis-local`
-        dotenv_1.default.config({
-            path: path_1.default.resolve(__dirname, '../.env'),
-        });
         const host = process.env.REDIS_HOST;
         const port = process.env.REDIS_PORT;
         const client = (0, redis_1.createClient)({
@@ -37,6 +29,13 @@ class RedisClient {
         return client;
     }
     async quit() {
+        if (this.instance && this.instance.isOpen) {
+            await this.instance.quit();
+            console.log('Redis client safely closed.');
+        }
+        else {
+            console.log('Redis client already closed or not initialized.');
+        }
         if (!this.instance.isOpen) {
             console.log('Redis client already disconnected');
             return;

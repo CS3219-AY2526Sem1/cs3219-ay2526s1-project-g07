@@ -77,6 +77,11 @@ export class MatchingWS {
     console.log(`Emitting user dequeued event to user ${userId}`);
     this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.USER_DEQUEUED, userId);
   }
+
+  emitQuestionFailure(userId: string, reason: string) {
+    console.log(`Emitting question failure to user ${userId} due to ${reason}`);
+    this.io.to(`user_${userId}`).emit(WS_EVENTS_MATCHING.QUESTION_FAILURE, reason);
+  }
 }
 
 // Extend Socket interface to include userId
