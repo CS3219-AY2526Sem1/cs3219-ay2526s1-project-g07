@@ -71,9 +71,9 @@ function PythonMonacoEditor({
   const userId = useSession().data?.user?.id;
   const userName = useSession().data?.user?.name;
   const roomname = sessionId;
-  const userColor = `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
+  const userColor = useMemo(() => `#${Math.floor(Math.random() * MAX_COLOR_VALUE)
     .toString(16)
-    .padStart(6, "0")}`; // assign a random color
+    .padStart(6, "0")}`, []); // assign a random color
 
   // Clean up Yjs document on unmount
   useEffect(() => {
@@ -92,7 +92,7 @@ function PythonMonacoEditor({
       return;
     }
 
-    console.log(`Connecting to collab session ${roomname} as user ${userId}`);
+    console.log(`Connecting to collab session ${roomname}`);
     const provider = new WebsocketProvider("/api/collab", roomname, ydoc, {
       params: { sessionId: roomname, userId },
     });
@@ -147,7 +147,7 @@ function PythonMonacoEditor({
     return () => {
       provider?.destroy();
     };
-  }, [ydoc, userId, roomname, userName, userColor, navigate]);
+  }, [ydoc, roomname, userId, userName, userColor, navigate]);
 
   // this effect manages the lifetime of the editor binding
   useEffect(() => {
@@ -225,8 +225,7 @@ function PythonMonacoEditor({
         `;
         }
       }
-      console.log("Active users updated:", usersForBar);
-      console.log("user set", userIdSet);
+
       setActiveUsers(usersForBar);
 
       // Inject the CSS into the document

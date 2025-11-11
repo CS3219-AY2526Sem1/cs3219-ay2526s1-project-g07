@@ -55,9 +55,6 @@ function RouteComponent() {
   const { user, isPending } = useCurrentUser();
   const { isChecking } = useCheckAndRedirectToCollab();
 
-  // No need for injection in production
-  const MATCHING_SERVICE_WS_URL = import.meta.env.PUBLIC_MATCHING_SERVICE_WS_URL || '/';
-
   // WebSocket integration
   const {
     isConnected: wsConnected,
@@ -66,7 +63,7 @@ function RouteComponent() {
     matchData,
     error: wsError,
     joinUser,
-  } = useMatchingWebSocket(MATCHING_SERVICE_WS_URL);
+  } = useMatchingWebSocket();
 
   // Join WebSocket when user is connected
   useEffect(() => {
@@ -187,6 +184,46 @@ function RouteComponent() {
       : data.firstUserId.id;
   };
 
+  const topic_options = [
+    "Array",
+    "String",
+    "Hash Table",
+    "Dynamic Programming",
+    "Math",
+    "Sorting",
+    "Greedy",
+    "Depth-First Search",
+    "Binary Search",
+    "Database",
+    "Breadth-First Search",
+    "Tree",
+    "Matrix",
+    "Two Pointers",
+    "Binary Tree",
+    "Bit Manipulation",
+    "Stack",
+    "Design",
+    "Heap (Priority Queue)",
+    "Graph",
+    "Simulation",
+    "Backtracking",
+    "Linked List",
+    "Union Find",
+    "Sliding Window",
+    "Divide and Conquer",
+    "Recursion",
+    "Trie",
+  ];
+
+  const selectItems = topic_options.map((topic) => (
+    <SelectItem
+      key={topic.toLowerCase().replace(/\s+/g, "_")}
+      value={topic.toLowerCase().replace(/\s+/g, "_")}
+    >
+      {topic}
+    </SelectItem>
+  ));
+
   return (
     <div>
       <Navbar />
@@ -201,11 +238,7 @@ function RouteComponent() {
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Topic" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="binary_search">Binary Search</SelectItem>
-                <SelectItem value="graphs">Graphs</SelectItem>
-                <SelectItem value="data_structures">Data Structures</SelectItem>
-              </SelectContent>
+              <SelectContent>{selectItems}</SelectContent>
             </Select>
             <Select onValueChange={setDifficulty}>
               <SelectTrigger className="w-48">
