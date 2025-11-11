@@ -3,13 +3,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -17,6 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { redirectIfNotAuthenticated, useIsAdmin } from "@/src/hooks/user-hooks";
 import Navbar from "../../../components/Navbar";
 
@@ -48,7 +48,7 @@ function RouteComponent() {
 
   // Get unique topics from all questions
   const allTopics = Array.from(
-    new Set(questions.flatMap(q => q.topics))
+    new Set(questions.flatMap((q) => q.topics))
   ).sort();
 
   // Fetch questions from API
@@ -88,25 +88,29 @@ function RouteComponent() {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(question =>
-        question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.difficulty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.topics.some(topic =>
-          topic.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      filtered = filtered.filter(
+        (question) =>
+          question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          question.difficulty
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          question.topics.some((topic) =>
+            topic.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
     }
 
     // Apply difficulty filter
     if (difficultyFilter !== "all") {
       filtered = filtered.filter(
-        question => question.difficulty.toLowerCase() === difficultyFilter.toLowerCase()
+        (question) =>
+          question.difficulty.toLowerCase() === difficultyFilter.toLowerCase()
       );
     }
 
     // Apply topic filter
     if (topicFilter !== "all") {
-      filtered = filtered.filter(question =>
+      filtered = filtered.filter((question) =>
         question.topics.includes(topicFilter)
       );
     }
@@ -118,14 +122,28 @@ function RouteComponent() {
           return a.title.localeCompare(b.title);
         case "title-desc":
           return b.title.localeCompare(a.title);
-        case "difficulty-asc":
+        case "difficulty-asc": {
           const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
-          return (difficultyOrder[a.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0) - 
-                 (difficultyOrder[b.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0);
-        case "difficulty-desc":
+          return (
+            (difficultyOrder[
+              a.difficulty.toLowerCase() as keyof typeof difficultyOrder
+            ] || 0) -
+            (difficultyOrder[
+              b.difficulty.toLowerCase() as keyof typeof difficultyOrder
+            ] || 0)
+          );
+        }
+        case "difficulty-desc": {
           const difficultyOrderDesc = { easy: 1, medium: 2, hard: 3 };
-          return (difficultyOrderDesc[b.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc] || 0) - 
-                 (difficultyOrderDesc[a.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc] || 0);
+          return (
+            (difficultyOrderDesc[
+              b.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc
+            ] || 0) -
+            (difficultyOrderDesc[
+              a.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc
+            ] || 0)
+          );
+        }
         default:
           return 0;
       }
@@ -221,11 +239,14 @@ function RouteComponent() {
                   className="max-w-md flex-1"
                 />
               </div>
-              
+
               <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Difficulty:</label>
-                  <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <Select
+                    value={difficultyFilter}
+                    onValueChange={setDifficultyFilter}
+                  >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
@@ -246,7 +267,7 @@ function RouteComponent() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Topics</SelectItem>
-                      {allTopics.map(topic => (
+                      {allTopics.map((topic) => (
                         <SelectItem key={topic} value={topic}>
                           {topic}
                         </SelectItem>
@@ -264,13 +285,19 @@ function RouteComponent() {
                     <SelectContent>
                       <SelectItem value="title-asc">Title (A-Z)</SelectItem>
                       <SelectItem value="title-desc">Title (Z-A)</SelectItem>
-                      <SelectItem value="difficulty-asc">Difficulty (Easy-Hard)</SelectItem>
-                      <SelectItem value="difficulty-desc">Difficulty (Hard-Easy)</SelectItem>
+                      <SelectItem value="difficulty-asc">
+                        Difficulty (Easy-Hard)
+                      </SelectItem>
+                      <SelectItem value="difficulty-desc">
+                        Difficulty (Hard-Easy)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {(searchTerm || difficultyFilter !== "all" || topicFilter !== "all") && (
+                {(searchTerm ||
+                  difficultyFilter !== "all" ||
+                  topicFilter !== "all") && (
                   <Button
                     variant="outline"
                     size="sm"

@@ -22,9 +22,9 @@ export function redirectIfNotAuthenticated() {
     if (isPending) return; // Wait until we know the auth status
 
     if (!user) {
-      navigate({ to: '/login' })
-    } 
-  }, [user, isPending, navigate])
+      navigate({ to: "/login" });
+    }
+  }, [user, isPending, navigate]);
 }
 
 export function redirectIfAuthenticated() {
@@ -35,9 +35,9 @@ export function redirectIfAuthenticated() {
     if (isPending) return; // Wait until we know the auth status
 
     if (user) {
-      navigate({ to: '/home' })
-    } 
-  }, [user, isPending, navigate])
+      navigate({ to: "/home" });
+    }
+  }, [user, isPending, navigate]);
 }
 
 export function useCheckAndRedirectToCollab() {
