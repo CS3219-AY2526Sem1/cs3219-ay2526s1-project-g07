@@ -25,6 +25,14 @@ vi.mock('../../src/sessions.js', () => ({
   removeSession: vi.fn(),
 }));
 
+vi.mock('../../src/index.js', () => ({
+  kafkaClient: {
+    getProducer: () => ({
+      publishEvent: vi.fn().mockResolvedValue(undefined),
+    }),
+  },
+}));
+
 // 2. Import the actual mocked function to assert against it.
 import { removeSession } from '../../src/sessions.js';
 
@@ -99,7 +107,7 @@ describe('Room Management Functions', () => {
   });
 
   describe('removeActiveRoom', () => {
-    it('should remove the user, close their socket, and keep the room if not empty', () => {
+    it('should remove the user, close their socket, and keep the room if not empty', async () => {
       const wsA = mockWebSocket();
       const wsB = mockWebSocket();
       const USER_REMOVED_CLOSE_CODE = 4000;
@@ -108,7 +116,7 @@ describe('Room Management Functions', () => {
       addActiveRoom(SESSION_ID, USER_ID_B, wsB as any);
 
       // Remove User A
-      removeActiveRoom(SESSION_ID, USER_ID_A);
+      await removeActiveRoom(SESSION_ID, USER_ID_A);
 
       const activeRooms = getActiveRooms();
       const room = activeRooms.get(SESSION_ID);
@@ -126,12 +134,12 @@ describe('Room Management Functions', () => {
       expect(removeSession).not.toHaveBeenCalled(); // Room is not empty
     });
 
-    it('should remove the user and the room if it becomes empty, calling removeSession', () => {
+    it('should remove the user and the room if it becomes empty, calling removeSession', async () => {
       const wsA = mockWebSocket();
       addActiveRoom(SESSION_ID, USER_ID_A, wsA as any);
 
       // Remove User A (the last user)
-      removeActiveRoom(SESSION_ID, USER_ID_A);
+      await removeActiveRoom(SESSION_ID, USER_ID_A);
 
       const activeRooms = getActiveRooms();
 
@@ -149,12 +157,12 @@ describe('Room Management Functions', () => {
   });
 
   describe('disconnectSocketFromRoom', () => {
-    it('should remove the user and room if the provided socket matches and is the last one, calling removeSession', () => {
+    it('should remove the user and room if the provided socket matches and is the last one, calling removeSession', async () => {
       const wsA = mockWebSocket();
       addActiveRoom(SESSION_ID, USER_ID_A, wsA as any);
 
       // Disconnect using the same socket instance
-      disconnectSocketFromRoom(SESSION_ID, USER_ID_A, wsA as any);
+      await disconnectSocketFromRoom(SESSION_ID, USER_ID_A, wsA as any);
 
       const activeRooms = getActiveRooms();
       expect(activeRooms.size).toBe(0);
@@ -163,28 +171,28 @@ describe('Room Management Functions', () => {
       expect(removeSession).toHaveBeenCalledWith(SESSION_ID);
     });
 
-    it('should remove the user but NOT call removeSession if other users remain', () => {
+    it('should remove the user but NOT call removeSession if other users remain', async () => {
       const wsA = mockWebSocket();
       const wsB = mockWebSocket();
       addActiveRoom(SESSION_ID, USER_ID_A, wsA as any);
       addActiveRoom(SESSION_ID, USER_ID_B, wsB as any);
 
       // Disconnect User A
-      disconnectSocketFromRoom(SESSION_ID, USER_ID_A, wsA as any);
+      await disconnectSocketFromRoom(SESSION_ID, USER_ID_A, wsA as any);
 
       // Assertions
       expect(getActiveRooms().get(SESSION_ID)?.size).toBe(1);
       expect(removeSession).not.toHaveBeenCalled();
     });
 
-    it('should NOT remove the user if the provided socket instance does not match the active one', () => {
+    it('should NOT remove the user if the provided socket instance does not match the active one', async () => {
       const activeWs = mockWebSocket();
       const staleWs = mockWebSocket();
 
       addActiveRoom(SESSION_ID, USER_ID_A, activeWs as any);
 
       // Try to disconnect using a different socket instance
-      disconnectSocketFromRoom(SESSION_ID, USER_ID_A, staleWs as any);
+      await disconnectSocketFromRoom(SESSION_ID, USER_ID_A, staleWs as any);
 
       const activeRooms = getActiveRooms();
       expect(activeRooms.size).toBe(1);
@@ -194,9 +202,9 @@ describe('Room Management Functions', () => {
       expect(removeSession).not.toHaveBeenCalled();
     });
 
-    it('should not throw error if room/user does not exist', () => {
+    it('should not throw error if room/user does not exist', async () => {
         const wsA = mockWebSocket();
-        expect(() => disconnectSocketFromRoom('non-existent-session', USER_ID_A, wsA as any)).not.toThrow();
+        await expect(() => disconnectSocketFromRoom('non-existent-session', USER_ID_A, wsA as any)).not.toThrow();
     });
   });
 
