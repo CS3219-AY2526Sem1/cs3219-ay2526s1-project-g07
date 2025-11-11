@@ -376,7 +376,7 @@ function RouteComponent() {
                             <div className="flex gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button
+                                  {/* <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
@@ -384,7 +384,7 @@ function RouteComponent() {
                                     }
                                   >
                                     View
-                                  </Button>
+                                  </Button> */}
                                 </DialogTrigger>
                                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                                   <DialogHeader>
