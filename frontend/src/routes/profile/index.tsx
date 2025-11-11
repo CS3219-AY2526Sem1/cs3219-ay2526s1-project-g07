@@ -1,28 +1,30 @@
-import { useEffect } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useSession } from '@/lib/auth-client'
-import Navbar from '@/src/components/Navbar'
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useSession } from "@/lib/auth-client";
+import Navbar from "@/src/components/Navbar";
 
-export const Route = createFileRoute('/profile/')({
+export const Route = createFileRoute("/profile/")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { data: session, isPending } = useSession()
-  const navigate = useNavigate()
+  const { data: session, isPending } = useSession();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isPending && session?.user) {
       // Redirect to the user's profile page
-      navigate({ 
-        to: '/profile/$username', 
-        params: { username: session.user.name || session.user.email || 'unknown' }
-      })
+      navigate({
+        to: "/profile/$username",
+        params: {
+          username: session.user.name || session.user.email || "unknown",
+        },
+      });
     } else if (!isPending && !session) {
       // If no session, redirect to login
-      navigate({ to: '/login' })
+      navigate({ to: "/login" });
     }
-  }, [session, isPending, navigate])
+  }, [session, isPending, navigate]);
 
   if (isPending) {
     return (
@@ -32,7 +34,7 @@ function RouteComponent() {
           <div>Loading...</div>
         </div>
       </>
-    )
+    );
   }
 
   if (!session) {
@@ -43,7 +45,7 @@ function RouteComponent() {
           <div>Please log in to view your profile.</div>
         </div>
       </>
-    )
+    );
   }
 
   return (
@@ -53,5 +55,5 @@ function RouteComponent() {
         <div>Redirecting to your profile...</div>
       </div>
     </>
-  )
+  );
 }

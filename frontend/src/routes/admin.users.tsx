@@ -1,8 +1,13 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import Navbar from "../components/Navbar";
-import { redirectIfNotAuthenticated, useIsAdmin, useCurrentUser } from "../hooks/user-hooks";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import {
   Select,
@@ -11,13 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import Navbar from "../components/Navbar";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+  redirectIfNotAuthenticated,
+  useCurrentUser,
+  useIsAdmin,
+} from "../hooks/user-hooks";
 
 export const Route = createFileRoute("/admin/users")({
   component: RouteComponent,
@@ -35,7 +39,7 @@ interface User {
 function RouteComponent() {
   redirectIfNotAuthenticated();
 
-  const {isAdmin, isLoading} = useIsAdmin();
+  const { isAdmin, isLoading } = useIsAdmin();
   const { user: currentUser } = useCurrentUser();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +49,6 @@ function RouteComponent() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const fetchUsers = async () => {
-    
     try {
       setLoading(true);
       setError(null);
@@ -72,26 +75,21 @@ function RouteComponent() {
     const action = newRole === "admin" ? "promote" : "demote";
 
     if (
-      !confirm(
-        `Are you sure you want to ${action} this user to ${newRole}?`
-      )
+      !confirm(`Are you sure you want to ${action} this user to ${newRole}?`)
     ) {
       return;
     }
 
     try {
       setUpdatingUserId(userId);
-      const response = await fetch(
-        `/api/user/${userId}/role`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ role: newRole }),
-        }
-      );
+      const response = await fetch(`/api/user/${userId}/role`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ role: newRole }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update user role");
@@ -112,9 +110,8 @@ function RouteComponent() {
       const matchesSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesRole =
-        roleFilter === "all" || user.role === roleFilter;
+
+      const matchesRole = roleFilter === "all" || user.role === roleFilter;
 
       return matchesSearch && matchesRole;
     });
@@ -125,11 +122,11 @@ function RouteComponent() {
   }, [isAdmin, isLoading]);
 
   if (isLoading) {
-    return <div></div>
+    return <div></div>;
   }
 
   if (!isAdmin) {
-    return <Navigate to="/home" />
+    return <Navigate to="/home" />;
   }
 
   if (loading) {
@@ -236,7 +233,9 @@ function RouteComponent() {
                         colSpan={4}
                         className="px-4 py-8 text-center text-gray-500"
                       >
-                        {users.length === 0 ? "No users found" : "No users match your filters"}
+                        {users.length === 0
+                          ? "No users found"
+                          : "No users match your filters"}
                       </td>
                     </tr>
                   ) : (
@@ -257,7 +256,9 @@ function RouteComponent() {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           {currentUser?.id === user.id ? (
-                            <span className="text-sm text-gray-400 italic">You (current admin)</span>
+                            <span className="text-sm text-gray-400 italic">
+                              You (current admin)
+                            </span>
                           ) : (
                             <Button
                               onClick={() => promoteToAdmin(user.id, user.role)}

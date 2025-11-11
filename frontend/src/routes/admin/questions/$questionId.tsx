@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import Navbar from "@/src/components/Navbar";
 import { redirectIfNotAuthenticated } from "@/src/hooks/user-hooks";
 
@@ -49,7 +49,7 @@ const CATEGORY_OPTIONS = [
   "Sliding Window",
   "Divide and Conquer",
   "Recursion",
-  "Trie"
+  "Trie",
 ];
 
 function RouteComponent() {
@@ -63,7 +63,7 @@ function RouteComponent() {
     title: "",
     difficulty: "",
     topics: [] as string[],
-    question: ""
+    question: "",
   });
 
   const [categoryInput, setCategoryInput] = useState("");
@@ -73,16 +73,16 @@ function RouteComponent() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
-        console.log("hello")
+        console.log("hello");
         setIsLoadingQuestion(true);
         const response = await fetch(`/api/questions/${questionId}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch question');
+          throw new Error("Failed to fetch question");
         }
 
         const data = await response.json();
-        console.log('Fetched question:', data);
+        console.log("Fetched question:", data);
 
         // The API returns the question object directly
         const question = data.question || data;
@@ -90,12 +90,12 @@ function RouteComponent() {
           title: question.title || "",
           difficulty: question.difficulty || "",
           topics: question.topics || [],
-          question: question.question || ""
+          question: question.question || "",
         });
       } catch (error) {
-        console.error('Error fetching question:', error);
-        alert('Failed to load question. Redirecting back to questions list.');
-        navigate({ to: '/admin/questions' });
+        console.error("Error fetching question:", error);
+        alert("Failed to load question. Redirecting back to questions list.");
+        navigate({ to: "/admin/questions" });
       } finally {
         setIsLoadingQuestion(false);
       }
@@ -109,7 +109,7 @@ function RouteComponent() {
   const handleRemoveCategory = (categoryToRemove: string) => {
     setFormData({
       ...formData,
-      topics: formData.topics.filter(cat => cat !== categoryToRemove)
+      topics: formData.topics.filter((cat) => cat !== categoryToRemove),
     });
   };
 
@@ -143,35 +143,35 @@ function RouteComponent() {
       // Call the question service API to update
       console.log("Updating question:", formData);
       const response = await fetch(`/api/questions/${questionId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: formData.title,
           difficulty: formData.difficulty,
           topics: formData.topics,
-          question: formData.question
-        })
+          question: formData.question,
+        }),
       });
 
       if (response.ok) {
-        console.log('Question updated successfully');
+        console.log("Question updated successfully");
         // Navigate back to admin questions page
-        navigate({ to: '/admin/questions' });
+        navigate({ to: "/admin/questions" });
       } else {
-        throw new Error('Failed to update question');
+        throw new Error("Failed to update question");
       }
     } catch (error) {
-      console.error('Error updating question:', error);
-      alert('Failed to update question. Please try again.');
+      console.error("Error updating question:", error);
+      alert("Failed to update question. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    navigate({ to: '/admin/questions' });
+    navigate({ to: "/admin/questions" });
   };
 
   if (isLoadingQuestion) {
@@ -203,7 +203,9 @@ function RouteComponent() {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="e.g., Two Sum"
                   required
                 />
@@ -214,13 +216,15 @@ function RouteComponent() {
                 <Label htmlFor="difficulty">Difficulty *</Label>
                 <Select
                   value={formData.difficulty}
-                  onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, difficulty: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent>
-                    {DIFFICULTY_OPTIONS.map(difficulty => (
+                    {DIFFICULTY_OPTIONS.map((difficulty) => (
                       <SelectItem key={difficulty} value={difficulty}>
                         {difficulty}
                       </SelectItem>
@@ -238,40 +242,46 @@ function RouteComponent() {
                       value={categoryInput}
                       onChange={(e) => setCategoryInput(e.target.value)}
                       onFocus={() => setShowCategoryDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 150)}
+                      onBlur={() =>
+                        setTimeout(() => setShowCategoryDropdown(false), 150)
+                      }
                       placeholder="Search and select categories..."
                       className="pr-10"
                     />
                     {showCategoryDropdown && (
                       <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                        {CATEGORY_OPTIONS
-                          .filter(cat =>
+                        {CATEGORY_OPTIONS.filter(
+                          (cat) =>
                             !formData.topics.includes(cat) &&
-                            (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
-                          )
-                          .map(category => (
-                            <button
-                              key={category}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  topics: [...formData.topics, category]
-                                });
-                                setCategoryInput("");
-                                setShowCategoryDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b border-gray-100 last:border-b-0"
-                            >
-                              {category}
-                            </button>
-                          ))
-                        }
-                        {CATEGORY_OPTIONS
-                          .filter(cat =>
+                            (categoryInput === "" ||
+                              cat
+                                .toLowerCase()
+                                .includes(categoryInput.toLowerCase()))
+                        ).map((category) => (
+                          <button
+                            key={category}
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                topics: [...formData.topics, category],
+                              });
+                              setCategoryInput("");
+                              setShowCategoryDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b border-gray-100 last:border-b-0"
+                          >
+                            {category}
+                          </button>
+                        ))}
+                        {CATEGORY_OPTIONS.filter(
+                          (cat) =>
                             !formData.topics.includes(cat) &&
-                            (categoryInput === '' || cat.toLowerCase().includes(categoryInput.toLowerCase()))
-                          ).length === 0 && (
+                            (categoryInput === "" ||
+                              cat
+                                .toLowerCase()
+                                .includes(categoryInput.toLowerCase()))
+                        ).length === 0 && (
                           <div className="px-3 py-2 text-gray-500 text-sm">
                             No topics found
                           </div>
@@ -284,7 +294,7 @@ function RouteComponent() {
                 {/* Selected Topics */}
                 {formData.topics.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.topics.map(category => (
+                    {formData.topics.map((category) => (
                       <span
                         key={category}
                         className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
@@ -305,11 +315,15 @@ function RouteComponent() {
 
               {/* Question (Markdown) */}
               <div className="space-y-2">
-                <Label htmlFor="question">Question Description (Markdown) *</Label>
+                <Label htmlFor="question">
+                  Question Description (Markdown) *
+                </Label>
                 <Textarea
                   id="question"
                   value={formData.question}
-                  onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, question: e.target.value })
+                  }
                   placeholder="Enter the question description in markdown format...
 
 Example:
@@ -327,18 +341,15 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                   required
                 />
                 <p className="text-xs text-gray-500">
-                  You can use markdown formatting: **bold**, *italic*, `code`, ```code blocks```, etc.
+                  You can use markdown formatting: **bold**, *italic*, `code`,
+                  ```code blocks```, etc.
                 </p>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  {isLoading ? 'Updating...' : 'Update Question'}
+                <Button type="submit" disabled={isLoading} className="flex-1">
+                  {isLoading ? "Updating..." : "Update Question"}
                 </Button>
                 <Button
                   type="button"
