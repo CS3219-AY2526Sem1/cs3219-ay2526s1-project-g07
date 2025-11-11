@@ -23,8 +23,14 @@ export class Matcher {
     
     // Clean up corrupted data every 5 minutes
     setInterval(() => {
-      this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
-      this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+      (async () => {
+        try {
+          await this.cleanUpCorruptedData(Matcher.REDIS_KEY_MATCHING_QUEUE);
+          await this.cleanUpCorruptedData(Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+        } catch (err) {
+          console.error('Error during periodic cleanup:', err);
+        }
+      })();
     }, this.cleanUpInterval);
   }
 
