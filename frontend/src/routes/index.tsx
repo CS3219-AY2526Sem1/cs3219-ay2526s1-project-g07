@@ -33,7 +33,7 @@ function Index() {
 
       setSessionChecked(true);
     }
-  }, [session.isPending, session.data, navigate, sessionChecked]);
+  }, [session.isPending, session.data, navigate, sessionChecked, session]);
 
   // Show loading while session is pending or we haven't checked yet
   if (session.isPending || !sessionChecked) {

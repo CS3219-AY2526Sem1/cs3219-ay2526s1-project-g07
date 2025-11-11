@@ -242,7 +242,7 @@ function RouteComponent() {
 
               <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Difficulty:</label>
+                  <span className="text-sm font-medium">Difficulty:</span>
                   <Select
                     value={difficultyFilter}
                     onValueChange={setDifficultyFilter}
@@ -260,7 +260,7 @@ function RouteComponent() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Topic:</label>
+                  <span className="text-sm font-medium">Topic:</span>
                   <Select value={topicFilter} onValueChange={setTopicFilter}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="All Topics" />
@@ -277,7 +277,7 @@ function RouteComponent() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Sort by:</label>
+                  <span className="text-sm font-medium">Sort by:</span>
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Title (A-Z)" />
@@ -362,9 +362,9 @@ function RouteComponent() {
                           </td>
                           <td className="p-4">
                             <div className="flex flex-wrap gap-1">
-                              {question.topics.map((topic, index) => (
+                              {question.topics.map((topic) => (
                                 <span
-                                  key={index}
+                                  key={topic}
                                   className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                 >
                                   {topic}
@@ -409,9 +409,9 @@ function RouteComponent() {
                                       </h4>
                                       <div className="flex flex-wrap gap-1">
                                         {selectedQuestion?.topics.map(
-                                          (topic, index) => (
+                                          (topic) => (
                                             <span
-                                              key={index}
+                                              key={topic}
                                               className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                                             >
                                               {topic}
