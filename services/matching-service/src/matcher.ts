@@ -41,7 +41,11 @@ export class Matcher {
       throw new Error('Invalid userId provided for enqueue operation');
     }
     
-    if (!preferences || !preferences.topic || !preferences.difficulty) {
+    if (
+      !preferences ||
+      preferences.topic == null ||
+      preferences.difficulty == null
+    ) {
       console.error('Cannot enqueue: invalid preferences provided');
       throw new Error('Invalid preferences provided for enqueue operation');
     }
