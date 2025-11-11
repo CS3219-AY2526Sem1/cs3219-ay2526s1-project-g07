@@ -99,14 +99,14 @@ async function main() {
     app.post(api_endpoints_1.API_ENDPOINTS_MATCHING.MATCHING_REQUEST, async (req, res) => {
         const matchingRequest = req.body;
         console.log(`Received matching request for user id: ${matchingRequest.userId.id}`);
-        matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
+        await matcher.enqueue(matchingRequest.userId, matchingRequest.preferences);
         return res.status(200).send({ message: `Matching service received session id: ${matchingRequest.userId.id}` });
     });
     app.post(api_endpoints_1.API_ENDPOINTS_MATCHING.MATCHING_CANCEL, async (req, res) => {
         const { userId } = req.body;
         console.log(`Received matching cancel request for user id: ${userId.id}`);
-        matcher.dequeue(userId);
-        matcher.dequeue(userId, true, matcher_js_1.Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
+        await matcher.dequeue(userId, false, matcher_js_1.Matcher.REDIS_KEY_MATCHING_QUEUE);
+        await matcher.dequeue(userId, true, matcher_js_1.Matcher.REDIS_KEY_SUCCESSFUL_MATCHES);
         return res.status(200).send({ message: `Matching service cancelled matching for user id: ${userId.id}` });
     });
     // --- Error Handling Middleware ---
