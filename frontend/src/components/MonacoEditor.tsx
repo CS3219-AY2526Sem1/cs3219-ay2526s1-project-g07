@@ -92,7 +92,7 @@ function PythonMonacoEditor({
       return;
     }
 
-    console.log(`Connecting to collab session ${roomname} as user ${userId}`);
+    console.log(`Connecting to collab session ${roomname}`);
     const provider = new WebsocketProvider("/api/collab", roomname, ydoc, {
       params: { sessionId: roomname, userId },
     });
@@ -225,8 +225,7 @@ function PythonMonacoEditor({
         `;
         }
       }
-      console.log("Active users updated:", usersForBar);
-      console.log("user set", userIdSet);
+
       setActiveUsers(usersForBar);
 
       // Inject the CSS into the document
