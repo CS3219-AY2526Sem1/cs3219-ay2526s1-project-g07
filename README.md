@@ -89,7 +89,7 @@ The application should now be accessible at:
 - **Frontend**: `http://localhost` (port 80)
 - **Kafka UI**: `http://localhost:8080/kafkaui`
 - **User Service**: `http://localhost:5002`
-- **Question Service**: `http://localhost:5002`
+- **Question Service**: `http://localhost:5001`
 - **Matching Service**: `http://localhost:5003`
 - **Collab Service**: `http://localhost:5004`
 - **AI Service**: `http://localhost:5005`
