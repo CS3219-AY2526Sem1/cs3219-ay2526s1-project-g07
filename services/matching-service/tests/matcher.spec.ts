@@ -1,0 +1,227 @@
+import { Matcher } from '../src/matcher';
+import { type UserMatchingRequest } from '../../../shared/types/matching-types';
+import { RedisClient } from '../../../redis/src/client';
+
+describe('Matcher', () => {
+  let matcher: Matcher;
+  let redisClient: RedisClient;
+  const cacheKey = Matcher.REDIS_KEY_MATCHING_QUEUE;
+
+  beforeAll(async () => {
+    redisClient = new RedisClient();
+    await redisClient.init();
+  });
+
+  beforeEach(async () => {
+    function mockSetInterval() {
+      return 1;
+    }
+    // Mock setInterval to prevent actual intervals during tests
+    spyOn(global, 'setInterval').and.callFake(mockSetInterval as any);
+
+    await redisClient.instance.del(cacheKey);
+
+    matcher = new Matcher(redisClient);
+  });
+
+  afterAll(async () => {
+    await matcher.cleanUp();
+  });
+
+  describe('enqueue', () => {
+    it('should enqueue a user matching request', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(1);
+      expect(queue[0].userId).toEqual({ id: '1' });
+      expect(queue[0].preferences.topic).toBe('Math');
+      expect(queue[0].preferences.difficulty).toBe('easy');
+    });
+
+    it('should handle multiple enqueues', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '2' }, { topic: 'BST', difficulty: 'medium' });
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(2);
+    });
+
+    it('should not enqueue duplicate user IDs', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '1' }, { topic: 'BST', difficulty: 'medium' });
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue[0].preferences.topic).toBe('BST');
+    });
+
+    it('should handle concurrent enqueues correctly', async () => {
+      const enqueuePromises = [
+        matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' }),
+        matcher.enqueue({ id: '2' }, { topic: 'BST', difficulty: 'medium' }),
+        matcher.enqueue({ id: '3' }, { topic: 'Array', difficulty: 'hard' }),
+        matcher.enqueue({ id: '4' }, { topic: 'Shell', difficulty: 'easy' }),
+        matcher.enqueue({ id: '5' }, { topic: 'Dynamic Programming', difficulty: 'medium' }),
+      ];
+      await Promise.all(enqueuePromises);
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(5);
+    });
+  });
+
+  describe('dequeue', () => {
+    it('should dequeue a user matching request', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.dequeue({ id: '1' });
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(0);
+    });
+
+    it('should handle dequeueing a non-existent user ID gracefully', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.dequeue({ id: '2' });
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(1);
+      expect(queue[0].userId).toEqual({ id: '1' });
+    });
+
+    it('should handle concurrent dequeues correctly', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '2' }, { topic: 'BST', difficulty: 'medium' });
+      await matcher.enqueue({ id: '3' }, { topic: 'Array', difficulty: 'hard' });
+      await matcher.enqueue({ id: '4' }, { topic: 'Shell', difficulty: 'easy' });
+      await matcher.enqueue({ id: '5' }, { topic: 'Dynamic Programming', difficulty: 'medium' });
+
+      const dequeuePromises = [
+        matcher.dequeue({ id: '1' }),
+        matcher.dequeue({ id: '2' }),
+        matcher.dequeue({ id: '3' }),
+        matcher.dequeue({ id: '4' }),
+        matcher.dequeue({ id: '5' }),
+      ];
+      await Promise.all(dequeuePromises);
+
+      const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+      expect(queue.length).toBe(0);
+    });
+  });
+
+  describe('findMatch', () => {
+    it('should find a match based on preferences', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '2' }, { topic: 'Math', difficulty: 'easy' });
+      // Ensure the private method is called
+      const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
+
+      // Call the private method
+      const match = await matcher['findMatch'](); 
+      expect(spyFindMatch).toHaveBeenCalled();
+      expect(match).not.toBeNull();
+
+      const ids = [match?.firstUserId, match?.secondUserId];
+      expect(ids).toContain({ id: '1' });
+      expect(ids).toContain({ id: '2' });
+    });
+
+    it('should return null when no match is found', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
+      const match = await matcher['findMatch']();
+      expect(spyFindMatch).toHaveBeenCalled();
+      expect(match).toBeNull();
+    });
+
+    it('should not match users with different preferences', async () => {
+      await matcher.enqueue({ id: '1' }, { topic: 'Math', difficulty: 'easy' });
+      await matcher.enqueue({ id: '2' }, { topic: 'Science', difficulty: 'medium' });
+      const spyFindMatch = spyOn(matcher as any, 'findMatch').and.callThrough();
+      const match = await matcher['findMatch']();
+      expect(spyFindMatch).toHaveBeenCalled();
+      expect(match).toBeNull();
+    });
+  });
+
+  describe('timedOut', () => {
+    describe('isTimedOut', () => {
+      it('should return true for boundary timed out requests', () => {
+        const pastTimestamp = Date.now() - matcher.timeOutDuration; // Right on the boundary of timeout
+        const result = matcher['isTimedOut'](pastTimestamp);
+
+        expect(result).toBeTrue();
+      });
+
+      it('should return true for clearly timed out requests', () => {
+        const pastTimestamp = Date.now() - (matcher.timeOutDuration + 1000); // Beyond the timeout duration
+        const result = matcher['isTimedOut'](pastTimestamp);
+        expect(result).toBeTrue();
+      });
+
+      it('should return false for non-timed out requests', () => {
+        const recentTimestamp = Date.now() - (matcher.timeOutDuration / 2); // Well within the timeout duration
+        const result = matcher['isTimedOut'](recentTimestamp);
+        expect(result).toBeFalse();
+      });
+
+      it('should return false for boundary non-timed out requests', () => {
+        const recentTimestamp = Date.now() - (matcher.timeOutDuration - 1); // Just within the timeout duration
+        const result = matcher['isTimedOut'](recentTimestamp);
+        expect(result).toBeFalse();
+      });
+    });
+
+    describe('tryTimeOut', () => {
+      it('should remove timed out requests from the queue', async () => {
+        const tryTimedOutSpy = spyOn(matcher as any, 'tryTimeOut').and.callThrough();
+
+        const pastOffset = matcher.timeOutDuration + 1000;
+        const pastTimestamp = Date.now() - pastOffset;
+        const currentTimestamp = Date.now();
+        const timedOutRequest: UserMatchingRequest = {
+          userId: { id: '1' },
+          preferences: { topic: 'Math', difficulty: 'easy' },
+          timestamp: pastTimestamp,
+        };
+        const validRequest: UserMatchingRequest = {
+          userId: { id: '2' },
+          preferences: { topic: 'Science', difficulty: 'medium' },
+          timestamp: currentTimestamp,
+        };
+
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(timedOutRequest));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest));
+        await matcher['tryTimeOut']();
+
+        expect(tryTimedOutSpy).toHaveBeenCalled();
+        const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+        expect(queue.length).toBe(1);
+        expect(queue[0].userId).toEqual({ id: '2' });
+      });
+
+      it('should not remove valid requests from the queue', async () => {
+        const tryTimedOutSpy = spyOn(matcher as any, 'tryTimeOut').and.callThrough();
+        const currentTimestamp = Date.now();
+        const validRequest1: UserMatchingRequest = {
+          userId: { id: '1' },
+          preferences: { topic: 'Math', difficulty: 'easy' },
+          timestamp: currentTimestamp,
+        };
+        const validRequest2: UserMatchingRequest = {
+          userId: { id: '2' },
+          preferences: { topic: 'Science', difficulty: 'medium' },
+          timestamp: currentTimestamp,
+        };
+
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest1));
+        await redisClient.instance.rPush(cacheKey, JSON.stringify(validRequest2));
+        await matcher['tryTimeOut']();
+        expect(tryTimedOutSpy).toHaveBeenCalled();
+
+        const queue: UserMatchingRequest[] = await matcher['queue'](Matcher.REDIS_KEY_MATCHING_QUEUE);
+        expect(queue.length).toBe(2);
+      });
+    });
+  });
+});

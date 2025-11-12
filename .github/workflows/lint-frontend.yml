@@ -1,0 +1,44 @@
+# AI Assistance Disclosure:
+# Tool: GitHub Copilot (model: claude-sonnet-4.5), date: 2025-11-11
+# Scope: Generated GitHub Actions workflow for linting the frontend code using Biome.
+# Author review: I tested the action workflow in GitHub Actions.
+
+name: Lint Frontend
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "frontend/**"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "frontend/**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Biome check
+        working-directory: ./frontend
+        run: pnpm check

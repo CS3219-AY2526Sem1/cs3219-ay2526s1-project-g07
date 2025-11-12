@@ -1,0 +1,42 @@
+{
+  "name": "matching-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node .\\spec\\support\\jasmine.mjs",
+    "redis-local": "docker rm -f redis && docker run -d --name redis -p 6379:6379 redis:latest",
+    "start": "node dist/services/matching-service/src/index.js",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "docker:build": "docker build -t peerprep-matching-service ."
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@peerprep/redis": "file:../../redis",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "kafkajs": "^2.2.4",
+    "path": "^0.12.7",
+    "redis": "^5.9.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jasmine": "^5.1.12",
+    "@types/node": "^24.5.2",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.25.12",
+    "esbuild-register": "^3.6.0",
+    "jasmine": "^5.12.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

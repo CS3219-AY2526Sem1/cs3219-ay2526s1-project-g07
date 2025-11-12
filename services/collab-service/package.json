@@ -1,0 +1,29 @@
+{
+  "name": "collab-service",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "@y/websocket-server": "^0.1.1",
+    "hono": "^4.9.9",
+    "kafkajs": "^2.2.4",
+    "uuid": "^13.0.0",
+    "ws": "^8.18.3",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.27"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "4.0.8",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.8"
+  }
+}
