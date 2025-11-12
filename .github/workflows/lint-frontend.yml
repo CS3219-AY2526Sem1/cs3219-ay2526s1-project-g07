@@ -1,6 +1,6 @@
 # AI Assistance Disclosure:
 # Tool: GitHub Copilot (model: claude-sonnet-4.5), date: 2025-11-11
-# Scope: Generated GitHub Actions workflow for linting the frontend code using Biome.
+# Scope: Generated GitHub Actions workflow for automatically building the container images.
 # Author review: I tested the action workflow in GitHub Actions.
 
 name: Lint Frontend
