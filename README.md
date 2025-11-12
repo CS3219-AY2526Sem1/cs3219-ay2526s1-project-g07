@@ -9,6 +9,13 @@
 
 ## Group: G07
 
+### Note
+
+- You are required to develop individual microservices within separate folders within this repository.
+- The teaching team should be given access to the repositories as we may require viewing the history of the repository in case of any disputes or disagreements.
+
+---
+
 ## Deployment Guide
 
 ### Prerequisites
@@ -113,7 +120,17 @@ docker-compose -f docker-compose.prod.yml down
 
 ---
 
-### Note
+## AI Use Summary
 
-- You are required to develop individual microservices within separate folders within this repository.
-- The teaching team should be given access to the repositories as we may require viewing the history of the repository in case of any disputes or disagreements.
+AI tools (GitHub Copilot) are used in this project.
+
+The interactions with the AI tools (prompts and outputs) are recorded in /ai/usage-log.md.
+
+All AI outputs have been reviewed, tested, and verified by the authors.
+
+- [x] Requirements and architecture created without AI.
+- [x] AI used only for implementation/debugging/refactoring/docs.
+- [x] All AI-influenced files have header attributions.
+- [x] README/report includes the project-level AI use summary.
+- [x] Prompts and key outputs archived in /ai/usage-log.md.
+- [x] All AI outputs reviewed, tested, and verified by the authors
