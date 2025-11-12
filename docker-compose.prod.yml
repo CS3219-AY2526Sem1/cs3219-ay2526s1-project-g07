@@ -78,8 +78,8 @@ services:
       - KAFKA_CLUSTERS_0_TOPIC_AUTO_CREATE=true
       - SERVER_SERVLET_CONTEXT_PATH=/kafkaui
       - AUTH_TYPE=LOGIN_FORM
-      - SPRING_SECURITY_USER_NAME=admin
-      - SPRING_SECURITY_USER_PASSWORD=${KAFKA_UI_PASSWORD}
+      - SPRING_SECURITY_USER_NAME=${KAFKA_UI_USERNAME:-admin}
+      - SPRING_SECURITY_USER_PASSWORD=${KAFKA_UI_PASSWORD:?KAFKA_UI_PASSWORD environment variable is required}
     networks:
       - app-network
 
