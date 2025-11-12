@@ -133,4 +133,4 @@ All AI outputs have been reviewed, tested, and verified by the authors.
 - [x] All AI-influenced files have header attributions.
 - [x] README/report includes the project-level AI use summary.
 - [x] Prompts and key outputs archived in /ai/usage-log.md.
-- [x] All AI outputs reviewed, tested, and verified by the authors
+- [x] All AI outputs reviewed, tested, and verified by the authors.
