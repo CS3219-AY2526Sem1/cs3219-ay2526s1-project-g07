@@ -34,6 +34,7 @@ export default defineConfig({
     },
   },
   html: {
+    title: "PeerPrep",
     tags: [
       {
         tag: "link",
