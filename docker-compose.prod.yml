@@ -27,6 +27,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: "always"
 
   kafka-init: # Topic initialization service
     image: apache/kafka:4.0.0
@@ -82,6 +83,7 @@ services:
       - SPRING_SECURITY_USER_PASSWORD=${KAFKA_UI_PASSWORD}
     networks:
       - app-network
+    restart: "always"
 
   redis:
     image: ghcr.io/cs3219-ay2526sem1/g07-redis:master-50ce297
@@ -90,6 +92,7 @@ services:
       - "6379:6379"
     networks:
       - app-network
+    restart: "always"
 
   collab-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-collab-service:latest
@@ -106,6 +109,7 @@ services:
       - "5004:5004"
     networks:
       - app-network
+    restart: "always"
 
   ai-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-ai-service:latest
@@ -123,6 +127,7 @@ services:
       - "5005:5005"
     networks:
       - app-network
+    restart: "always"
 
   matching-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-matching-service:latest
@@ -166,6 +171,7 @@ services:
       - "5001:5001"
     networks:
       - app-network
+    restart: "always"
 
   user-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-user-service:latest
@@ -187,6 +193,7 @@ services:
       - "5002:5002"
     networks:
       - app-network
+    restart: "always"
 
   frontend:
     image: ghcr.io/cs3219-ay2526sem1/g07-frontend:latest
@@ -201,6 +208,7 @@ services:
       - "80:80"
     networks:
       - app-network
+    restart: "always"
 
 networks:
   app-network:
