@@ -11326,6 +11326,7 @@ export function useCheckAndRedirectToCollab() {
 </details>
 
 ### Step 4: Now let's check where users land after login and use this hook there
+
 <details>
   <summary>Read **home.tsx**</summary>
 
@@ -11671,14 +11672,17 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
 ## How It Works End-to-End
 
 **Backend (User Service):**
+
 - Kafka consumer listens to `'user-status-update'` topic
 - When message received: Updates
  in database
 -
+
  endpoint returns
  field
 
 **Frontend (Home Route):**
+
 - Hook fetches user data on mount
 - If
  exists → Auto-redirect to active session
@@ -11686,6 +11690,7 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
  is null → User can start new matching
 
 **Use Cases:**
+
 - ✅ User joins a collab →
  set → Next login redirects to active session
 - ✅ User leaves collab →
@@ -11693,6 +11698,7 @@ Perfect! ✅ The implementation is now complete. Here's what the feature does:
 - ✅ User refreshes page in home → If in active collab, redirects back to session
 
 The feature is ready to test! You can verify by:
+
 1. Sending a Kafka message with a
  for your user
 2. Logging in as that user
@@ -12155,7 +12161,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
  and
  were being instantiated as singletons with default brokers (`localhost:9094`), but they weren't being initialized with the actual broker configuration from your environment variables.
 
-## What I Fixed:
+## What I Fixed
 
 1. **Producer singleton** - Now initializes with brokers from
  environment variable (or defaults to `localhost:9094`)
@@ -12163,7 +12169,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
  environment variable (or defaults to `localhost:9094`)
 3. **Added dotenv** - Both files now import `'dotenv/config'` to ensure environment variables are loaded before the singletons are created
 
-## How it works now:
+## How it works now
 
 - When
  and
@@ -12733,13 +12739,15 @@ echo "  - User Service"
 
 Perfect! ✅ I've created a GitHub Actions workflow for testing your question-service and user-service. Here's what the workflow includes:
 
-## Test Workflow Features:
+## Test Workflow Features
 
 ### **Triggers:**
+
 - Runs on push to `master`, `main`, or `develop` branches
 - Runs on pull requests to these branches
 
 ### **Question Service Tests:**
+
 - Sets up Node.js 20
 - Installs dependencies with `npm ci`
 - Runs tests with `npm test`
@@ -12747,6 +12755,7 @@ Perfect! ✅ I've created a GitHub Actions workflow for testing your question-se
 - Uploads coverage artifacts (kept for 7 days)
 
 ### **User Service Tests:**
+
 - Sets up Node.js 20
 - Installs dependencies with `npm ci`
 - Runs tests with `npm test`
@@ -12754,6 +12763,7 @@ Perfect! ✅ I've created a GitHub Actions workflow for testing your question-se
 - Uploads coverage artifacts (kept for 7 days)
 
 ### **Benefits:**
+
 - ✅ Both services tested in parallel for faster execution
 - ✅ Coverage reports generated and saved as artifacts
 - ✅ Final verification job ensures both test suites pass
@@ -13166,7 +13176,7 @@ jobs:
 
 Perfect! ✅ Now you have a clean setup:
 
-## How it works:
+## How it works
 
 1. **`test.yml`** - Runs tests for question-service and user-service
    - Triggers on push to master/main/develop
@@ -13313,18 +13323,22 @@ echo "  - User Service"
 Perfect! ✅ I've created a separate `test.yml` workflow file. Here's what it does:
 
 ## Test Workflow (
+
 )
 
 **Triggers:**
+
 - Runs on push to `master`, `main`, or `develop` branches
 - Runs on pull requests to these branches
 
 **Jobs:**
+
 1. **test-question-service** - Tests the question service with coverage
 2. **test-user-service** - Tests the user service with coverage
 3. **verify-tests** - Final verification that all tests passed
 
 **Features:**
+
 - ✅ Runs tests in parallel for both services
 - ✅ Generates and uploads coverage reports (kept for 7 days)
 - ✅ Caches npm dependencies for faster runs
@@ -13543,6 +13557,7 @@ I see! Both services use pnpm. Let me update the workflow:
 Perfect! ✅ I've updated the test workflow to use pnpm instead of npm for both services. The changes include:
 
 **Updates made:**
+
 1. Added `pnpm/action-setup@v3` step to install pnpm version 8
 2. Changed cache from `'npm'` to `'pnpm'`
 3. Changed cache-dependency-path to use
@@ -13586,10 +13601,11 @@ I'll help you push your local branch to the remote repository.
 Perfect! ✅ Your `finalize/user` branch has been successfully pushed to the remote repository.
 
 The branch is now:
+
 - Pushed to remote as
 
 - Set up to track the remote branch
-- Ready for you to create a pull request at: https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07/pull/new/finalize/user
+- Ready for you to create a pull request at: <https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g07/pull/new/finalize/user>
 
 All your changes including the test workflow, Kafka integrations, and frontend redirect feature are now on the remote! 🎉
 
@@ -13717,6 +13733,7 @@ on:
 </details>
 
 Perfect! ✅ I've updated the test workflow to run on the `finalize/user` branch. Now the tests will run whenever you:
+
 - Push to `master` or `finalize/user` branches
 - Create a pull request to `master` or `finalize/user` branches
 
@@ -13982,6 +13999,7 @@ Perfect! Now I understand. The integration tests are already included when you r
 ## Running Tests Locally
 
 **For User Service:**
+
 ```bash
 cd services/user-service
 
@@ -14002,6 +14020,7 @@ pnpm test:coverage
 ```
 
 **For Question Service:**
+
 ```bash
 cd services/question-service
 
@@ -14132,6 +14151,7 @@ I'll add separate integration test jobs to the GitHub Actions workflow:
 Perfect! ✅ I've added separate integration test jobs to your GitHub Actions workflow. Now you have:
 
 **4 Jobs in total:**
+
 1. `test_user` - Runs all user-service tests (unit + integration)
 2. `test_question` - Runs all question-service tests (unit + integration)
 3. `integration_test_user` - Runs **only** user-service integration tests
@@ -14480,6 +14500,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
 .
 
 **What was wrong:**
+
 - The
  hooks were only watching
  changes
@@ -14490,6 +14511,7 @@ Perfect! ✅ I've fixed the issue. The problem was that the
 - This means if you're not authenticated, the redirect never happens
 
 **What I fixed:**
+
 - Added
  and
  to the dependency arrays for both
@@ -14516,12 +14538,18 @@ Try refreshing the page now - you should be redirected to `/login` when not auth
 - **write your notes here: (what you changed, why, and how you verified correctness)**
 
 ---
+
 ## request_8ecae8b4-ba94-41d5-9c07-eca2e05d06f0
+
 **Participant:** jiakai-17
 **Assistant:** GitHub Copilot
+
 ### Participant
+
 Write a github action to run "pnpm check" on the frontend folder.
+
 ### Assistant
+
 <details>
   <summary>Used 4 references</summary>
   <p>📄 package.json<br>📄 lint-frontend.yml<br>☰ tools.instructions.md<br>☰ instructionsList</p>
@@ -14593,3 +14621,248 @@ The workflow uses the exact pnpm version from your frontend
 
 ---
 
+## request_53b30569-8754-4f5b-93c3-b80baa960292
+
+**Participant:** jiakai-17
+**Assistant:** GitHub Copilot
+
+### Participant
+
+Write deployment instructions from the docker compose file. ALso prompt the user to provide the environment variables and api keys.
+
+```env
+  # VARIABLE = value
+GEMINI_API_KEY=
+JWT_SECRET=
+BETTER_AUTH_SECRET=
+DATABASE_URL=postgres:/
+KAFKA_BROKERS=kafka:9092
+PUBLIC_MATCHING_SERVICE_WS_URL=
+PUBLIC_MATCHING_SERVICE_URL=
+```
+
+### Assistant
+
+<details>
+  <summary>Used 4 references</summary>
+  <p>📄 README.md<br>📄 docker-compose.prod.yml<br>☰ tools.instructions.md<br>☰ instructionsList</p>
+</details>
+
+
+
+I'll help you write deployment instructions based on the
+ file. Let me update the
+ with comprehensive deployment instructions.
+
+<details>
+  <summary>🛠️ File Edit: README.md</summary>
+  <p><strong>Modified lines 7-11:</strong></p>
+
+````markdown
+## Deployment Instructions
+
+### Prerequisites
+
+Before deploying the application, ensure you have the following installed:
+- [Docker](https://www.docker.com/get-started) (version 20.10 or higher)
+- [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0 or higher)
+- A PostgreSQL database (can be hosted on services like Supabase, AWS RDS, etc.)
+- A GitHub personal access token with `read:packages` permission to pull Docker images
+
+### Step 1: Configure GitHub Container Registry Access
+
+The Docker images are hosted on GitHub Container Registry. You need to authenticate Docker to pull these images:
+
+```bash
+# Login to GitHub Container Registry
+echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+Replace `YOUR_GITHUB_TOKEN` with your GitHub personal access token and `YOUR_GITHUB_USERNAME` with your GitHub username.
+
+### Step 2: Set Up Environment Variables
+
+Create a `.env` file in the root directory of the project with the following variables:
+
+```env
+# Gemini API Key (required for AI service)
+# Get your API key from: https://ai.google.dev/
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# JWT Secret (required for authentication)
+# Generate a secure random string (at least 32 characters)
+JWT_SECRET=your_jwt_secret_here
+
+# Better Auth Secret (required for user authentication)
+# Generate a secure random string (at least 32 characters)
+BETTER_AUTH_SECRET=your_better_auth_secret_here
+
+# Database URL (required for user and question services)
+# Format: postgres://username:password@host:port/database
+# Example: postgres://user:pass@db.example.com:5432/peerprep
+DATABASE_URL=postgres://username:password@host:port/database
+
+# Kafka Brokers (default configuration)
+KAFKA_BROKERS=kafka:9092
+
+# Public URLs for Matching Service (update with your domain or IP)
+# For local deployment: ws://localhost:5003 and http://localhost:5003
+# For production: use your actual domain
+PUBLIC_MATCHING_SERVICE_WS_URL=ws://localhost:5003
+PUBLIC_MATCHING_SERVICE_URL=http://localhost:5003
+```
+
+### Step 3: Initialize the Database
+
+Before starting the services, you need to initialize your PostgreSQL database:
+
+1. Connect to your PostgreSQL instance
+2. Create a database for the application (e.g., `peerprep`)
+3. Run the initialization scripts:
+
+```bash
+# Run the database initialization script
+psql -h YOUR_DB_HOST -U YOUR_DB_USER -d YOUR_DB_NAME -f db/init.sql
+
+# Seed the questions (optional, but recommended)
+psql -h YOUR_DB_HOST -U YOUR_DB_USER -d YOUR_DB_NAME -f db/seed-questions.sql
+```
+
+### Step 4: Deploy the Application
+
+Once environment variables are configured, start the application using Docker Compose:
+
+```bash
+# Pull the latest images
+docker-compose -f docker-compose.prod.yml pull
+
+# Start all services
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Step 5: Verify Deployment
+
+Check that all services are running:
+
+```bash
+# View running containers
+docker-compose -f docker-compose.prod.yml ps
+
+# Check logs for any errors
+docker-compose -f docker-compose.prod.yml logs
+```
+
+The application should now be accessible at:
+- **Frontend**: http://localhost (port 80)
+- **Kafka UI**: http://localhost:8080/kafkaui
+- **User Service**: http://localhost:5002
+- **Question Service**: http://localhost:5001
+- **Matching Service**: http://localhost:5003 (WebSocket and HTTP)
+- **Collab Service**: http://localhost:5004
+- **AI Service**: http://localhost:5005
+
+### Step 6: Access the Application
+
+Open your web browser and navigate to `http://localhost` to access PeerPrep.
+
+### Troubleshooting
+
+**Issue: Cannot pull Docker images**
+- Ensure you're logged in to GitHub Container Registry with proper permissions
+- Verify your GitHub token has `read:packages` scope
+
+**Issue: Services fail to start**
+- Check that all required environment variables are set correctly
+- Verify database connectivity and that initialization scripts have been run
+- Check logs with: `docker-compose -f docker-compose.prod.yml logs [service-name]`
+
+**Issue: Kafka connection errors**
+- Kafka may take 30-60 seconds to fully initialize
+- Wait for the `kafka-init` service to complete successfully
+- Check Kafka health with: `docker-compose -f docker-compose.prod.yml logs kafka`
+
+### Stopping the Application
+
+To stop all services:
+
+```bash
+docker-compose -f docker-compose.prod.yml down
+```
+
+To stop and remove all data (including volumes):
+
+```bash
+docker-compose -f docker-compose.prod.yml down -v
+```
+
+### Production Deployment Notes
+
+For production deployment:
+1. Use a reverse proxy (nginx, Traefik) with SSL/TLS certificates
+2. Update `PUBLIC_MATCHING_SERVICE_WS_URL` and `PUBLIC_MATCHING_SERVICE_URL` with your production domain
+3. Ensure proper firewall rules are configured
+4. Use strong, randomly generated secrets for `JWT_SECRET` and `BETTER_AUTH_SECRET`
+5. Set up regular database backups
+6. Configure monitoring and logging solutions
+7. Consider using managed Kafka and Redis services for better scalability
+
+### Note
+````
+
+</details>
+
+Perfect! I've successfully updated the
+ with comprehensive deployment instructions based on your
+ file.
+
+## Summary of Changes
+
+The deployment instructions now include:
+
+### ✅ **Prerequisites Section**
+
+- Lists required software (Docker, Docker Compose, PostgreSQL)
+- Mentions GitHub Container Registry access requirement
+
+### ✅ **Step-by-Step Deployment Guide**
+
+1. **GitHub Authentication** - How to login to pull Docker images
+2. **Environment Variables** - Complete `.env` file template with:
+   - `GEMINI_API_KEY` (with link to get one)
+   - `JWT_SECRET` (with security requirements)
+   - `BETTER_AUTH_SECRET` (with security requirements)
+   - `DATABASE_URL` (with format example)
+   - `KAFKA_BROKERS` (pre-configured)
+   - `PUBLIC_MATCHING_SERVICE_WS_URL` (with examples)
+   - `PUBLIC_MATCHING_SERVICE_URL` (with examples)
+
+3. **Database Initialization** - Instructions to run init and seed scripts
+4. **Service Deployment** - Docker Compose commands
+5. **Verification** - How to check deployment status
+6. **Access Information** - All service endpoints listed
+
+### ✅ **Additional Sections**
+
+- **Troubleshooting** guide for common issues
+- **Stopping the Application** instructions
+- **Production Deployment Notes** with security best practices
+
+The instructions clearly prompt users to provide all necessary API keys and environment variables before deployment, with explanations of where to get them and what format to use.
+
+> *Response time: 44.28 seconds*
+> <br>*Model: claude-sonnet-4.5*
+> <br>*Timestamp: 2025-11-12 11:36:25 (GMT+8)*
+
+### Action Taken
+
+- [ ] Accepted as-is
+- [x] Modified
+- [ ] Rejected
+
+### Author Notes
+
+- Removed unnecessary content
+- Reworded for clairty
+- Checked for accuracy
+
+---
