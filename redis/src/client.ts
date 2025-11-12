@@ -1,6 +1,4 @@
 import { createClient } from 'redis';
-import dotenv from 'dotenv';
-import path from 'path';
 
 export class RedisClient {
   instance: ReturnType<typeof createClient>;
@@ -15,9 +13,6 @@ export class RedisClient {
 
   private async createRedisClient(database = 0) {
     // Start redis local with `npm run redis-local`
-    dotenv.config({
-      path: path.resolve(__dirname, '../.env'),
-    });
     const host = process.env.REDIS_HOST;
     const port = process.env.REDIS_PORT;
     const client = createClient({

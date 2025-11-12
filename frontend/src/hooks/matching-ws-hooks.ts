@@ -105,6 +105,12 @@ export const useMatchingWebSocket = (
       handleUserDequeued(userId);
     });
 
+    socketRef.current.on(WS_EVENTS_MATCHING.QUESTION_FAILURE, (reason: string) => {
+      console.log("Received question failure event:", reason);
+      setMatchingStatus("failed");
+      updateMessage(`Matching failed due to question error: ${reason}`);
+    });
+
     // Error handler
     socketRef.current.on(WS_EVENTS_MATCHING.ERROR, (error: Error) => {
       console.error("WebSocket error:", error);
