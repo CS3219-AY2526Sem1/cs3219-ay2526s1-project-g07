@@ -77,11 +77,14 @@ services:
       - KAFKA_CLUSTERS_0_READONLY=false
       - KAFKA_CLUSTERS_0_TOPIC_AUTO_CREATE=true
       - SERVER_SERVLET_CONTEXT_PATH=/kafkaui
+      - AUTH_TYPE=LOGIN_FORM
+      - SPRING_SECURITY_USER_NAME=admin
+      - SPRING_SECURITY_USER_PASSWORD=${KAFKA_UI_PASSWORD}
     networks:
       - app-network
 
   redis:
-    image: ghcr.io/cs3219-ay2526sem1/g07-redis:latest
+    image: ghcr.io/cs3219-ay2526sem1/g07-redis:master-50ce297
     container_name: redis
     ports:
       - "6379:6379"
@@ -98,7 +101,7 @@ services:
         condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
     ports:
       - "5004:5004"
     networks:
@@ -115,7 +118,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
     ports:
       - "5005:5005"
     networks:
@@ -137,11 +140,12 @@ services:
       - WS_PORT=5003
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
     ports:
       - "5003:5003"
     networks:
       - app-network
+    restart: "always"
 
   question-service:
     image: ghcr.io/cs3219-ay2526sem1/g07-question-service:latest
@@ -173,7 +177,7 @@ services:
         condition: service_completed_successfully
     environment:
       - HOST=0.0.0.0
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
       - JWT_SECRET=${JWT_SECRET}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       # TODO: standardize env vars across services
@@ -195,9 +199,6 @@ services:
       - matching-service
     ports:
       - "80:80"
-    environment:
-      - PUBLIC_MATCHING_SERVICE_WS_URL=${PUBLIC_MATCHING_SERVICE_WS_URL}
-      - PUBLIC_MATCHING_SERVICE_URL=${PUBLIC_MATCHING_SERVICE_URL}
     networks:
       - app-network
 
