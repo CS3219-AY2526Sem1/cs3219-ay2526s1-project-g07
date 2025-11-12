@@ -346,12 +346,6 @@ function RouteComponent() {
             <strong>Success:</strong> {matchingSuccess}
           </div>
         )}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-8">
-          <h3 className="text-lg font-medium mb-2">Raw Session Data</h3>
-          <pre className="text-xs bg-white p-3 rounded border overflow-auto">
-            {JSON.stringify(session, null, 2)}
-          </pre>
-        </div>
       </div>
     </div>
   );
