@@ -44,6 +44,9 @@ DATABASE_URL=postgres://username:password@host:port/database
 # Kafka Brokers (default configuration)
 # Point to the kafka container
 KAFKA_BROKERS=kafka:9092
+
+# Password to access Kafka UI
+KAFKA_UI_PASSWORD=your_password
 ```
 
 ### Step 3: Initialize the Database
